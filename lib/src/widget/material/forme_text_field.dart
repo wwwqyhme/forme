@@ -72,6 +72,7 @@ class FormeTextField extends FormeField<String> {
     FormeFieldSetter<String>? onSaved,
     FormeValidator<String>? validator,
     FormeAsyncValidator<String>? asyncValidator,
+    bool enableIMEPersonalizedLearning = true,
   }) : super(
           order: order,
           quietlyValidate: quietlyValidate,
@@ -94,6 +95,7 @@ class FormeTextField extends FormeField<String> {
                 baseState as _FormeTextFieldState;
 
             return TextField(
+              enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
               focusNode: state.focusNode,
               controller: state.textEditingController,
               decoration: decoration?.copyWith(errorText: state.errorText),

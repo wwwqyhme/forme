@@ -85,9 +85,11 @@ CupertinoTextField buildCupertinoTextField({
   GestureTapCallback? onTap,
   List<TextInputFormatter>? inputFormatters,
   ValueChanged<String>? onChanged,
+  bool enableIMEPersonalizedLearning = true,
 }) {
   if (borderless) {
     return CupertinoTextField.borderless(
+      enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
       focusNode: focusNode,
       controller: textEditingController,
       decoration: decoration,
@@ -143,6 +145,7 @@ CupertinoTextField buildCupertinoTextField({
     );
   }
   return CupertinoTextField(
+    enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
     focusNode: focusNode,
     controller: textEditingController,
     decoration: decoration,

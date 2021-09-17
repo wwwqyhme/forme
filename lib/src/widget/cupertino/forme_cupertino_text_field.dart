@@ -78,6 +78,7 @@ class FormeCupertinoTextField extends FormeField<String> {
     FormeValidator<String>? validator,
     FormeAsyncValidator<String>? asyncValidator,
     FormeFieldDecorator<String>? decorator,
+    bool enableIMEPersonalizedLearning = true,
   }) : super(
             enabled: enabled,
             decorator: decorator,
@@ -108,6 +109,7 @@ class FormeCupertinoTextField extends FormeField<String> {
               }
 
               return buildCupertinoTextField(
+                enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
                 focusNode: focusNode,
                 textEditingController: textEditingController,
                 decoration: decoration,
