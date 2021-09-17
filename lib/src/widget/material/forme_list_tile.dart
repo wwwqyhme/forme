@@ -37,7 +37,7 @@ class FormeListTileItem<T extends Object> {
         padding = padding ?? EdgeInsets.zero;
 }
 
-enum FormeListTileType { checkbox, switch_ }
+enum FormeListTileType { checkbox, switchs }
 
 class FormeListTile<T extends Object> extends FormeField<List<T>> {
   final List<FormeListTileItem<T>> items;
@@ -66,7 +66,6 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
     double? minVerticalPadding,
     double? minLeadingWidth,
     Color? activeColor,
-    MouseCursor? mouseCursor,
     MaterialStateProperty<Color?>? fillColor,
     Color? checkColor,
     Color? focusColor,
@@ -78,7 +77,6 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
     Color? activeTrackColor,
     Color? inactiveThumbColor,
     Color? inactiveTrackColor,
-    ImageProvider? imageProvider,
     ImageProvider? activeThumbImage,
     ImageProvider? inactiveThumbImage,
     MaterialStateProperty<Color?>? thumbColor,
@@ -88,7 +86,6 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
     ImageErrorListener? onInactiveThumbImageError,
     Axis direction = Axis.horizontal,
     WrapAlignment alignment = WrapAlignment.start,
-    double? space,
     WrapAlignment runAlignment = WrapAlignment.start,
     double runSpacing = 0.0,
     double spacing = 0.0,
@@ -97,6 +94,7 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
     VerticalDirection verticalDirection = VerticalDirection.down,
     InputDecoration? decoration,
     FormeFieldDecorator<List<T>>? decorator,
+    bool isThreeLine = false,
   }) : super(
             quietlyValidate: quietlyValidate,
             order: order,
@@ -109,13 +107,13 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
                     ? null
                     : FormeInputDecoratorBuilder(decoration: decoration)),
             builder: (state) {
-              bool readOnly = state.readOnly;
+              final bool readOnly = state.readOnly;
 
-              List<Widget> wrapWidgets = [];
+              final List<Widget> wrapWidgets = [];
 
               void changeValue(T value) {
                 state.requestFocus();
-                List<T> values = List.of(state.value);
+                final List<T> values = List.of(state.value);
                 if (!values.remove(value)) {
                   values.add(value);
                 }
@@ -127,6 +125,7 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
                 switch (type) {
                   case FormeListTileType.checkbox:
                     return CheckboxListTile(
+                      isThreeLine: isThreeLine,
                       shape: shape,
                       tileColor: tileColor,
                       selectedTileColor: selectedTileColor,
@@ -142,8 +141,9 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
                       onChanged:
                           readOnly ? null : (v) => changeValue(item.data),
                     );
-                  case FormeListTileType.switch_:
+                  case FormeListTileType.switchs:
                     return SwitchListTile(
+                      isThreeLine: isThreeLine,
                       tileColor: tileColor,
                       activeColor: activeColor,
                       activeTrackColor: activeTrackColor,
@@ -185,7 +185,7 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
                           ? null
                           : (v) => changeValue(item.data),
                     );
-                  case FormeListTileType.switch_:
+                  case FormeListTileType.switchs:
                     return Switch(
                       value: selected,
                       onChanged: readOnly || item.readOnly
@@ -213,11 +213,11 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
               }
 
               for (int i = 0; i < items.length; i++) {
-                FormeListTileItem<T> item = items[i];
-                bool isReadOnly = readOnly || item.readOnly;
-                bool selected = state.value.contains(item.data);
+                final FormeListTileItem<T> item = items[i];
+                final bool isReadOnly = readOnly || item.readOnly;
+                final bool selected = state.value.contains(item.data);
                 if (split > 0) {
-                  double factor = 1 / split;
+                  final double factor = 1 / split;
                   if (factor == 1) {
                     wrapWidgets.add(
                         createFormeListTileItem(item, selected, isReadOnly));
@@ -225,7 +225,8 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
                   }
                 }
 
-                Widget tileItem = createCommonItem(item, selected, readOnly);
+                final Widget tileItem =
+                    createCommonItem(item, selected, readOnly);
 
                 final Widget title = split == 0
                     ? item.title
@@ -243,12 +244,12 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
                     break;
                 }
 
-                Row tileItemRow = Row(
+                final Row tileItemRow = Row(
                   mainAxisSize: MainAxisSize.min,
                   children: children,
                 );
 
-                Widget groupItemWidget = Padding(
+                final Widget groupItemWidget = Padding(
                   padding: item.padding,
                   child: InkWell(
                       borderRadius:
@@ -261,11 +262,11 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
                       child: tileItemRow),
                 );
 
-                bool visible = item.visible;
+                final bool visible = item.visible;
                 if (split <= 0) {
                   wrapWidgets.add(Visibility(
-                    child: groupItemWidget,
                     visible: visible,
+                    child: groupItemWidget,
                   ));
                   if (visible && i < items.length - 1) {
                     wrapWidgets.add(const SizedBox(
@@ -273,13 +274,13 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
                     ));
                   }
                 } else {
-                  double factor = item.ignoreSplit ? 1 : 1 / split;
+                  final double factor = item.ignoreSplit ? 1 : 1 / split;
                   wrapWidgets.add(Visibility(
+                    visible: visible,
                     child: FractionallySizedBox(
                       widthFactor: factor,
                       child: groupItemWidget,
                     ),
-                    visible: visible,
                   ));
                 }
               }
@@ -330,8 +331,8 @@ class _FormeListTileState<T extends Object> extends FormeFieldState<List<T>> {
 
   @override
   void updateFieldValueInDidUpdateWidget(FormeField<List<T>> oldWidget) {
-    List<T> items = List.of(value);
-    Iterable<T> datas = widget.items.map((e) => e.data);
+    final List<T> items = List.of(value);
+    final Iterable<T> datas = widget.items.map((e) => e.data);
     bool removed = false;
     items.removeWhere((element) {
       if (!datas.contains(element)) {
@@ -340,6 +341,8 @@ class _FormeListTileState<T extends Object> extends FormeFieldState<List<T>> {
       }
       return false;
     });
-    if (removed) setValue(items);
+    if (removed) {
+      setValue(items);
+    }
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
-import 'package:forme/forme.dart';
+import '../../forme.dart';
 
-abstract class FormeFieldDecorator<T> {
+mixin FormeFieldDecorator<T> {
   Widget build(
     FormeFieldController<T> controller,
     Widget child,

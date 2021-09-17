@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
-import 'package:forme/forme.dart';
+import '../../../forme.dart';
 
 import 'cupertinos.dart';
 
@@ -50,7 +50,7 @@ class FormeCupertinoTextField extends FormeField<String> {
     VoidCallback? onEditingComplete,
     ValueChanged<String>? onSubmitted,
     List<TextInputFormatter>? inputFormatters,
-    bool? enabled,
+    bool enabled = true,
     double cursorWidth = 2.0,
     double? cursorHeight,
     Radius cursorRadius = const Radius.circular(2.0),
@@ -79,6 +79,7 @@ class FormeCupertinoTextField extends FormeField<String> {
     FormeAsyncValidator<String>? asyncValidator,
     FormeFieldDecorator<String>? decorator,
   }) : super(
+            enabled: enabled,
             decorator: decorator,
             quietlyValidate: quietlyValidate,
             asyncValidatorDebounce: asyncValidatorDebounce,
@@ -96,11 +97,11 @@ class FormeCupertinoTextField extends FormeField<String> {
             readOnly: readOnly,
             initialValue: initialValue ?? '',
             builder: (baseState) {
-              _FormeCupertinoTextFieldState state =
+              final _FormeCupertinoTextFieldState state =
                   baseState as _FormeCupertinoTextFieldState;
-              bool readOnly = state.readOnly;
-              FocusNode focusNode = state.focusNode;
-              TextEditingController textEditingController =
+              final bool readOnly = state.readOnly;
+              final FocusNode focusNode = state.focusNode;
+              final TextEditingController textEditingController =
                   state.textEditingController;
               void onChanged(String v) {
                 state.didChange(v);

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:forme/forme.dart';
+import '../forme.dart';
 
 import 'forme_mounted_value_notifier.dart';
 
@@ -12,19 +12,22 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
 
   /// whether formKey is initialized
   bool get initialized {
-    State? state = currentState;
-    if (state == null || state is! _FormeState) return false;
+    final State? state = currentState;
+    if (state == null || state is! _FormeState) {
+      return false;
+    }
     return true;
   }
 
   /// get form controller , throw an error if there's no form controller
   FormeController get _currentController {
-    State? currentState = super.currentState;
+    final State? currentState = super.currentState;
     if (currentState == null) {
-      throw 'current state is null,did you put this key on Forme?';
+      throw Exception('current state is null,did you put this key on Forme?');
     }
     if (currentState is! _FormeState) {
-      throw 'current state is not a state of Forme , did you put this key on Forme?';
+      throw Exception(
+          'current state is not a state of Forme , did you put this key on Forme?');
     }
     return currentState.controller;
   }
@@ -127,16 +130,12 @@ class Forme extends StatefulWidget {
   final WillPopCallback? onWillPop;
 
   /// if this flag is true , will not display default error when perform a validate
-  ///
-  /// [FormeFieldController.errorText] will return null
   final bool quietlyValidate;
 
   /// autovalidateMode
   ///
   /// if mode is [AutovalidateMode.onUserInteraction] , will validate and rebuild all fields which has a validator
   /// after field was interacted by user
-  /// **if user changed field's value manually via [FormeFieldController.value] or changed field's model via [FormeFieldController.model] or [FormeFieldController.updateModel] ,
-  /// will also be regarded as interacted by user**
   ///
   /// if mode is [AutovalidateMode.always] , will revalidated all value fields after called reset
   final AutovalidateMode autovalidateMode;
@@ -187,7 +186,7 @@ class _FormeState extends State<Forme> {
         gen++;
         _readOnly = readOnly;
       });
-      for (var element in states) {
+      for (final element in states) {
         element._readOnlyNotifier.value = readOnly;
       }
     }
@@ -220,10 +219,12 @@ class _FormeState extends State<Forme> {
   }
 
   void reset() {
-    for (var element in states) {
+    for (final element in states) {
       element.reset();
     }
-    if (widget.autovalidateMode == AutovalidateMode.always) _validateForm();
+    if (widget.autovalidateMode == AutovalidateMode.always) {
+      _validateForm();
+    }
   }
 
   ValueNotifier<FormeFieldController?> fieldListenable(String name) {
@@ -237,30 +238,34 @@ class _FormeState extends State<Forme> {
 
   void _validateForm() {
     if (widget.autovalidateByOrder) {
-      List<FormeFieldState> valueFieldStates = states
+      final List<FormeFieldState> valueFieldStates = states
           .where((element) => element._hasAnyValidator)
           .toList()
             ..sort((a, b) => a.order.compareTo(b.order));
-      if (valueFieldStates.isEmpty) return;
+      if (valueFieldStates.isEmpty) {
+        return;
+      }
       _validateByOrder(valueFieldStates);
     } else {
-      for (var element in states) {
+      for (final element in states) {
         element._validate2(() {});
       }
     }
   }
 
   void _validateByOrder(List<FormeFieldState> states, {int index = 0}) {
-    int length = states.length;
-    if (index >= length) return;
-    FormeFieldState state = states[index];
+    final int length = states.length;
+    if (index >= length) {
+      return;
+    }
+    final FormeFieldState state = states[index];
     state._validate2(() {
       _validateByOrder(states, index: index + 1);
     });
   }
 
   void save() {
-    for (var element in states) {
+    for (final element in states) {
       element.save();
     }
   }
@@ -268,12 +273,12 @@ class _FormeState extends State<Forme> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
+      onWillPop: widget.onWillPop,
       child: _FormeScope(
         gen: gen,
         state: this,
         child: widget.child,
       ),
-      onWillPop: widget.onWillPop,
     );
   }
 
@@ -285,7 +290,9 @@ class _FormeState extends State<Forme> {
   }
 
   bool get needValidate {
-    if (autovalidateMode == AutovalidateMode.always) return true;
+    if (autovalidateMode == AutovalidateMode.always) {
+      return true;
+    }
     if (autovalidateMode == AutovalidateMode.onUserInteraction) {
       return states.any((element) => element._hasInteractedByUser);
     }
@@ -374,7 +381,8 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   int get order =>
       widget.order ??
       _formeState?.getOrder(this) ??
-      (throw 'can not get order of this field , if this field is not wrapped by Forme , you must specific an order on it');
+      (throw Exception(
+          'can not get order of this field , if this field is not wrapped by Forme , you must specific an order on it'));
 
   String get name => widget.name;
 
@@ -413,10 +421,18 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   FormeValueComparator<T> get comparator =>
       widget.comparator ??
       (a, b) {
-        if (a == b) return true;
-        if (a is List && b is List) return listEquals<dynamic>(a, b);
-        if (a is Set && b is Set) return setEquals<dynamic>(a, b);
-        if (a is Map && b is Map) return mapEquals<dynamic, dynamic>(a, b);
+        if (a == b) {
+          return true;
+        }
+        if (a is List && b is List) {
+          return listEquals<dynamic>(a, b);
+        }
+        if (a is Set && b is Set) {
+          return setEquals<dynamic>(a, b);
+        }
+        if (a is Map && b is Map) {
+          return mapEquals<dynamic, dynamic>(a, b);
+        }
         return false;
       };
 
@@ -446,7 +462,9 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _formeState = _FormeScope.of(context);
-    if (_init) return;
+    if (_init) {
+      return;
+    }
     _init = true;
     beforeInitiation();
     controller = createFormeFieldController();
@@ -498,7 +516,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   @mustCallSuper
   void didChange(T newValue) {
-    T oldValue = _value;
+    final T oldValue = _value;
     if (!comparator(oldValue, newValue)) {
       setState(() {
         _hasInteractedByUser = true;
@@ -513,7 +531,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   @override
   void didUpdateWidget(FormeField<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    T oldValue = _value;
+    final T oldValue = _value;
     updateFieldValueInDidUpdateWidget(oldWidget);
     if (!comparator(oldValue, _value)) {
       _oldValue = oldValue;
@@ -527,7 +545,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   @mustCallSuper
   void reset() {
-    T oldValue = _value;
+    final T oldValue = _value;
     setState(() {
       _validateGen++;
       _error = null;
@@ -613,13 +631,17 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   void _validate2(VoidCallback onValid) {
     _asyncValidatorDebounce?.cancel();
     if (_ignoreValidate) {
-      if (_error?.valid ?? false) onValid();
+      if (_error?.valid ?? false) {
+        onValid();
+      }
       return;
     }
-    if (!_hasAnyValidator) return;
+    if (!_hasAnyValidator) {
+      return;
+    }
     setState(() {
       _alwaysValidateOnNextBuild = true;
-      int gen = _validateGen + 1;
+      final int gen = _validateGen + 1;
       _validateValidCallback = () {
         if (gen == _validateGen) {
           WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
@@ -632,8 +654,10 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   void _validate() {
     _asyncValidatorDebounce?.cancel();
-    if (_ignoreValidate || !_hasAnyValidator) return;
-    int gen = ++_validateGen;
+    if (_ignoreValidate || !_hasAnyValidator) {
+      return;
+    }
+    final int gen = ++_validateGen;
 
     void afterUpdateError() {
       if (_error!.valid) {
@@ -653,7 +677,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     }
 
     if (_hasValidator) {
-      String? errorText = widget.validator!(controller, value);
+      final String? errorText = widget.validator!(controller, value);
       if (errorText != null || !_hasAsyncValidator) {
         notifyError(FormeValidateError(
             errorText,
@@ -701,14 +725,14 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   Future<FormeFieldValidateSnapshot<T>> _performValidate(
       {bool quietly = false}) {
-    T value = this.value;
+    final T value = this.value;
     if (!_hasAnyValidator) {
       return Future.delayed(
           Duration.zero,
           () => FormeFieldValidateSnapshot(
               value, null, order, controller, false, false));
     }
-    int gen = quietly ? _validateGen : ++_validateGen;
+    final int gen = quietly ? _validateGen : ++_validateGen;
 
     bool needNotify() {
       return !quietly && gen == _validateGen && mounted;
@@ -724,9 +748,9 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     }
 
     if (_hasValidator) {
-      String? errorText = widget.validator!(controller, value);
+      final String? errorText = widget.validator!(controller, value);
       if (errorText != null || !_hasAsyncValidator) {
-        FormeValidateError error = FormeValidateError(
+        final FormeValidateError error = FormeValidateError(
             errorText,
             errorText == null
                 ? FormeValidateState.valid
@@ -765,7 +789,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       });
     }
 
-    throw 'should not go here';
+    throw Exception('should not go here');
   }
 
   void save() {
@@ -773,8 +797,6 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   }
 
   /// override this method if you want to listen value changed
-  ///
-  /// **if [ValueField] is nonnull , value will not be null**
   @protected
   void onValueChanged(T value) {}
 
@@ -807,10 +829,10 @@ class _FormeController extends FormeController {
 
   @override
   Map<String, dynamic> get data {
-    Map<String, dynamic> map = <String, dynamic>{};
-    for (var element in state.states) {
-      String name = element.name;
-      dynamic value = element.value;
+    final Map<String, dynamic> map = <String, dynamic>{};
+    for (final element in state.states) {
+      final String name = element.name;
+      final dynamic value = element.value;
       map[name] = value;
     }
     return map;
@@ -824,11 +846,13 @@ class _FormeController extends FormeController {
 
   @override
   Map<FormeFieldController, String> get errors {
-    Map<FormeFieldController, String> errorMap = {};
-    for (FormeFieldState state in state.states) {
-      FormeFieldController controller = state.controller;
-      String? errorText = controller.error?.text;
-      if (errorText == null) continue;
+    final Map<FormeFieldController, String> errorMap = {};
+    for (final FormeFieldState state in state.states) {
+      final FormeFieldController controller = state.controller;
+      final String? errorText = controller.error?.text;
+      if (errorText == null) {
+        continue;
+      }
       errorMap[controller] = errorText;
     }
     return errorMap;
@@ -836,8 +860,10 @@ class _FormeController extends FormeController {
 
   @override
   T field<T extends FormeFieldController<dynamic>>(String name) {
-    T? field = findFormeFieldController(name);
-    if (field == null) throw 'no field can be found by name :$name';
+    final T? field = findFormeFieldController(name);
+    if (field == null) {
+      throw Exception('no field can be found by name :$name');
+    }
     return field;
   }
 
@@ -852,10 +878,10 @@ class _FormeController extends FormeController {
     bool clearError = false,
     bool validateByOrder = false,
   }) {
-    List<FormeFieldState> states = (state.states
+    final List<FormeFieldState> states = (state.states
             .where((element) =>
                 element._hasAnyValidator &&
-                (names.isEmpty ? true : names.contains(element.name)))
+                (names.isEmpty || names.contains(element.name)))
             .toList()
               ..sort((a, b) => a.order.compareTo(b.order)))
         .toList();
@@ -863,11 +889,13 @@ class _FormeController extends FormeController {
       return Future.delayed(Duration.zero, () => FormeValidateSnapshot([]));
     }
     if (clearError) {
-      for (var element in states) {
+      for (final element in states) {
         element._clearError();
       }
     }
-    if (validateByOrder) return _validateByOrder(states, quietly);
+    if (validateByOrder) {
+      return _validateByOrder(states, quietly);
+    }
     return Future.wait(
             states.map((state) => state._performValidate(quietly: quietly)),
             eagerError: true)
@@ -880,14 +908,15 @@ class _FormeController extends FormeController {
   Future<FormeValidateSnapshot> _validateByOrder(
       List<FormeFieldState> states, bool quietly,
       {int index = 0, List<FormeFieldValidateSnapshot> list = const []}) {
-    int length = controllers.length;
-    list = List.of(list);
+    final int length = controllers.length;
+    final List<FormeFieldValidateSnapshot> copyList = List.of(list);
     return states[index]._performValidate(quietly: quietly).then((value) {
-      list.add(value);
+      copyList.add(value);
       if (value.invalid || index == length - 1) {
-        return FormeValidateSnapshot(list);
+        return FormeValidateSnapshot(copyList);
       }
-      return _validateByOrder(states, quietly, index: index + 1, list: list);
+      return _validateByOrder(states, quietly,
+          index: index + 1, list: copyList);
     });
   }
 
@@ -911,8 +940,10 @@ class _FormeController extends FormeController {
 
   T? findFormeFieldController<T extends FormeFieldController<dynamic>>(
       String name) {
-    for (FormeFieldState state in state.states) {
-      if (state.name == name) return state.controller as T;
+    for (final FormeFieldState state in state.states) {
+      if (state.name == name) {
+        return state.controller as T;
+      }
     }
   }
 

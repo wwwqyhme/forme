@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:forme/forme.dart';
+import '../../../forme.dart';
 
 import '../../forme_mounted_value_notifier.dart';
 
@@ -34,7 +34,6 @@ class FormeRangeSlider extends FormeField<RangeValues> {
     Color? activeColor,
     Color? inactiveColor,
     SliderThemeData? sliderThemeData,
-    MouseCursor? mouseCursor,
     FormRangeLabelRender? rangeLabelRender,
     Duration? asyncValidatorDebounce,
     AutovalidateMode? autovalidateMode,
@@ -66,19 +65,20 @@ class FormeRangeSlider extends FormeField<RangeValues> {
             name: name,
             initialValue: initialValue ?? RangeValues(min, max),
             builder: (baseState) {
-              _FormeRangeSliderState state =
+              final _FormeRangeSliderState state =
                   baseState as _FormeRangeSliderState;
-              bool readOnly = state.readOnly;
+              final bool readOnly = state.readOnly;
 
-              Widget slider = ValueListenableBuilder(
+              final Widget slider = ValueListenableBuilder(
                   valueListenable: state.notifier,
                   builder: (context, _value, _child) {
                     RangeLabels? sliderLabels;
 
                     if (rangeLabelRender != null) {
-                      String start =
+                      final String start =
                           rangeLabelRender.startRender(state.value.start);
-                      String end = rangeLabelRender.endRender(state.value.end);
+                      final String end =
+                          rangeLabelRender.endRender(state.value.end);
                       sliderLabels = RangeLabels(start, end);
                     }
 
@@ -146,7 +146,7 @@ class _FormeRangeSliderState extends FormeFieldState<RangeValues> {
 
   @override
   RangeValues get initialValue {
-    RangeValues defaultInitialValue = super.initialValue;
+    final RangeValues defaultInitialValue = super.initialValue;
     RangeValues currentInitialValue = defaultInitialValue;
     if (defaultInitialValue.start < widget.min) {
       currentInitialValue = RangeValues(widget.min, defaultInitialValue.end);
@@ -171,7 +171,7 @@ class _FormeRangeSliderState extends FormeFieldState<RangeValues> {
 
   @override
   void updateFieldValueInDidUpdateWidget(FormeField<RangeValues> oldWidget) {
-    RangeValues value = super.value;
+    final RangeValues value = super.value;
     if (value.start < widget.min) {
       setValue(RangeValues(widget.min, value.end));
     } else if (value.end < widget.min) {
@@ -223,7 +223,7 @@ class CustomRangeSliderThumbCircle extends RangeSliderThumbShape {
     bool? isPressed,
   }) {
     String value;
-    Thumb _thumb = thumb ?? Thumb.start;
+    final Thumb _thumb = thumb ?? Thumb.start;
     switch (_thumb) {
       case Thumb.start:
         value = this.value.start.round().toString();
@@ -244,7 +244,7 @@ class CustomRangeSliderThumbCircle extends RangeSliderThumbShape {
       ..color = color //Thumb Background Color
       ..style = PaintingStyle.fill;
 
-    TextSpan span = TextSpan(
+    final TextSpan span = TextSpan(
         style: TextStyle(
           fontSize: enabledThumbRadius * .8,
           fontWeight: FontWeight.w700,
@@ -252,12 +252,12 @@ class CustomRangeSliderThumbCircle extends RangeSliderThumbShape {
         ),
         text: value);
 
-    TextPainter tp = TextPainter(
+    final TextPainter tp = TextPainter(
         text: span,
         textAlign: TextAlign.center,
         textDirection: TextDirection.ltr);
     tp.layout();
-    Offset textCenter =
+    final Offset textCenter =
         Offset(center.dx - (tp.width / 2), center.dy - (tp.height / 2));
 
     canvas.drawCircle(center, enabledThumbRadius * .9, paint);

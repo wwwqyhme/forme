@@ -34,7 +34,6 @@ class FormeFilterChip<T extends Object> extends FormeField<List<T>> {
     FormeFieldDecorator<List<T>>? decorator,
     Axis direction = Axis.horizontal,
     WrapAlignment alignment = WrapAlignment.start,
-    double? space,
     WrapAlignment runAlignment = WrapAlignment.start,
     double runSpacing = 0.0,
     double spacing = 0.0,
@@ -62,14 +61,14 @@ class FormeFilterChip<T extends Object> extends FormeField<List<T>> {
           validator: validator,
           asyncValidator: asyncValidator,
           builder: (state) {
-            bool readOnly = state.readOnly;
-            ChipThemeData _chipThemeData =
+            final bool readOnly = state.readOnly;
+            final ChipThemeData _chipThemeData =
                 chipThemeData ?? ChipTheme.of(state.context);
 
-            List<Widget> chips = [];
-            for (FormeChipItem<T> item in items) {
-              bool isReadOnly = readOnly || item.readOnly;
-              FilterChip chip = FilterChip(
+            final List<Widget> chips = [];
+            for (final FormeChipItem<T> item in items) {
+              final bool isReadOnly = readOnly || item.readOnly;
+              final FilterChip chip = FilterChip(
                 selected: state.value.contains(item.data),
                 label: item.label,
                 avatar: item.avatar,
@@ -94,7 +93,7 @@ class FormeFilterChip<T extends Object> extends FormeField<List<T>> {
                 onSelected: isReadOnly
                     ? null
                     : (bool selected) {
-                        List<T> value = List.of(state.value);
+                        final List<T> value = List.of(state.value);
                         if (selected) {
                           if (maxSelectedCount != null &&
                               value.length >= maxSelectedCount) {
@@ -111,14 +110,14 @@ class FormeFilterChip<T extends Object> extends FormeField<List<T>> {
                       },
               );
               chips.add(Visibility(
+                  visible: item.visible,
                   child: Padding(
                     padding: item.padding,
                     child: chip,
-                  ),
-                  visible: item.visible));
+                  )));
             }
 
-            Widget chipWidget = Wrap(
+            final Widget chipWidget = Wrap(
               spacing: spacing,
               runSpacing: runSpacing,
               textDirection: textDirection,
@@ -131,11 +130,11 @@ class FormeFilterChip<T extends Object> extends FormeField<List<T>> {
             );
 
             return Focus(
+                focusNode: state.focusNode,
                 child: ChipTheme(
                   data: _chipThemeData,
                   child: chipWidget,
-                ),
-                focusNode: state.focusNode);
+                ));
           },
         );
 
@@ -149,10 +148,12 @@ class _FormeFilterChipState<T extends Object> extends FormeFieldState<List<T>> {
 
   @override
   void updateFieldValueInDidUpdateWidget(FormeField<List<T>> oldWidget) {
-    List<T> value = super.value;
-    if (value.isEmpty) return;
-    List<T> items = List.of(value);
-    Iterable<T> datas = widget.items.map((e) => e.data);
+    final List<T> value = super.value;
+    if (value.isEmpty) {
+      return;
+    }
+    final List<T> items = List.of(value);
+    final Iterable<T> datas = widget.items.map((e) => e.data);
     bool removed = false;
     items.removeWhere((element) {
       if (!datas.contains(element)) {
@@ -161,11 +162,13 @@ class _FormeFilterChipState<T extends Object> extends FormeFieldState<List<T>> {
       }
       return false;
     });
-    if (removed) setValue(items);
+    if (removed) {
+      setValue(items);
+    }
     if (widget.maxSelectedCount != null &&
         widget.maxSelectedCount! < value.length) {
-      List<T> items = List.of(value);
-      setValue(items.sublist(0, widget.maxSelectedCount!));
+      final List<T> items = List.of(value);
+      setValue(items.sublist(0, widget.maxSelectedCount));
     }
   }
 }

@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:forme/forme.dart';
+import '../../forme.dart';
 
 class FormeInputDecoratorBuilder<T> implements FormeFieldDecorator<T> {
+  const FormeInputDecoratorBuilder(
+      {this.emptyChecker, this.decoration, this.wrapper});
   final bool Function(T? value)? emptyChecker;
   final InputDecoration? decoration;
   final Widget Function(Widget child)? wrapper;
-
-  const FormeInputDecoratorBuilder(
-      {this.emptyChecker, this.decoration, this.wrapper});
 
   @override
   Widget build(
@@ -18,8 +17,8 @@ class FormeInputDecoratorBuilder<T> implements FormeFieldDecorator<T> {
       emptyChecker: emptyChecker,
       decoration: decoration,
       controller: controller,
-      child: child,
       wrapper: wrapper,
+      child: child,
     );
   }
 }
@@ -28,12 +27,6 @@ class FormeInputDecoratorBuilder<T> implements FormeFieldDecorator<T> {
 ///
 /// **worked well if you no need to support prefixIcon & suffixIcon & prefix & sufix**
 class FormeInputDecorator<T> extends StatelessWidget {
-  final Widget child;
-  final bool Function(T? value)? emptyChecker;
-  final InputDecoration? decoration;
-  final Widget Function(Widget child)? wrapper;
-  final FormeFieldController<T> controller;
-
   const FormeInputDecorator({
     required this.controller,
     Key? key,
@@ -43,10 +36,16 @@ class FormeInputDecorator<T> extends StatelessWidget {
     this.wrapper,
   }) : super(key: key);
 
+  final Widget child;
+  final bool Function(T? value)? emptyChecker;
+  final InputDecoration? decoration;
+  final Widget Function(Widget child)? wrapper;
+  final FormeFieldController<T> controller;
+
   @override
   Widget build(BuildContext context) {
-    Widget child = wrapper == null ? this.child : wrapper!(this.child);
-    InputDecoration _decoration = decoration ?? const InputDecoration();
+    final Widget child = wrapper == null ? this.child : wrapper!(this.child);
+    final InputDecoration _decoration = decoration ?? const InputDecoration();
 
     if (emptyChecker == null) {
       if (FormeKey.of(context)?.quietlyValidate ?? false) {
@@ -54,7 +53,6 @@ class FormeInputDecorator<T> extends StatelessWidget {
           valueListenable: controller.focusListenable,
           builder: (context, focus, _child) {
             return InputDecorator(
-              isEmpty: false,
               isFocused: focus,
               decoration: _decoration,
               child: child,
@@ -67,7 +65,6 @@ class FormeInputDecorator<T> extends StatelessWidget {
         controller.errorTextListenable,
         builder: (context, bool focus, FormeValidateError? error, _child) {
           return InputDecorator(
-            isEmpty: false,
             isFocused: focus,
             decoration: _decoration.copyWith(errorText: error?.text),
             child: child,

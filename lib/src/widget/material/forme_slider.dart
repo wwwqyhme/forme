@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:forme/forme.dart';
+import '../../../forme.dart';
 
 import '../../forme_mounted_value_notifier.dart';
 
@@ -43,6 +43,7 @@ class FormeSlider extends FormeField<double> {
     FormeValidator<double>? validator,
     FormeAsyncValidator<double>? asyncValidator,
   }) : super(
+          order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
           autovalidateMode: autovalidateMode,
@@ -62,13 +63,13 @@ class FormeSlider extends FormeField<double> {
                   ? null
                   : FormeInputDecoratorBuilder(decoration: decoration)),
           builder: (baseState) {
-            _FormeSliderState state = baseState as _FormeSliderState;
-            bool readOnly = state.readOnly;
+            final _FormeSliderState state = baseState as _FormeSliderState;
+            final bool readOnly = state.readOnly;
 
-            Widget slider = ValueListenableBuilder<double?>(
+            final Widget slider = ValueListenableBuilder<double?>(
               valueListenable: state.notifier,
               builder: (context, _value, child) {
-                String? sliderLabel =
+                final String? sliderLabel =
                     labelRender == null ? null : labelRender(state.value);
                 SliderThemeData _sliderThemeData =
                     sliderThemeData ?? SliderTheme.of(state.context);
@@ -134,9 +135,13 @@ class _FormeSliderState extends FormeFieldState<double> {
 
   @override
   double get initialValue {
-    double defaultInitialValue = widget.initialValue;
-    if (defaultInitialValue < widget.min) return widget.min;
-    if (defaultInitialValue > widget.max) return widget.max;
+    final double defaultInitialValue = widget.initialValue;
+    if (defaultInitialValue < widget.min) {
+      return widget.min;
+    }
+    if (defaultInitialValue > widget.max) {
+      return widget.max;
+    }
     return defaultInitialValue;
   }
 
@@ -145,8 +150,12 @@ class _FormeSliderState extends FormeFieldState<double> {
 
   @override
   void updateFieldValueInDidUpdateWidget(FormeField<double> oldWidget) {
-    if (value < widget.min) setValue(widget.min);
-    if (value > widget.max) setValue(widget.max);
+    if (value < widget.min) {
+      setValue(widget.min);
+    }
+    if (value > widget.max) {
+      setValue(widget.max);
+    }
   }
 
   @override
@@ -199,23 +208,23 @@ class CustomSliderThumbCircle extends SliderComponentShape {
     );
     final Color color = colorTween.evaluate(enableAnimation)!;
 
-    final paint = Paint()
+    final Paint paint = Paint()
       ..color = color //Thumb Background Color
       ..style = PaintingStyle.fill;
 
-    TextSpan span = TextSpan(
+    final TextSpan span = TextSpan(
         style: TextStyle(
           fontSize: thumbRadius * .8,
           fontWeight: FontWeight.w700,
           color: Colors.white, //Text Color of Value on Thumb
         ),
         text: this.value.round().toString());
-    TextPainter tp = TextPainter(
+    final TextPainter tp = TextPainter(
         text: span,
         textAlign: TextAlign.center,
         textDirection: TextDirection.ltr);
     tp.layout();
-    Offset textCenter =
+    final Offset textCenter =
         Offset(center.dx - (tp.width / 2), center.dy - (tp.height / 2));
 
     canvas.drawCircle(center, thumbRadius * .9, paint);

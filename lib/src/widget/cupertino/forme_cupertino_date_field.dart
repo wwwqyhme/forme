@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:forme/forme.dart';
+import '../../../forme.dart';
 
 import 'cupertinos.dart';
 
@@ -77,7 +77,7 @@ class FormeCupertinoDateTimeField extends FormeField<DateTime?> {
     int? maxLength,
     MaxLengthEnforcement? maxLengthEnforcement,
     VoidCallback? onEditingComplete,
-    bool? enabled,
+    bool enabled = true,
     double cursorWidth = 2.0,
     double? cursorHeight,
     Radius cursorRadius = const Radius.circular(2.0),
@@ -104,6 +104,8 @@ class FormeCupertinoDateTimeField extends FormeField<DateTime?> {
     FormeValidator<DateTime?>? validator,
     FormeAsyncValidator<DateTime?>? asyncValidator,
   }) : super(
+          readOnly: readOnly,
+          enabled: enabled,
           decorator: decorator,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
@@ -120,12 +122,13 @@ class FormeCupertinoDateTimeField extends FormeField<DateTime?> {
           name: name,
           initialValue: initialValue,
           builder: (state) {
-            bool readOnly = state.readOnly;
-            FocusNode focusNode = state.focusNode;
-            TextEditingController textEditingController =
+            final bool readOnly = state.readOnly;
+            final FocusNode focusNode = state.focusNode;
+            final TextEditingController textEditingController =
                 (state as _FormeCupertinoDateFieldState).textEditingController;
 
             void pickTime() {
+              beforeOpen?.call();
               showCupertinoModalPopup<dynamic>(
                 context: state.context,
                 builder: (context) => Container(
@@ -231,8 +234,10 @@ class _FormeCupertinoDateFieldState extends FormeFieldState<DateTime?> {
       widget.formatter ?? defaultDateTimeFormatter;
 
   DateTime get initialDateTime {
-    if (value != null) return value!;
-    DateTime now = DateTime.now();
+    if (value != null) {
+      return value!;
+    }
+    final DateTime now = DateTime.now();
     DateTime date =
         DateTime(now.year, now.month, now.day, now.hour, now.minute);
     if (widget.maximumDate != null && widget.maximumDate!.isBefore(date)) {
@@ -251,7 +256,7 @@ class _FormeCupertinoDateFieldState extends FormeFieldState<DateTime?> {
     }
     if (widget.minuteInterval != 1 &&
         date.minute % widget.minuteInterval != 0) {
-      date = DateTime(date.year, date.month, date.day, date.hour, 0);
+      date = DateTime(date.year, date.month, date.day, date.hour);
     }
     switch (widget.type) {
       case FormeDateTimeType.date:
@@ -276,8 +281,10 @@ class _FormeCupertinoDateFieldState extends FormeFieldState<DateTime?> {
 
   @override
   DateTime? get value {
-    DateTime? value = super.value;
-    if (value == null) return null;
+    final DateTime? value = super.value;
+    if (value == null) {
+      return null;
+    }
     return simple(value);
   }
 
@@ -294,21 +301,29 @@ class _FormeCupertinoDateFieldState extends FormeFieldState<DateTime?> {
 
   @override
   void updateFieldValueInDidUpdateWidget(FormeField<DateTime?> oldWidget) {
-    if (value == null) return;
+    if (value == null) {
+      return;
+    }
     if (widget.maximumDate != null && widget.maximumDate!.isBefore(value!)) {
       clearValue();
     }
     if (value != null &&
         widget.minimumDate != null &&
-        widget.minimumDate!.isAfter(value!)) clearValue();
+        widget.minimumDate!.isAfter(value!)) {
+      clearValue();
+    }
     if (value != null &&
         widget.maximumYear != null &&
-        widget.maximumYear! < value!.year) clearValue();
-    if (value != null && widget.minimumYear > value!.year) clearValue();
+        widget.maximumYear! < value!.year) {
+      clearValue();
+    }
+    if (value != null && widget.minimumYear > value!.year) {
+      clearValue();
+    }
     if (value != null &&
         widget.minuteInterval != 1 &&
         value!.minute % widget.minuteInterval != 0) {
-      setValue(DateTime(value!.year, value!.month, value!.day, value!.hour, 0));
+      setValue(DateTime(value!.year, value!.month, value!.day, value!.hour));
       textEditingController.text =
           (widget.formatter ?? defaultDateTimeFormatter)(widget.type, value!);
     }
@@ -395,17 +410,15 @@ class _PickerState extends State<_PickerWidget> {
           children: [
             if (index == 1)
               CupertinoButton(
-                child: widget.backWidget ?? const Icon(CupertinoIcons.back),
                 onPressed: () {
                   setState(() {
                     index = 0;
                   });
                 },
+                child: widget.backWidget ?? const Icon(CupertinoIcons.back),
               ),
             const Spacer(),
             CupertinoButton(
-              child:
-                  widget.confirmWidget ?? const Icon(CupertinoIcons.check_mark),
               onPressed: () {
                 if (index == 1 || widget.type == FormeDateTimeType.date) {
                   DateTime selectedDateTime;
@@ -437,6 +450,8 @@ class _PickerState extends State<_PickerWidget> {
                   });
                 }
               },
+              child:
+                  widget.confirmWidget ?? const Icon(CupertinoIcons.check_mark),
             ),
           ],
         ),

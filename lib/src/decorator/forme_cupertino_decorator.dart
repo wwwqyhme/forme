@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
-import 'package:forme/forme.dart';
+
+import '../../forme.dart';
 
 /// this builder will decorate current field with [CupertinoFormRow]
 class FormeCupertinoInputDecoratorBuilder<T> implements FormeFieldDecorator<T> {
@@ -25,20 +26,13 @@ class FormeCupertinoInputDecoratorBuilder<T> implements FormeFieldDecorator<T> {
       padding: padding,
       prefix: prefix,
       controller: controller,
-      child: child,
       wrapper: wrapper,
+      child: child,
     );
   }
 }
 
 class FormeCupertinoInputDecorator<T> extends StatelessWidget {
-  final Widget? prefix;
-  final EdgeInsets? padding;
-  final Widget? helper;
-  final Widget child;
-  final Widget Function(Widget child)? wrapper;
-  final FormeFieldController<T> controller;
-
   const FormeCupertinoInputDecorator(
       {Key? key,
       this.prefix,
@@ -49,22 +43,28 @@ class FormeCupertinoInputDecorator<T> extends StatelessWidget {
       required this.child})
       : super(key: key);
 
+  final Widget? prefix;
+  final EdgeInsets? padding;
+  final Widget? helper;
+  final Widget child;
+  final Widget Function(Widget child)? wrapper;
+  final FormeFieldController<T> controller;
+
   @override
   Widget build(BuildContext context) {
-    Widget child = wrapper == null ? this.child : wrapper!(this.child);
+    final Widget child = wrapper == null ? this.child : wrapper!(this.child);
     if (FormeKey.of(context)?.quietlyValidate ?? false) {
       return CupertinoFormRow(
-        child: child,
         helper: helper,
         padding: padding,
         prefix: prefix,
+        child: child,
       );
     }
     return ValueListenableBuilder<FormeValidateError?>(
       valueListenable: controller.errorTextListenable,
       builder: (context, FormeValidateError? error, _child) {
         return CupertinoFormRow(
-          child: child,
           helper: helper,
           padding: padding,
           prefix: prefix,
@@ -73,6 +73,7 @@ class FormeCupertinoInputDecorator<T> extends StatelessWidget {
               : error.invalid
                   ? Text(error.text!)
                   : null,
+          child: child,
         );
       },
     );

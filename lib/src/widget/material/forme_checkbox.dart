@@ -29,10 +29,12 @@ class FormeCheckbox extends FormeField<bool> {
     double? splashRadius,
     VisualDensity? visualDensity,
     MaterialTapTargetSize? materialTapTargetSize,
-    Color? tileColor,
-    Color? selectedTileColor,
-    ShapeBorder? shape,
+    OutlinedBorder? shape,
+    bool autofocus = false,
+    BorderSide? side,
+    bool tristate = false,
   }) : super(
+          order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
           autovalidateMode: autovalidateMode,
@@ -48,9 +50,15 @@ class FormeCheckbox extends FormeField<bool> {
           name: name,
           initialValue: initialValue,
           builder: (state) {
-            bool readOnly = state.readOnly;
-            bool value = state.value;
+            final bool readOnly = state.readOnly;
+            final bool value = state.value;
             return Checkbox(
+              autofocus: autofocus,
+              focusNode: state.focusNode,
+              side: side,
+              tristate: tristate,
+              mouseCursor: mouseCursor,
+              shape: shape,
               activeColor: activeColor,
               fillColor: fillColor,
               checkColor: checkColor,

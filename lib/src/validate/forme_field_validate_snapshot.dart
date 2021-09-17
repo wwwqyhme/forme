@@ -1,4 +1,4 @@
-import 'package:forme/forme.dart';
+import '../../forme.dart';
 
 class FormeValidateSnapshot {
   final List<FormeFieldValidateSnapshot> _snapshots;
@@ -7,8 +7,10 @@ class FormeValidateSnapshot {
 
   /// get first invalid field
   FormeFieldValidateSnapshot? get firstInvalidField {
-    Iterable<FormeFieldValidateSnapshot> iterable = invalidFields;
-    if (iterable.isNotEmpty) return iterable.first;
+    final Iterable<FormeFieldValidateSnapshot> iterable = invalidFields;
+    if (iterable.isNotEmpty) {
+      return iterable.first;
+    }
   }
 
   /// no validate error can be found in these fields

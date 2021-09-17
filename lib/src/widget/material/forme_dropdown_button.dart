@@ -46,6 +46,7 @@ class FormeDropdownButton<T extends Object> extends FormeField<T?> {
     InputDecoration? decoration,
     FormeFieldDecorator<T?>? decorator,
   }) : super(
+          order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
           autovalidateMode: autovalidateMode,
@@ -70,8 +71,8 @@ class FormeDropdownButton<T extends Object> extends FormeField<T?> {
                         return DropdownButtonHideUnderline(child: child);
                       })),
           builder: (state) {
-            bool readOnly = state.readOnly;
-            DropdownButton<T> dropdownButton = DropdownButton<T>(
+            final bool readOnly = state.readOnly;
+            final DropdownButton<T> dropdownButton = DropdownButton<T>(
               focusNode: state.focusNode,
               autofocus: autofocus,
               selectedItemBuilder: selectedItemBuilder,

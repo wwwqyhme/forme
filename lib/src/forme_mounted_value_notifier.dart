@@ -8,16 +8,22 @@ class FormeMountedValueNotifier<T> extends ValueNotifier<T> {
 
   @override
   set value(T newValue) {
-    if (state.mounted) super.value = newValue;
+    if (state.mounted) {
+      super.value = newValue;
+    }
   }
 
   @override
-  void addListener(listener) {
-    if (state.mounted) super.addListener(listener);
+  void addListener(VoidCallback listener) {
+    if (state.mounted) {
+      super.addListener(listener);
+    }
   }
 
   @override
-  void removeListener(listener) {
-    if (state.mounted) super.removeListener(listener);
+  void removeListener(VoidCallback listener) {
+    if (state.mounted) {
+      super.removeListener(listener);
+    }
   }
 }

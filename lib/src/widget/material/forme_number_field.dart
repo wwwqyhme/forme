@@ -57,7 +57,6 @@ class FormeNumberField extends FormeField<num?> {
     Iterable<String>? autofillHints,
     bool enableInteractiveSelection = true,
     bool enabled = true,
-    bool enableIMEPersonalizedLearning = true,
     VoidCallback? onEditingComplete,
     List<TextInputFormatter>? inputFormatters,
     AppPrivateCommandCallback? appPrivateCommandCallback,
@@ -79,6 +78,7 @@ class FormeNumberField extends FormeField<num?> {
     this.max,
     this.allowNegative = false,
   }) : super(
+          order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
           autovalidateMode: autovalidateMode,
@@ -94,43 +94,17 @@ class FormeNumberField extends FormeField<num?> {
           readOnly: readOnly,
           initialValue: initialValue,
           builder: (baseState) {
-            bool readOnly = baseState.readOnly;
-            _FormeNumberFieldState state = baseState as _FormeNumberFieldState;
-
-            String regex = r'[0-9' +
-                (decimal > 0 ? '.' : '') +
-                (allowNegative ? '-' : '') +
-                ']';
-            List<TextInputFormatter> formatters = [
-              TextInputFormatter.withFunction((oldValue, newValue) {
-                if (newValue.text == '') return newValue;
-                if (allowNegative && newValue.text == '-') return newValue;
-                double? parsed = double.tryParse(newValue.text);
-                if (parsed == null) {
-                  return oldValue;
-                }
-                int indexOfPoint = newValue.text.indexOf(".");
-                if (indexOfPoint != -1) {
-                  int decimalNum = newValue.text.length - (indexOfPoint + 1);
-                  if (decimalNum > decimal) {
-                    return oldValue;
-                  }
-                }
-
-                if (max != null && parsed > max) {
-                  return oldValue;
-                }
-                return newValue;
-              }),
-              FilteringTextInputFormatter.allow(RegExp(regex))
-            ];
-
+            final bool readOnly = baseState.readOnly;
+            final _FormeNumberFieldState state =
+                baseState as _FormeNumberFieldState;
+            final List<TextInputFormatter> formatters = numberFormatters(
+                decimal: decimal, allowNegative: allowNegative, max: max);
             if (inputFormatters != null) {
               formatters.addAll(inputFormatters);
             }
 
             void onChanged(String value) {
-              num? parsed = num?.tryParse(value);
+              final num? parsed = num?.tryParse(value);
               if (parsed != null && parsed != state.value) {
                 state.updateController = false;
                 state.didChange(parsed);
@@ -198,6 +172,39 @@ class FormeNumberField extends FormeField<num?> {
 
   @override
   _FormeNumberFieldState createState() => _FormeNumberFieldState();
+
+  static List<TextInputFormatter> numberFormatters(
+      {required int decimal, required bool allowNegative, required num? max}) {
+    final RegExp regex =
+        RegExp('[0-9${decimal > 0 ? '.' : ''}${allowNegative ? '-' : ''}]');
+    return [
+      TextInputFormatter.withFunction((oldValue, newValue) {
+        if (newValue.text == '') {
+          return newValue;
+        }
+        if (allowNegative && newValue.text == '-') {
+          return newValue;
+        }
+        final double? parsed = double.tryParse(newValue.text);
+        if (parsed == null) {
+          return oldValue;
+        }
+        final int indexOfPoint = newValue.text.indexOf('.');
+        if (indexOfPoint != -1) {
+          final int decimalNum = newValue.text.length - (indexOfPoint + 1);
+          if (decimalNum > decimal) {
+            return oldValue;
+          }
+        }
+
+        if (max != null && parsed > max) {
+          return oldValue;
+        }
+        return newValue;
+      }),
+      FilteringTextInputFormatter.allow(regex)
+    ];
+  }
 }
 
 class _FormeNumberFieldState extends FormeFieldState<num?> {
@@ -225,7 +232,7 @@ class _FormeNumberFieldState extends FormeFieldState<num?> {
   @override
   void onValueChanged(num? value) {
     if (updateController) {
-      String str = value == null ? '' : value.toString();
+      final String str = value == null ? '' : value.toString();
       if (textEditingController.text != str) {
         textEditingController.text = str;
       }
@@ -247,15 +254,23 @@ class _FormeNumberFieldState extends FormeFieldState<num?> {
 
   @override
   void updateFieldValueInDidUpdateWidget(FormeField<num?> oldWidget) {
-    if (value == null) return;
-    if (widget.max != null && widget.max! < value!) _clearValue();
+    if (value == null) {
+      return;
+    }
+    if (widget.max != null && widget.max! < value!) {
+      _clearValue();
+    }
     if (!widget.allowNegative && value! < 0) {
       _clearValue();
     }
-    int? decimal = widget.decimal;
-    int indexOfPoint = value.toString().indexOf(".");
-    if (indexOfPoint == -1) return;
-    int decimalNum = value.toString().length - (indexOfPoint + 1);
-    if (decimalNum > decimal) _clearValue();
+    final int decimal = widget.decimal;
+    final int indexOfPoint = value.toString().indexOf('.');
+    if (indexOfPoint == -1) {
+      return;
+    }
+    final int decimalNum = value.toString().length - (indexOfPoint + 1);
+    if (decimalNum > decimal) {
+      _clearValue();
+    }
   }
 }

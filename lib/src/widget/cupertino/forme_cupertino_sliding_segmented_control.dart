@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:forme/forme.dart';
+import '../../../forme.dart';
 
 class FormeCupertinoSlidingSegmentedControl<T extends Object>
     extends FormeField<T?> {
@@ -46,7 +46,7 @@ class FormeCupertinoSlidingSegmentedControl<T extends Object>
             readOnly: readOnly,
             key: key,
             builder: (state) {
-              bool readOnly = state.readOnly;
+              final bool readOnly = state.readOnly;
               return Row(
                 children: [
                   Expanded(

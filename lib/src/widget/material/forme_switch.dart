@@ -8,7 +8,6 @@ class FormeSwitch extends FormeField<bool> {
     bool initialValue = false,
     required String name,
     bool readOnly = false,
-    Widget? label,
     Key? key,
     int? order,
     bool quietlyValidate = false,
@@ -39,6 +38,7 @@ class FormeSwitch extends FormeField<bool> {
     ImageErrorListener? onInactiveThumbImageError,
     bool autofocus = false,
   }) : super(
+          order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
           autovalidateMode: autovalidateMode,
@@ -54,8 +54,8 @@ class FormeSwitch extends FormeField<bool> {
           name: name,
           initialValue: initialValue,
           builder: (state) {
-            bool readOnly = state.readOnly;
-            bool value = state.value;
+            final bool readOnly = state.readOnly;
+            final bool value = state.value;
             return Switch(
               value: value,
               onChanged: readOnly

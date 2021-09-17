@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:forme/forme.dart';
+import '../../../forme.dart';
 
 import 'cupertinos.dart';
 
@@ -56,7 +56,7 @@ class FormeCupertinoNumberField extends FormeField<num?> {
     MaxLengthEnforcement? maxLengthEnforcement,
     VoidCallback? onEditingComplete,
     List<TextInputFormatter>? inputFormatters,
-    bool? enabled,
+    bool enabled = true,
     double cursorWidth = 2.0,
     double? cursorHeight,
     Radius cursorRadius = const Radius.circular(2.0),
@@ -85,6 +85,7 @@ class FormeCupertinoNumberField extends FormeField<num?> {
     FormeAsyncValidator<num?>? asyncValidator,
     FormeFieldDecorator<num?>? decorator,
   }) : super(
+          enabled: enabled,
           key: key,
           decorator: decorator,
           quietlyValidate: quietlyValidate,
@@ -102,45 +103,19 @@ class FormeCupertinoNumberField extends FormeField<num?> {
           name: name,
           initialValue: initialValue,
           builder: (state) {
-            bool readOnly = state.readOnly;
-            FocusNode focusNode = state.focusNode;
-            TextEditingController textEditingController =
+            final bool readOnly = state.readOnly;
+            final FocusNode focusNode = state.focusNode;
+            final TextEditingController textEditingController =
                 (state as _NumberFieldState).textEditingController;
-
-            String regex = r'[0-9' +
-                (decimal > 0 ? '.' : '') +
-                (allowNegative ? '-' : '') +
-                ']';
-            List<TextInputFormatter> formatters = [
-              TextInputFormatter.withFunction((oldValue, newValue) {
-                if (newValue.text == '') return newValue;
-                if (allowNegative && newValue.text == '-') return newValue;
-                double? parsed = double.tryParse(newValue.text);
-                if (parsed == null) {
-                  return oldValue;
-                }
-                int indexOfPoint = newValue.text.indexOf(".");
-                if (indexOfPoint != -1) {
-                  int decimalNum = newValue.text.length - (indexOfPoint + 1);
-                  if (decimalNum > decimal) {
-                    return oldValue;
-                  }
-                }
-
-                if (max != null && parsed > max) {
-                  return oldValue;
-                }
-                return newValue;
-              }),
-              FilteringTextInputFormatter.allow(RegExp(regex))
-            ];
-
+            final List<TextInputFormatter> formatters =
+                FormeNumberField.numberFormatters(
+                    decimal: decimal, allowNegative: allowNegative, max: max);
             if (inputFormatters != null) {
               formatters.addAll(inputFormatters);
             }
 
             void onChanged(String value) {
-              num? parsed = num.tryParse(value);
+              final num? parsed = num.tryParse(value);
               if (parsed != null && parsed != state.value) {
                 state.updateController = false;
                 state.didChange(parsed);
@@ -238,7 +213,7 @@ class _NumberFieldState extends FormeFieldState<num?> {
   @override
   void onValueChanged(num? value) {
     if (updateController) {
-      String str = value == null ? '' : value.toString();
+      final String str = value == null ? '' : value.toString();
       if (textEditingController.text != str) {
         textEditingController.text = str;
       }
@@ -260,14 +235,20 @@ class _NumberFieldState extends FormeFieldState<num?> {
 
   @override
   void updateFieldValueInDidUpdateWidget(FormeField<num?> oldWidget) {
-    if (value == null) return;
-    if (widget.max != null && widget.max! < value!) clearValue();
+    if (value == null) {
+      return;
+    }
+    if (widget.max != null && widget.max! < value!) {
+      clearValue();
+    }
     if (!widget.allowNegative && value! < 0) {
       clearValue();
     }
-    int indexOfPoint = value.toString().indexOf(".");
-    if (indexOfPoint == -1) return;
-    int decimalNum = value.toString().length - (indexOfPoint + 1);
+    final int indexOfPoint = value.toString().indexOf('.');
+    if (indexOfPoint == -1) {
+      return;
+    }
+    final int decimalNum = value.toString().length - (indexOfPoint + 1);
     if (decimalNum > widget.decimal) {
       clearValue();
     }

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:forme/forme.dart';
+import '../forme.dart';
 
 /// base form controller
 ///
@@ -69,9 +69,9 @@ abstract class FormeController {
 
   /// whether form' value changed after initialized
   ///
-  /// this method is relay on [BaseValueField.initialValue] and [Forme.initialValue]
+  /// this method is relay on [FormeField.initialValue] and [Forme.initialValue]
   ///
-  /// **comparator from [BaseValueField.comparator] is used to compare two values **
+  /// **comparator from [FormeField.comparator] is used to compare two values **
   bool get isValueChanged;
 
   /// get all registered controllers
@@ -127,7 +127,7 @@ abstract class FormeFieldController<T> {
   /// readOnly listenable
   ///
   /// useful update children items when readOnly state changes,
-  ///  eg [CupertinoSegmentedControl]
+  ///  eg [FormeCupertinoSegmentedControl]
   ///
   /// will trigger when [Forme] or field's readOnly state changed
   ValueListenable<bool> get readOnlyListenable;
@@ -200,16 +200,15 @@ abstract class FormeFieldController<T> {
 
   /// whether field's value changed after initialized
   ///
-  /// this method is relay on [BaseValueField.initialValue] and [Forme.initialValue]
+  /// this method is relay on [FormeField.initialValue] and [Forme.initialValue]
   ///
-  /// the `comparator` from [BaseValueField.comparator] is used to compare value
+  /// the `comparator` from [FormeField.comparator] is used to compare value
   bool get isValueChanged;
 }
 
 class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
+  const FormeFieldControllerDelegate(this.delegate);
   final FormeFieldController<T> delegate;
-
-  FormeFieldControllerDelegate(this.delegate);
 
   @override
   bool get readOnly => delegate.readOnly;

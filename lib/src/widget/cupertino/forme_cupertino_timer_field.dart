@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
-import 'package:forme/forme.dart';
+import '../../../forme.dart';
 
 import 'cupertinos.dart';
 
@@ -71,7 +71,7 @@ class FormeCupertinoTimerField extends FormeField<Duration?> {
     int? maxLength,
     MaxLengthEnforcement? maxLengthEnforcement,
     VoidCallback? onEditingComplete,
-    bool? enabled,
+    bool enabled = true,
     double cursorWidth = 2.0,
     double? cursorHeight,
     Radius cursorRadius = const Radius.circular(2.0),
@@ -99,6 +99,8 @@ class FormeCupertinoTimerField extends FormeField<Duration?> {
     FormeAsyncValidator<Duration?>? asyncValidator,
     FormeFieldDecorator<Duration?>? decorator,
   }) : super(
+          enabled: enabled,
+          readOnly: readOnly,
           decorator: decorator,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
@@ -115,9 +117,9 @@ class FormeCupertinoTimerField extends FormeField<Duration?> {
           name: name,
           initialValue: initialValue,
           builder: (state) {
-            bool readOnly = state.readOnly;
-            FocusNode focusNode = state.focusNode;
-            TextEditingController textEditingController =
+            final bool readOnly = state.readOnly;
+            final FocusNode focusNode = state.focusNode;
+            final TextEditingController textEditingController =
                 (state as _FormeCupertinoTimerFieldState).textEditingController;
 
             void pickDuration() {
@@ -144,10 +146,10 @@ class FormeCupertinoTimerField extends FormeField<Duration?> {
                               state.duration = null;
                               Navigator.of(context).pop();
                             },
-                            child: (confirmWidget ??
+                            child: confirmWidget ??
                                 const Icon(
                                   CupertinoIcons.check_mark,
-                                )),
+                                ),
                           ),
                         ],
                       ),
@@ -275,7 +277,9 @@ class _FormeCupertinoTimerFieldState extends FormeFieldState<Duration?> {
 
   @override
   void updateFieldValueInDidUpdateWidget(FormeField<Duration?> oldWidget) {
-    if (value == null) return;
+    if (value == null) {
+      return;
+    }
     if (value!.inMinutes % widget.minuteInterval != 0) {
       clearValue();
     }
@@ -299,7 +303,7 @@ class _FormeCupertinoTimerFieldState extends FormeFieldState<Duration?> {
       case CupertinoTimerPickerMode.hms:
         return '${v.inHours.toString().padLeft(2, '0')}:${v.inMinutes.remainder(60).toString().padLeft(2, '0')}:${v.inSeconds.remainder(60).toString().padLeft(2, '0')}';
       default:
-        throw 'unknown mode:$mode';
+        throw Exception('unknown mode:$mode');
     }
   }
 }

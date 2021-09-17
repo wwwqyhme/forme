@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:forme/forme.dart';
+import '../../../forme.dart';
 
 class FormeChoiceChip<T extends Object> extends FormeField<T?> {
   final List<FormeChipItem<T>> items;
@@ -26,7 +26,6 @@ class FormeChoiceChip<T extends Object> extends FormeField<T?> {
     ChipThemeData? chipThemeData,
     Axis direction = Axis.horizontal,
     WrapAlignment alignment = WrapAlignment.start,
-    double? space,
     WrapAlignment runAlignment = WrapAlignment.start,
     double runSpacing = 0.0,
     double spacing = 0.0,
@@ -34,6 +33,7 @@ class FormeChoiceChip<T extends Object> extends FormeField<T?> {
     TextDirection? textDirection,
     VerticalDirection verticalDirection = VerticalDirection.down,
   }) : super(
+          order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
           autovalidateMode: autovalidateMode,
@@ -53,13 +53,13 @@ class FormeChoiceChip<T extends Object> extends FormeField<T?> {
           name: name,
           initialValue: initialValue,
           builder: (state) {
-            bool readOnly = state.readOnly;
-            ChipThemeData _chipThemeData =
+            final bool readOnly = state.readOnly;
+            final ChipThemeData _chipThemeData =
                 chipThemeData ?? ChipTheme.of(state.context);
-            List<Widget> chips = [];
-            for (FormeChipItem<T> item in items) {
-              bool isReadOnly = readOnly || item.readOnly;
-              ChoiceChip chip = ChoiceChip(
+            final List<Widget> chips = [];
+            for (final FormeChipItem<T> item in items) {
+              final bool isReadOnly = readOnly || item.readOnly;
+              final ChoiceChip chip = ChoiceChip(
                 selected: state.value == item.data,
                 label: item.label,
                 avatar: item.avatar,
@@ -91,14 +91,14 @@ class FormeChoiceChip<T extends Object> extends FormeField<T?> {
                       },
               );
               chips.add(Visibility(
+                  visible: item.visible,
                   child: Padding(
                     padding: item.padding,
                     child: chip,
-                  ),
-                  visible: item.visible));
+                  )));
             }
 
-            Widget chipWidget = Wrap(
+            final Widget chipWidget = Wrap(
               spacing: spacing,
               runSpacing: runSpacing,
               textDirection: textDirection,
@@ -129,7 +129,9 @@ class _FormeChoiceChipState<T extends Object> extends FormeFieldState<T?> {
 
   @override
   void updateFieldValueInDidUpdateWidget(FormeField<T?> oldWidget) {
-    if (value == null) return;
+    if (value == null) {
+      return;
+    }
     if (!widget.items.any((element) => element.data == value)) {
       setValue(null);
     }

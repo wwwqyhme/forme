@@ -78,7 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     name: 'username',
                     decoration: const InputDecoration(labelText: 'username'),
                     onInitialed: (field) {
-                      TextEditingController controller =
+                      final TextEditingController controller =
                           (field as FormeTextFieldController)
                               .textEditingController;
                       controller.value = const TextEditingValue(
@@ -116,11 +116,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   Row(
                     children: [
                       FormeSwitch(
-                        name: "switch",
+                        name: 'switch',
                         initialValue: true,
                       ),
                       FormeCheckbox(
-                        name: "checkbox",
+                        name: 'checkbox',
                         initialValue: true,
                       )
                     ],
@@ -197,8 +197,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     },
                     items: const [
                       DropdownMenuItem(
-                        child: Text('xxx'),
                         value: '123',
+                        child: Text('xxx'),
                       ),
                     ],
                     name: 'dropdown',
@@ -246,13 +246,11 @@ class _MyHomePageState extends State<MyHomePage> {
                     validator:
                         FormeValidates.equals('C', errorText: 'pls select C'),
                     autovalidateMode: AutovalidateMode.onUserInteraction,
-                    onValueChanged: (c, v) =>
-                        print('value changed,current value is $v'),
                     name: 'segmentedControl',
-                    children: {
-                      'A': const Text('A'),
-                      'B': const Text('B'),
-                      'C': const Text('C'),
+                    children: const {
+                      'A': Text('A'),
+                      'B': Text('B'),
+                      'C': Text('C'),
                     },
                   ),
                   FormeCupertinoSlidingSegmentedControl<String>(
@@ -262,19 +260,16 @@ class _MyHomePageState extends State<MyHomePage> {
                     validator:
                         FormeValidates.equals('C', errorText: 'pls select C'),
                     autovalidateMode: AutovalidateMode.onUserInteraction,
-                    onValueChanged: (c, v) =>
-                        print('value changed,current value is $v'),
                     name: 'slidingSegmentedControl',
-                    children: {
-                      'A': const Text('A'),
-                      'B': const Text('B'),
-                      'C': const Text('C'),
+                    children: const {
+                      'A': Text('A'),
+                      'B': Text('B'),
+                      'C': Text('C'),
                     },
                   ),
                   FormeCupertinoPicker(
                       decorator: const FormeCupertinoInputDecoratorBuilder(
                           prefix: Text('picker')),
-                      onValueChanged: (c, v) => print(v),
                       autovalidateMode: AutovalidateMode.onUserInteraction,
                       validator: FormeValidates.all([
                         FormeValidates.notNull(),

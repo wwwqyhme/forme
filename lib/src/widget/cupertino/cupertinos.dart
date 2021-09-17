@@ -9,7 +9,6 @@ const BorderSide _kDefaultRoundedBorderSide = BorderSide(
     color: Color(0x33000000),
     darkColor: Color(0x33FFFFFF),
   ),
-  style: BorderStyle.solid,
   width: 0.0,
 );
 const Border _kDefaultRoundedBorder = Border(
@@ -31,7 +30,7 @@ const BoxDecoration defaultTextFieldDecoration = BoxDecoration(
 CupertinoTextField buildCupertinoTextField({
   int? maxLines = 1,
   BoxDecoration? decoration,
-  EdgeInsetsGeometry padding = const EdgeInsets.all(6.0),
+  EdgeInsetsGeometry padding = const EdgeInsets.all(6),
   String? placeholder,
   TextStyle placeholderStyle = const TextStyle(
     fontWeight: FontWeight.w400,

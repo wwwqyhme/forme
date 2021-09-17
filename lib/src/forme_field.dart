@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:forme/forme.dart';
+import '../forme.dart';
 
 typedef FormeValueChanged<T> = void Function(
     FormeFieldController<T>, T newValue);
@@ -46,7 +46,7 @@ class FormeField<T> extends StatefulWidget {
   /// triggered when:
   ///
   /// 1. if autovalidateMode is not disabled, **in this case, will triggered after current frame completed**
-  /// 2. after called [validate] method
+  /// 2. after called [FormeFieldController.validate] method
   ///
   /// **errorText will be null if field's errorText from nonnull to null**
   final FormeErrorChanged<T>? onErrorChanged;

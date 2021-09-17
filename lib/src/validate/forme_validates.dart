@@ -1,4 +1,4 @@
-import '../forme_field.dart';
+import '../../forme.dart';
 
 /// validators for [Forme]
 class FormeValidates {
@@ -30,13 +30,14 @@ class FormeValidates {
   /// 3. value's length is > min and < max
   static FormeValidator size({String errorText = '', int? min, int? max}) {
     return (f, dynamic v) {
-      if (v == null) return null;
-      if (min == null && max == null) return null;
-
-      if (v is Iterable || v is Map || v is String) {
-        return _validateSize(v.length as int, min, max, errorText: errorText);
+      if (v == null) {
+        return null;
       }
-      throw 'only Iterable|Map|String support this validator';
+      if (min == null && max == null) {
+        return null;
+      }
+
+      return _validateSize(_getLength(v), min, max, errorText: errorText);
     };
   }
 
@@ -71,8 +72,10 @@ class FormeValidates {
   /// 2. value's length > 0
   static FormeValidator notEmpty({String errorText = ''}) {
     return (f, dynamic v) {
-      if (v == null) return errorText;
-      if ((v is Iterable || v is Map || v is String) && v.length == 0) {
+      if (v == null) {
+        return errorText;
+      }
+      if (_getLength(v) == 0) {
         return errorText;
       }
     };
@@ -84,8 +87,10 @@ class FormeValidates {
   /// 2. value's length(after trim) > 0
   static FormeValidator notBlank({String errorText = ''}) {
     return (f, dynamic v) {
-      if (v == null) return null;
-      return (v as String).trim().length > 0 ? null : errorText;
+      if (v == null) {
+        return null;
+      }
+      return (v as String).trim().isNotEmpty ? null : errorText;
     };
   }
 
@@ -95,7 +100,9 @@ class FormeValidates {
   /// 2. value > 0
   static FormeValidator positive({String errorText = ''}) {
     return (f, dynamic v) {
-      if (v == null) return null;
+      if (v == null) {
+        return null;
+      }
       return v as num > 0 ? null : errorText;
     };
   }
@@ -106,7 +113,9 @@ class FormeValidates {
   /// 2. value >= 0
   static FormeValidator positiveOrZero({String errorText = ''}) {
     return (f, dynamic v) {
-      if (v == null) return null;
+      if (v == null) {
+        return null;
+      }
       return v as num >= 0 ? null : errorText;
     };
   }
@@ -117,7 +126,9 @@ class FormeValidates {
   /// 2. value < 0
   static FormeValidator negative({String errorText = ''}) {
     return (f, dynamic v) {
-      if (v == null) return null;
+      if (v == null) {
+        return null;
+      }
       return v as num < 0 ? null : errorText;
     };
   }
@@ -128,7 +139,9 @@ class FormeValidates {
   /// 2. value <= 0
   static FormeValidator negativeOrZero({String errorText = ''}) {
     return (f, dynamic v) {
-      if (v == null) return null;
+      if (v == null) {
+        return null;
+      }
       return v as num <= 0 ? null : errorText;
     };
   }
@@ -139,9 +152,13 @@ class FormeValidates {
   /// 2. value match pattern
   static FormeValidator pattern(String pattern, {String errorText = ''}) {
     return (f, dynamic v) {
-      if (v == null) return null;
-      bool isValid = RegExp(pattern).hasMatch(v as String);
-      if (!isValid) return errorText;
+      if (v == null) {
+        return null;
+      }
+      final bool isValid = RegExp(pattern).hasMatch(v as String);
+      if (!isValid) {
+        return errorText;
+      }
       return null;
     };
   }
@@ -165,16 +182,24 @@ class FormeValidates {
     int? port,
   }) {
     return (f, dynamic v) {
-      if (v == null || v.length == 0) return null;
+      if (v == null || (v as String).isEmpty) {
+        return null;
+      }
 
-      Uri? uri = Uri.tryParse(v as String);
-      if (uri == null) return errorText;
+      final Uri? uri = Uri.tryParse(v);
+      if (uri == null) {
+        return errorText;
+      }
 
       if (schema != null && schema.isNotEmpty && !uri.isScheme(schema)) {
         return errorText;
       }
-      if (host != null && host.isNotEmpty && uri.host != host) return errorText;
-      if (port != null && uri.port != port) return errorText;
+      if (host != null && host.isNotEmpty && uri.host != host) {
+        return errorText;
+      }
+      if (port != null && uri.port != port) {
+        return errorText;
+      }
     };
   }
 
@@ -184,7 +209,7 @@ class FormeValidates {
   static FormeValidator any(List<FormeValidator> validators,
       {String errorText = ''}) {
     return (f, dynamic v) {
-      for (FormeValidator validator in validators) {
+      for (final FormeValidator validator in validators) {
         if (validator(f, v) == null) {
           return null;
         }
@@ -199,8 +224,8 @@ class FormeValidates {
   static FormeValidator all(List<FormeValidator> validators,
       {String errorText = ''}) {
     return (f, dynamic v) {
-      for (FormeValidator validator in validators) {
-        String? _errorText = validator(f, v);
+      for (final FormeValidator validator in validators) {
+        final String? _errorText = validator(f, v);
         if (_errorText != null) {
           return _errorText == '' ? errorText : _errorText;
         }
@@ -211,8 +236,28 @@ class FormeValidates {
 
   static String? _validateSize(int length, int? min, int? max,
       {String errorText = ''}) {
-    if (min != null && min > length) return errorText;
-    if (max != null && max < length) return errorText;
+    if (min != null && min > length) {
+      return errorText;
+    }
+    if (max != null && max < length) {
+      return errorText;
+    }
     return null;
   }
+}
+
+int _getLength(dynamic v) {
+  if (v is Iterable) {
+    return v.length;
+  }
+  if (v is Map) {
+    return v.length;
+  }
+
+  if (v is String) {
+    return v.length;
+  }
+
+  throw Exception(
+      'only support Iterator|Map|String , current type is ${v.runtimeType}');
 }

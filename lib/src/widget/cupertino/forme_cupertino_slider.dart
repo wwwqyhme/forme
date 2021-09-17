@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:forme/forme.dart';
+import '../../../forme.dart';
 
 import '../../forme_mounted_value_notifier.dart';
 
@@ -50,12 +50,13 @@ class FormeCupertinoSlider extends FormeField<double> {
           validator: validator,
           asyncValidator: asyncValidator,
           builder: (baseState) {
-            _FormeCupertinoSliderState state =
+            final _FormeCupertinoSliderState state =
                 baseState as _FormeCupertinoSliderState;
             return ValueListenableBuilder<double?>(
                 valueListenable: state.notifier,
                 builder: (context, _value, child) {
                   return Focus(
+                    focusNode: state.focusNode,
                     child: CupertinoSlider(
                         value: state.value,
                         min: min,
@@ -77,7 +78,6 @@ class FormeCupertinoSlider extends FormeField<double> {
                                 state.updateValue(v);
                                 onChanged?.call(v);
                               }),
-                    focusNode: state.focusNode,
                   );
                 });
           },
@@ -127,9 +127,13 @@ class _FormeCupertinoSliderState extends FormeFieldState<double> {
 
   @override
   double get initialValue {
-    double defaultInitialValue = widget.initialValue;
-    if (defaultInitialValue < widget.min) return widget.min;
-    if (defaultInitialValue > widget.max) return widget.max;
+    final double defaultInitialValue = widget.initialValue;
+    if (defaultInitialValue < widget.min) {
+      return widget.min;
+    }
+    if (defaultInitialValue > widget.max) {
+      return widget.max;
+    }
     return defaultInitialValue;
   }
 
@@ -138,8 +142,12 @@ class _FormeCupertinoSliderState extends FormeFieldState<double> {
 
   @override
   void updateFieldValueInDidUpdateWidget(FormeField<double> oldWidget) {
-    if (value < widget.min) setValue(widget.min);
-    if (value > widget.max) setValue(widget.max);
+    if (value < widget.min) {
+      setValue(widget.min);
+    }
+    if (value > widget.max) {
+      setValue(widget.max);
+    }
   }
 
   @override

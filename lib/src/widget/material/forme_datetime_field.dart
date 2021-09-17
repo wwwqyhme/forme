@@ -12,11 +12,6 @@ import '../forme_datetime_formatter.dart';
 import '../forme_datetime_type.dart';
 
 class FormeDateTimeField extends FormeField<DateTime?> {
-  final FormeDateTimeFormatter? formatter;
-  final FormeDateTimeType type;
-  final DateTime? firstDate;
-  final DateTime? lastDate;
-
   FormeDateTimeField({
     DateTime? initialValue,
     this.type = FormeDateTimeType.date,
@@ -64,9 +59,7 @@ class FormeDateTimeField extends FormeField<DateTime?> {
     Iterable<String>? autofillHints,
     bool enableInteractiveSelection = true,
     bool enabled = true,
-    bool enableIMEPersonalizedLearning = true,
     VoidCallback? onEditingComplete,
-    List<TextInputFormatter>? inputFormatters,
     AppPrivateCommandCallback? appPrivateCommandCallback,
     InputCounterWidgetBuilder? buildCounter,
     ValueChanged<DateTime?>? onSubmitted,
@@ -85,7 +78,6 @@ class FormeDateTimeField extends FormeField<DateTime?> {
     String? cancelText,
     String? confirmText,
     RouteSettings? routeSettings,
-    TextDirection? pickerTextDirection,
     DatePickerMode? initialDatePickerMode,
     String? errorFormatText,
     String? errorInvalidText,
@@ -101,6 +93,7 @@ class FormeDateTimeField extends FormeField<DateTime?> {
     TransitionBuilder? builder,
     bool? use24hFormat,
   }) : super(
+          order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
           autovalidateMode: autovalidateMode,
@@ -116,16 +109,14 @@ class FormeDateTimeField extends FormeField<DateTime?> {
           readOnly: readOnly,
           initialValue: initialValue,
           builder: (baseState) {
-            bool readOnly = baseState.readOnly;
-            _FormeDateTimeFieldState state =
-                baseState as _FormeDateTimeFieldState;
-
-            DateTime _firstDate = firstDate ?? DateTime(1970);
-            DateTime _lastDate = lastDate ?? DateTime(2099);
+            final readOnly = baseState.readOnly;
+            final state = baseState as _FormeDateTimeFieldState;
+            final _firstDate = firstDate ?? DateTime(1970);
+            final _lastDate = lastDate ?? DateTime(2099);
 
             void pickTime() {
-              DateTime value = state.initialDateTime;
-              TimeOfDay? timeOfDay = state.value == null
+              final value = state.initialDateTime;
+              final timeOfDay = state.value == null
                   ? null
                   : TimeOfDay(hour: value.hour, minute: value.minute);
 
@@ -148,6 +139,7 @@ class FormeDateTimeField extends FormeField<DateTime?> {
                 initialEntryMode:
                     dateInitialEntryMode ?? DatePickerEntryMode.calendar,
                 selectableDayPredicate: selectableDayPredicate,
+                builder: builder,
               ).then((date) {
                 if (date != null) {
                   if (type == FormeDateTimeType.dateTime) {
@@ -169,7 +161,7 @@ class FormeDateTimeField extends FormeField<DateTime?> {
                           );
                         }).then((value) {
                       if (value != null) {
-                        DateTime dateTime = DateTime(date.year, date.month,
+                        final dateTime = DateTime(date.year, date.month,
                             date.day, value.hour, value.minute);
                         state.didChange(dateTime);
                       }
@@ -236,6 +228,11 @@ class FormeDateTimeField extends FormeField<DateTime?> {
 
   @override
   _FormeDateTimeFieldState createState() => _FormeDateTimeFieldState();
+
+  final FormeDateTimeFormatter? formatter;
+  final FormeDateTimeType type;
+  final DateTime? firstDate;
+  final DateTime? lastDate;
 }
 
 class _FormeDateTimeFieldState extends FormeFieldState<DateTime?> {
@@ -273,13 +270,17 @@ class _FormeDateTimeFieldState extends FormeFieldState<DateTime?> {
 
   @override
   void updateFieldValueInDidUpdateWidget(FormeField<DateTime?> oldWidget) {
-    if (value == null) return;
+    if (value == null) {
+      return;
+    }
     if (widget.firstDate != null && widget.firstDate!.isAfter(value!)) {
       _clearValue();
     }
     if (value != null &&
         widget.lastDate != null &&
-        widget.lastDate!.isBefore(value!)) _clearValue();
+        widget.lastDate!.isBefore(value!)) {
+      _clearValue();
+    }
     if (value != null &&
         (widget.formatter != null ||
             widget.type != (oldWidget as FormeDateTimeField).type)) {
@@ -297,14 +298,18 @@ class _FormeDateTimeFieldState extends FormeFieldState<DateTime?> {
 
   @override
   DateTime? get value {
-    DateTime? value = super.value;
-    if (value == null) return null;
+    final value = super.value;
+    if (value == null) {
+      return null;
+    }
     return simple(value);
   }
 
   DateTime get initialDateTime {
-    if (value != null) return value!;
-    DateTime now = DateTime.now();
+    if (value != null) {
+      return value!;
+    }
+    final DateTime now = DateTime.now();
     DateTime date =
         DateTime(now.year, now.month, now.day, now.hour, now.minute);
     if (widget.lastDate != null && widget.lastDate!.isBefore(date)) {

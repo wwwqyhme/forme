@@ -1,13 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
-import 'package:forme/forme.dart';
+import '../../../forme.dart';
 
 class FormeCupertinoSwitch extends FormeField<bool> {
   FormeCupertinoSwitch({
     bool initialValue = false,
     required String name,
     bool readOnly = false,
-    Widget? label,
     Key? key,
     int? order,
     Color? activeColor,
@@ -42,8 +41,8 @@ class FormeCupertinoSwitch extends FormeField<bool> {
           name: name,
           initialValue: initialValue,
           builder: (state) {
-            bool readOnly = state.readOnly;
-            bool value = state.value;
+            final bool readOnly = state.readOnly;
+            final bool value = state.value;
             return CupertinoSwitch(
               value: value,
               onChanged: readOnly

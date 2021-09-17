@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:forme/forme.dart';
+import '../../../forme.dart';
 
 class FormeCupertinoPicker extends FormeField<int> {
   final List<Widget> children;
@@ -52,9 +52,9 @@ class FormeCupertinoPicker extends FormeField<int> {
           readOnly: readOnly,
           initialValue: initialValue ?? 0,
           builder: (baseState) {
-            _FormeCupertinoPickerState state =
+            final _FormeCupertinoPickerState state =
                 baseState as _FormeCupertinoPickerState;
-            Widget child = NotificationListener<ScrollNotification>(
+            final Widget child = NotificationListener<ScrollNotification>(
                 onNotification: (scrollNotification) {
                   if (scrollNotification is ScrollStartNotification) {
                     state.requestFocus();
@@ -120,12 +120,14 @@ class _FormeCupertinoPickerState extends FormeFieldState<int> {
   }
 
   void onScrollStatusChanged(bool scrolling) {
-    if (!scrolling) didChange(index);
+    if (!scrolling) {
+      didChange(index);
+    }
   }
 
   @override
   void updateFieldValueInDidUpdateWidget(FormeField<int> oldWidget) {
-    bool updateChildren = !listEquals(
+    final bool updateChildren = !listEquals(
         (oldWidget as FormeCupertinoPicker).children, widget.children);
 
     if (updateChildren) {

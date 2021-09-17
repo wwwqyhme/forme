@@ -61,9 +61,7 @@ class FormeDateTimeRangeField extends FormeField<DateTimeRange?> {
     Iterable<String>? autofillHints,
     bool enableInteractiveSelection = true,
     bool enabled = true,
-    bool enableIMEPersonalizedLearning = true,
     VoidCallback? onEditingComplete,
-    List<TextInputFormatter>? inputFormatters,
     AppPrivateCommandCallback? appPrivateCommandCallback,
     InputCounterWidgetBuilder? buildCounter,
     ValueChanged<DateTimeRange?>? onSubmitted,
@@ -93,6 +91,7 @@ class FormeDateTimeRangeField extends FormeField<DateTimeRange?> {
     RouteSettings? routeSettings,
     TransitionBuilder? builder,
   }) : super(
+          order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
           autovalidateMode: autovalidateMode,
@@ -108,12 +107,12 @@ class FormeDateTimeRangeField extends FormeField<DateTimeRange?> {
           readOnly: readOnly,
           initialValue: initialValue,
           builder: (baseState) {
-            bool readOnly = baseState.readOnly;
-            _FormeDateTimeRangeFieldState state =
+            final bool readOnly = baseState.readOnly;
+            final _FormeDateTimeRangeFieldState state =
                 baseState as _FormeDateTimeRangeFieldState;
 
-            DateTime _firstDate = firstDate ?? DateTime(1970);
-            DateTime _lastDate = lastDate ?? DateTime(2099);
+            final DateTime _firstDate = firstDate ?? DateTime(1970);
+            final DateTime _lastDate = lastDate ?? DateTime(2099);
 
             void pickRange() {
               showDateRangePicker(
@@ -138,7 +137,9 @@ class FormeDateTimeRangeField extends FormeField<DateTimeRange?> {
                 routeSettings: routeSettings,
                 textDirection: textDirection,
               ).then((value) {
-                if (value != null) state.didChange(value);
+                if (value != null) {
+                  state.didChange(value);
+                }
                 state.requestFocus();
               });
             }
@@ -211,8 +212,10 @@ class _FormeDateTimeRangeFieldState extends FormeFieldState<DateTimeRange?> {
 
   @override
   DateTimeRange? get value {
-    DateTimeRange? value = super.value;
-    if (value == null) return null;
+    final DateTimeRange? value = super.value;
+    if (value == null) {
+      return null;
+    }
     return DateTimeRange(start: simple(value.start), end: simple(value.end));
   }
 
@@ -241,13 +244,17 @@ class _FormeDateTimeRangeFieldState extends FormeFieldState<DateTimeRange?> {
 
   @override
   void updateFieldValueInDidUpdateWidget(FormeField<DateTimeRange?> oldWidget) {
-    if (value == null) return;
+    if (value == null) {
+      return;
+    }
     if (widget.firstDate != null && widget.firstDate!.isAfter(value!.start)) {
       _clearValue();
     }
     if (value != null &&
         widget.lastDate != null &&
-        widget.lastDate!.isBefore(value!.end)) _clearValue();
+        widget.lastDate!.isBefore(value!.end)) {
+      _clearValue();
+    }
     if (widget.formatter != null && value != null) {
       textEditingController.text = widget.formatter!(value!);
     }

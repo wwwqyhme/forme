@@ -1,12 +1,12 @@
 export 'cupertino/forme_cupertino_date_field.dart';
 export 'cupertino/forme_cupertino_number_field.dart';
+export 'cupertino/forme_cupertino_picker.dart';
 export 'cupertino/forme_cupertino_segmented_control.dart';
 export 'cupertino/forme_cupertino_slider.dart';
 export 'cupertino/forme_cupertino_sliding_segmented_control.dart';
 export 'cupertino/forme_cupertino_switch.dart';
 export 'cupertino/forme_cupertino_text_field.dart';
 export 'cupertino/forme_cupertino_timer_field.dart';
-export 'cupertino/forme_cupertino_picker.dart';
 export 'forme_datetime_formatter.dart';
 export 'forme_datetime_type.dart';
 export 'material/forme_checkbox.dart';

@@ -58,9 +58,7 @@ class FormeTimeField extends FormeField<TimeOfDay?> {
     Iterable<String>? autofillHints,
     bool enableInteractiveSelection = true,
     bool enabled = true,
-    bool enableIMEPersonalizedLearning = true,
     VoidCallback? onEditingComplete,
-    List<TextInputFormatter>? inputFormatters,
     AppPrivateCommandCallback? appPrivateCommandCallback,
     InputCounterWidgetBuilder? buildCounter,
     ScrollController? scrollController,
@@ -82,6 +80,7 @@ class FormeTimeField extends FormeField<TimeOfDay?> {
     RouteSettings? routeSettings,
     TransitionBuilder? builder,
   }) : super(
+          order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
           autovalidateMode: autovalidateMode,
@@ -97,8 +96,9 @@ class FormeTimeField extends FormeField<TimeOfDay?> {
           readOnly: readOnly,
           initialValue: initialValue,
           builder: (baseState) {
-            bool readOnly = baseState.readOnly;
-            _FormeTimeFieldState state = baseState as _FormeTimeFieldState;
+            final bool readOnly = baseState.readOnly;
+            final _FormeTimeFieldState state =
+                baseState as _FormeTimeFieldState;
 
             void pickTime() {
               showTimePicker(
@@ -111,7 +111,9 @@ class FormeTimeField extends FormeField<TimeOfDay?> {
                 confirmText: confirmText,
                 helpText: helpText,
               ).then((value) {
-                if (value != null) state.didChange(value);
+                if (value != null) {
+                  state.didChange(value);
+                }
                 state.requestFocus();
               });
             }

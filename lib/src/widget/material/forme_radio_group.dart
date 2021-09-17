@@ -29,7 +29,6 @@ class FormeRadioGroup<T extends Object> extends FormeField<T?> {
     double? minVerticalPadding,
     double? minLeadingWidth,
     Color? activeColor,
-    MouseCursor? mouseCursor,
     MaterialStateProperty<Color?>? fillColor,
     Color? focusColor,
     Color? hoverColor,
@@ -39,7 +38,6 @@ class FormeRadioGroup<T extends Object> extends FormeField<T?> {
     MaterialTapTargetSize? materialTapTargetSize,
     Axis direction = Axis.horizontal,
     WrapAlignment alignment = WrapAlignment.start,
-    double? space,
     WrapAlignment runAlignment = WrapAlignment.start,
     double runSpacing = 0.0,
     double spacing = 0.0,
@@ -81,9 +79,8 @@ class FormeRadioGroup<T extends Object> extends FormeField<T?> {
             name: name,
             initialValue: initialValue,
             builder: (state) {
-              bool readOnly = state.readOnly;
-
-              List<Widget> wrapWidgets = [];
+              final bool readOnly = state.readOnly;
+              final List<Widget> wrapWidgets = [];
 
               void changeValue(T value) {
                 state.didChange(value);
@@ -129,11 +126,11 @@ class FormeRadioGroup<T extends Object> extends FormeField<T?> {
               }
 
               for (int i = 0; i < items.length; i++) {
-                FormeListTileItem<T> item = items[i];
-                bool isReadOnly = readOnly || item.readOnly;
-                bool selected = state.value == item.data;
+                final FormeListTileItem<T> item = items[i];
+                final bool isReadOnly = readOnly || item.readOnly;
+                final bool selected = state.value == item.data;
                 if (split > 0) {
-                  double factor = 1 / split;
+                  final double factor = 1 / split;
                   if (factor == 1) {
                     wrapWidgets.add(
                         createFormeListTileItem(item, selected, isReadOnly));
@@ -141,7 +138,8 @@ class FormeRadioGroup<T extends Object> extends FormeField<T?> {
                   }
                 }
 
-                Widget tileItem = createCommonItem(item, selected, readOnly);
+                final Widget tileItem =
+                    createCommonItem(item, selected, readOnly);
 
                 final Widget title = split == 0
                     ? item.title
@@ -159,12 +157,12 @@ class FormeRadioGroup<T extends Object> extends FormeField<T?> {
                     break;
                 }
 
-                Row tileItemRow = Row(
+                final Row tileItemRow = Row(
                   mainAxisSize: MainAxisSize.min,
                   children: children,
                 );
 
-                Widget groupItemWidget = Padding(
+                final Widget groupItemWidget = Padding(
                   padding: item.padding,
                   child: InkWell(
                       borderRadius:
@@ -177,11 +175,11 @@ class FormeRadioGroup<T extends Object> extends FormeField<T?> {
                       child: tileItemRow),
                 );
 
-                bool visible = item.visible;
+                final bool visible = item.visible;
                 if (split <= 0) {
                   wrapWidgets.add(Visibility(
-                    child: groupItemWidget,
                     visible: visible,
+                    child: groupItemWidget,
                   ));
                   if (visible && i < items.length - 1) {
                     wrapWidgets.add(const SizedBox(
@@ -189,13 +187,13 @@ class FormeRadioGroup<T extends Object> extends FormeField<T?> {
                     ));
                   }
                 } else {
-                  double factor = item.ignoreSplit ? 1 : 1 / split;
+                  final double factor = item.ignoreSplit ? 1 : 1 / split;
                   wrapWidgets.add(Visibility(
+                    visible: visible,
                     child: FractionallySizedBox(
                       widthFactor: factor,
                       child: groupItemWidget,
                     ),
-                    visible: visible,
                   ));
                 }
               }
@@ -246,7 +244,9 @@ class _FormeRadioGroupState<T extends Object> extends FormeFieldState<T?> {
 
   @override
   void updateFieldValueInDidUpdateWidget(FormeField<T?> oldWidget) {
-    if (value == null) return;
+    if (value == null) {
+      return;
+    }
     if (!widget.items.any((element) => element.data == value)) {
       setValue(null);
     }

@@ -5,7 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:forme/forme.dart';
+import '../../../forme.dart';
 
 class FormeTextField extends FormeField<String> {
   final bool selectAllOnFocus;
@@ -55,7 +55,6 @@ class FormeTextField extends FormeField<String> {
     Iterable<String>? autofillHints,
     bool enableInteractiveSelection = true,
     bool enabled = true,
-    bool enableIMEPersonalizedLearning = true,
     VoidCallback? onEditingComplete,
     List<TextInputFormatter>? inputFormatters,
     AppPrivateCommandCallback? appPrivateCommandCallback,
@@ -74,6 +73,7 @@ class FormeTextField extends FormeField<String> {
     FormeValidator<String>? validator,
     FormeAsyncValidator<String>? asyncValidator,
   }) : super(
+          order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
           autovalidateMode: autovalidateMode,
@@ -89,8 +89,9 @@ class FormeTextField extends FormeField<String> {
           readOnly: readOnly,
           initialValue: initialValue ?? '',
           builder: (baseState) {
-            bool readOnly = baseState.readOnly;
-            _FormeTextFieldState state = baseState as _FormeTextFieldState;
+            final bool readOnly = baseState.readOnly;
+            final _FormeTextFieldState state =
+                baseState as _FormeTextFieldState;
 
             return TextField(
               focusNode: state.focusNode,
@@ -183,7 +184,9 @@ class _FormeTextFieldState extends FormeFieldState<String> {
 
   @override
   void onValueChanged(String value) {
-    if (textEditingController.text != value) textEditingController.text = value;
+    if (textEditingController.text != value) {
+      textEditingController.text = value;
+    }
   }
 
   @override
@@ -199,8 +202,8 @@ class _FormeTextFieldState extends FormeFieldState<String> {
   }
 
   TextSelection _selection(int start, int end) {
-    int extendsOffset = end;
-    int baseOffset = start < 0
+    final int extendsOffset = end;
+    final int baseOffset = start < 0
         ? 0
         : start > extendsOffset
             ? extendsOffset
