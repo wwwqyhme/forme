@@ -16,10 +16,7 @@ abstract class FormeController {
   set readOnly(bool readOnly);
 
   /// find [FormeFieldController] by name
-  T field<T extends FormeFieldController>(String name);
-
-  /// find [FormeValueFieldController] by name
-  T valueField<T extends FormeValueFieldController>(String name);
+  T field<T extends FormeFieldController<dynamic>>(String name);
 
   /// get form data
   Map<String, dynamic> get data;
@@ -27,7 +24,7 @@ abstract class FormeController {
   /// get error msg after validated
   ///
   /// this method can get error even though  [Forme.quietlyValidate] is true
-  Map<FormeValueFieldController, String> get errors;
+  Map<FormeFieldController, String> get errors;
 
   /// perform a validate
   ///
@@ -101,10 +98,9 @@ abstract class FormeController {
   ValueListenable<FormeFieldController?> fieldListenable(String name);
 }
 
-/// used to control form field
-abstract class FormeFieldController<E extends FormeModel> {
+abstract class FormeFieldController<T> {
   /// get forme controller
-  FormeController get formeController;
+  FormeController? get formeController;
 
   ///get field's name
   String get name;
@@ -117,55 +113,13 @@ abstract class FormeFieldController<E extends FormeModel> {
 
   /// get focus node
   ///
-  /// maybe null if field does not request a focusnode yet
+  /// maybe null if field does not request a focusNode yet
   ///
   /// **don't dispose it by yourself!**
   FocusNode? get focusNode;
 
-  /// set state model on field
-  ///
-  /// directly set model will lose old model
-  /// if you want to inherit old model, you can use  update model
-  ///
-  /// [model] is provided by your custom [AbstractFieldState],
-  /// if you no need a model,you can use [EmptyStateModel]
-  ///
-  /// model is a property variable of [AbstractFieldState],used to provide
-  /// data that determine how to render a field , you can
-  /// rebuild field easily via call this method and
-  /// avoid build whole form
-  ///
-  /// **model's all properties should be nullable**
-  ///
-  /// **the model's runtimetype must be  a child or same as  your custom [AbstractFieldState]'s generic model type**
-  set model(E model);
-
-  /// get current state model;
-  E get model;
-
-  /// update a model
-  ///
-  /// you needn't to call `model.copyWith(oldModel)` manually ,
-  /// when you want to update something,just create a new model with the attributes
-  /// you want to update,Forme will auto copy old model's attributes to new model
-  ///
-  /// ```
-  /// FormeFieldController<FormeTextFieldModel> m;
-  /// // update field's labelText to '123'
-  /// m.update(FormeTextFieldModel(inputDecoration:InputDecoration(labelText:'123')));
-  /// // update field's labelText size to 20, you won't lose labelText!
-  /// m.update(FormeTextFieldModel(inputDecoration:InputDecoration(labelStyle:TextStyle(fontSize:20))));
-  /// ```
-  ///
-  /// **update a null value will not work! if you want to set some attributes to null,use [set model] instead**
-  void updateModel(E model);
-
-  /// make current field visible in viewport
-  Future<void> ensureVisible(
-      {Duration? duration,
-      Curve? curve,
-      ScrollPositionAlignmentPolicy? alignmentPolicy,
-      double? alignment});
+  /// get context
+  BuildContext get context;
 
   /// focus listenable
   ValueListenable<bool> get focusListenable;
@@ -178,17 +132,7 @@ abstract class FormeFieldController<E extends FormeModel> {
   /// will trigger when [Forme] or field's readOnly state changed
   ValueListenable<bool> get readOnlyListenable;
 
-  /// model listenable
-  ValueListenable<E> get modelListenable;
-
-  static T of<T extends FormeFieldController>(BuildContext context) {
-    return FormeKey.getFieldByContext<T>(context);
-  }
-}
-
-abstract class FormeValueFieldController<T, E extends FormeModel>
-    extends FormeFieldController<E> {
-  /// get current value of valuefield
+  /// get current value of field
   T get value;
 
   /// set field value
@@ -219,15 +163,6 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// **value notifier is always be trigger before errorNotifier , so  when you want to get error in onValueChanged , you should call this method in [WidgetsBinding.instance.addPostFrameCallback]**
   FormeValidateError? get error;
 
-  /// get forme decorator controller
-  ///
-  /// decoratorController is used to update|set model for [FormeDecorator],
-  /// the model type is determined by [ValueField]'s decoratorBuilder.
-  ///
-  /// eg: when your decoratorBuilder is [FormeInputDecoratorBuilder] , the model
-  /// type is [FormeInputDecoratorModel]
-  FormeDecoratorController get decoratorController;
-
   /// get error listenable
   ///
   /// it's useful when you want to display error by your custom way!
@@ -240,8 +175,8 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// same as widget's onChanged , but it is more useful
   /// when you want to build a widget relies on field's value change
   ///
-  /// eg: if you want to build a clear icon on textfield , but don't want to display it
-  /// when textfield's value is empty ,you can do like this :
+  /// eg: if you want to build a clear icon on textField , but don't want to display it
+  /// when textField's value is empty ,you can do like this :
   ///
   /// ``` dart
   ///  return ValueListenableBuilder<String?>(
@@ -269,159 +204,63 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   ///
   /// the `comparator` from [BaseValueField.comparator] is used to compare value
   bool get isValueChanged;
-
-  static T of<T extends FormeValueFieldController>(BuildContext context) {
-    return FormeKey.getValueFieldByContext<T>(context);
-  }
 }
 
-/// used to control decorator's model
-/// see  [ValueField.decoratorBuilder]
-abstract class FormeDecoratorController {
-  /// get current decorator model
-  ///
-  /// always return null if you don't update or set a decorator model yet
-  FormeModel? get currentModel;
+class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
+  final FormeFieldController<T> delegate;
 
-  /// update decorator model
-  ///
-  /// the model type is determined by type of FormeDecorator
-  ///
-  /// eg: [FormeInputDecorator]'s model type is [FormeInputDecoratorModel]
-  update(FormeModel model);
+  FormeFieldControllerDelegate(this.delegate);
 
-  /// set decorator model
-  ///
-  /// the model type is determined by type of FormeDecorator
-  ///
-  /// eg: [FormeInputDecorator]'s model type is [FormeInputDecoratorModel]
-  set model(FormeModel model);
-}
-
-abstract class FormeFieldControllerDelegate<E extends FormeModel>
-    implements FormeFieldController<E> {
-  FormeFieldController<E> get delegate;
-  @override
-  FormeController get formeController => delegate.formeController;
-  @override
-  E get model => delegate.model;
-  @override
-  set model(E model) => delegate.model = model;
   @override
   bool get readOnly => delegate.readOnly;
+
   @override
   set readOnly(bool readOnly) => delegate.readOnly = readOnly;
-  @override
-  ValueListenable<bool> get readOnlyListenable => delegate.readOnlyListenable;
-  @override
-  Future<void> ensureVisible(
-          {Duration? duration,
-          Curve? curve,
-          ScrollPositionAlignmentPolicy? alignmentPolicy,
-          double? alignment}) =>
-      delegate.ensureVisible(
-        duration: duration,
-        curve: curve,
-        alignmentPolicy: alignmentPolicy,
-        alignment: alignment,
-      );
-  @override
-  FocusNode? get focusNode => delegate.focusNode;
-  @override
-  String get name => delegate.name;
-  @override
-  void updateModel(E model) => delegate.updateModel(model);
-  @override
-  ValueListenable<bool> get focusListenable => delegate.focusListenable;
-  @override
-  ValueListenable<E> get modelListenable => delegate.modelListenable;
-}
-
-abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
-    extends FormeFieldControllerDelegate<E>
-    implements FormeValueFieldController<T, E> {
-  FormeValueFieldController<T, E> get delegate;
 
   @override
   T get value => delegate.value;
+
   @override
   set value(T value) => delegate.value = value;
-  @override
-  Future<FormeFieldValidateSnapshot<T>> validate({bool quietly = false}) =>
-      delegate.validate(quietly: quietly);
-  @override
-  void reset() => delegate.reset();
+
   @override
   FormeValidateError? get error => delegate.error;
-  @override
-  FormeDecoratorController get decoratorController =>
-      delegate.decoratorController;
+
   @override
   ValueListenable<FormeValidateError?> get errorTextListenable =>
       delegate.errorTextListenable;
+
   @override
-  ValueListenable<T?> get valueListenable => delegate.valueListenable;
+  ValueListenable<bool> get focusListenable => delegate.focusListenable;
+
   @override
-  T? get oldValue => delegate.oldValue;
+  FocusNode? get focusNode => delegate.focusNode;
+
+  @override
+  FormeController? get formeController => delegate.formeController;
+
   @override
   bool get isValueChanged => delegate.isValueChanged;
-}
-
-/// forme validate error
-@immutable
-class FormeValidateError {
-  final String? text;
-  final FormeValidateState state;
-  const FormeValidateError(this.text, this.state);
-
-  bool get valid => state == FormeValidateState.valid;
-  bool get invalid => state == FormeValidateState.invalid;
-  bool get validating => state == FormeValidateState.validating;
-  bool get fail => state == FormeValidateState.fail;
 
   @override
-  int get hashCode => hashValues(text, state);
-  @override
-  bool operator ==(Object o) =>
-      o is FormeValidateError && o.text == text && o.state == state;
-  @override
-  String toString() => 'state: $state , errorText: $text';
-}
-
-/// used to update a field
-///
-/// ```
-/// FormeTextField(name:'text');
-///
-/// formeKey.field('text').updateModel(FormeTextFieldModel(decoration:InputDecoration('labelText':'New LabelText')))
-/// ```
-@immutable
-abstract class FormeModel {
-  const FormeModel();
-  FormeModel copyWith(FormeModel old);
-}
-
-class FormeEmptyModel extends FormeModel {
-  FormeEmptyModel._();
-  static final FormeEmptyModel model = FormeEmptyModel._();
-  factory FormeEmptyModel() => model;
+  String get name => delegate.name;
 
   @override
-  FormeModel copyWith(FormeModel old) {
-    return FormeEmptyModel();
-  }
-}
+  T? get oldValue => delegate.oldValue;
 
-enum FormeValidateState {
-  /// validator return null errorText
-  valid,
+  @override
+  ValueListenable<bool> get readOnlyListenable => delegate.readOnlyListenable;
 
-  ///validator return nonnull result
-  invalid,
+  @override
+  void reset() => delegate.reset();
 
-  /// validator executing
-  validating,
+  @override
+  Future<FormeFieldValidateSnapshot<T>> validate({bool quietly = false}) =>
+      delegate.validate(quietly: quietly);
 
-  /// may be an error occured when perform an async validate
-  fail,
+  @override
+  ValueListenable<T?> get valueListenable => delegate.valueListenable;
+
+  @override
+  BuildContext get context => delegate.context;
 }
