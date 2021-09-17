@@ -7,3 +7,4 @@ differences:
 2. Forme3 removed listener from field's constructor and moved listener properties into field's constructor
 3. Forme3 removed CommonField and renamed ValueField to FormeField
 4. Forme3 has big api breaks
+5. Forme3 is based on flutter 2.5
