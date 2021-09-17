@@ -241,7 +241,7 @@ class _FormeState extends State<Forme> {
       final List<FormeFieldState> valueFieldStates = states
           .where((element) => element._hasAnyValidator)
           .toList()
-            ..sort((a, b) => a.order.compareTo(b.order));
+        ..sort((a, b) => a.order.compareTo(b.order));
       if (valueFieldStates.isEmpty) {
         return;
       }
@@ -883,7 +883,7 @@ class _FormeController extends FormeController {
                 element._hasAnyValidator &&
                 (names.isEmpty || names.contains(element.name)))
             .toList()
-              ..sort((a, b) => a.order.compareTo(b.order)))
+          ..sort((a, b) => a.order.compareTo(b.order)))
         .toList();
     if (states.isEmpty) {
       return Future.delayed(Duration.zero, () => FormeValidateSnapshot([]));
