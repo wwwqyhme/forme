@@ -58,7 +58,9 @@ class FormeRadioGroup<T extends Object> extends FormeField<T?> {
     FormeAsyncValidator<T?>? asyncValidator,
     InputDecoration? decoration,
     FormeFieldDecorator<T?>? decorator,
+    bool requestFocusOnUserInteraction = true,
   }) : super(
+            requestFocusOnUserInteraction: requestFocusOnUserInteraction,
             quietlyValidate: quietlyValidate,
             asyncValidatorDebounce: asyncValidatorDebounce,
             autovalidateMode: autovalidateMode,
@@ -84,7 +86,7 @@ class FormeRadioGroup<T extends Object> extends FormeField<T?> {
 
               void changeValue(T value) {
                 state.didChange(value);
-                state.requestFocus();
+                state.requestFocusOnUserInteraction();
               }
 
               Widget createFormeListTileItem(

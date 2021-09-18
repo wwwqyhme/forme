@@ -79,7 +79,9 @@ class FormeTimeField extends FormeField<TimeOfDay?> {
     String? helpText,
     RouteSettings? routeSettings,
     TransitionBuilder? builder,
+    bool requestFocusOnUserInteraction = true,
   }) : super(
+          requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
@@ -114,7 +116,7 @@ class FormeTimeField extends FormeField<TimeOfDay?> {
                 if (value != null) {
                   state.didChange(value);
                 }
-                state.requestFocus();
+                state.focusNode.requestFocus();
               });
             }
 

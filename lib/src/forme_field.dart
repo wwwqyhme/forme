@@ -70,6 +70,9 @@ class FormeField<T> extends StatefulWidget {
   /// used to decorate a field
   final FormeFieldDecorator<T>? decorator;
 
+  /// whether request focus when field value changed
+  final bool requestFocusOnUserInteraction;
+
   const FormeField({
     Key? key,
     required this.name,
@@ -90,6 +93,7 @@ class FormeField<T> extends StatefulWidget {
     this.onFocusChanged,
     this.onInitialed,
     this.decorator,
+    this.requestFocusOnUserInteraction = true,
   })  : autovalidateMode = autovalidateMode ?? AutovalidateMode.disabled,
         super(key: key);
 

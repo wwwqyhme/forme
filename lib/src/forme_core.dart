@@ -597,8 +597,10 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     }
   }
 
-  void requestFocus() {
-    _focusNode?.requestFocus();
+  void requestFocusOnUserInteraction() {
+    if (_hasInteractedByUser && widget.requestFocusOnUserInteraction) {
+      _focusNode?.requestFocus();
+    }
   }
 
   @override

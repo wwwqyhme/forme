@@ -170,7 +170,7 @@ class FormeDateTimeField extends FormeField<DateTime?> {
                     state.didChange(date);
                   }
                 }
-                state.requestFocus();
+                state.focusNode.requestFocus();
               });
             }
 

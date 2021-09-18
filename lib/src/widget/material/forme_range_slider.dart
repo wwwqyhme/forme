@@ -100,7 +100,7 @@ class FormeRangeSlider extends FormeField<RangeValues> {
                         activeColor: activeColor,
                         inactiveColor: inactiveColor,
                         onChangeStart: (v) {
-                          state.requestFocus();
+                          state.focusNode.requestFocus();
                           onChangeStart?.call(v);
                         },
                         onChangeEnd: (v) {

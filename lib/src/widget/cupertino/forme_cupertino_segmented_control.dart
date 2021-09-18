@@ -30,7 +30,9 @@ class FormeCupertinoSegmentedControl<T extends Object> extends FormeField<T?> {
     FormeValidator<T?>? validator,
     FormeAsyncValidator<T?>? asyncValidator,
     FormeFieldDecorator<T?>? decorator,
+    bool requestFocusOnUserInteraction = true,
   }) : super(
+            requestFocusOnUserInteraction: requestFocusOnUserInteraction,
             decorator: decorator,
             quietlyValidate: quietlyValidate,
             asyncValidatorDebounce: asyncValidatorDebounce,
@@ -70,7 +72,7 @@ class FormeCupertinoSegmentedControl<T extends Object> extends FormeField<T?> {
                           padding: padding,
                           onValueChanged: (v) {
                             state.didChange(v);
-                            state.requestFocus();
+                            state.requestFocusOnUserInteraction();
                           }),
                     ),
                   ))

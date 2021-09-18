@@ -140,7 +140,7 @@ class FormeDateTimeRangeField extends FormeField<DateTimeRange?> {
                 if (value != null) {
                   state.didChange(value);
                 }
-                state.requestFocus();
+                state.focusNode.requestFocus();
               });
             }
 

@@ -33,7 +33,9 @@ class FormeCheckbox extends FormeField<bool> {
     bool autofocus = false,
     BorderSide? side,
     bool tristate = false,
+    bool requestFocusOnUserInteraction = true,
   }) : super(
+          requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
@@ -73,7 +75,7 @@ class FormeCheckbox extends FormeField<bool> {
                   ? null
                   : (_) {
                       state.didChange(!value);
-                      state.requestFocus();
+                      state.requestFocusOnUserInteraction();
                     },
             );
           },

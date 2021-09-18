@@ -23,7 +23,9 @@ class FormeCupertinoSwitch extends FormeField<bool> {
     FormeValidator<bool>? validator,
     FormeAsyncValidator<bool>? asyncValidator,
     FormeFieldDecorator<bool>? decorator,
+    bool requestFocusOnUserInteraction = true,
   }) : super(
+          requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
           autovalidateMode: autovalidateMode,
@@ -49,7 +51,7 @@ class FormeCupertinoSwitch extends FormeField<bool> {
                   ? null
                   : (v) {
                       state.didChange(v);
-                      state.requestFocus();
+                      state.requestFocusOnUserInteraction();
                     },
               activeColor: activeColor,
               trackColor: trackColor,

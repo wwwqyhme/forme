@@ -28,7 +28,9 @@ class FormeCupertinoSlidingSegmentedControl<T extends Object>
     FormeValidator<T?>? validator,
     FormeAsyncValidator<T?>? asyncValidator,
     FormeFieldDecorator<T?>? decorator,
+    bool requestFocusOnUserInteraction = true,
   }) : super(
+            requestFocusOnUserInteraction: requestFocusOnUserInteraction,
             decorator: decorator,
             quietlyValidate: quietlyValidate,
             asyncValidatorDebounce: asyncValidatorDebounce,
@@ -72,7 +74,7 @@ class FormeCupertinoSlidingSegmentedControl<T extends Object>
                                   vertical: 2, horizontal: 3),
                           onValueChanged: (v) {
                             state.didChange(v);
-                            state.requestFocus();
+                            state.requestFocusOnUserInteraction();
                           }),
                     ),
                   ))

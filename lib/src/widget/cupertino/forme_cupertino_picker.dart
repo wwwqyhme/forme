@@ -57,7 +57,7 @@ class FormeCupertinoPicker extends FormeField<int> {
             final Widget child = NotificationListener<ScrollNotification>(
                 onNotification: (scrollNotification) {
                   if (scrollNotification is ScrollStartNotification) {
-                    state.requestFocus();
+                    state.focusNode.requestFocus();
                     state.onScrollStatusChanged(true);
                   }
                   if (scrollNotification is ScrollEndNotification) {

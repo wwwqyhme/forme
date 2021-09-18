@@ -62,7 +62,7 @@ class FormeCupertinoSlider extends FormeField<double> {
                         min: min,
                         max: max,
                         onChangeStart: (v) {
-                          state.requestFocus();
+                          state.focusNode.requestFocus();
                           onChangeStart?.call(v);
                         },
                         onChangeEnd: (v) {

@@ -89,7 +89,7 @@ class FormeSlider extends FormeField<double> {
                     activeColor: activeColor,
                     inactiveColor: inactiveColor,
                     onChangeStart: (v) {
-                      state.requestFocus();
+                      state.focusNode.requestFocus();
                       onChangeStart?.call(v);
                     },
                     onChangeEnd: (v) {

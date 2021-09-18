@@ -40,7 +40,9 @@ class FormeFilterChip<T extends Object> extends FormeField<List<T>> {
     WrapCrossAlignment crossAxisAlignment = WrapCrossAlignment.start,
     TextDirection? textDirection,
     VerticalDirection verticalDirection = VerticalDirection.down,
+    bool requestFocusOnUserInteraction = true,
   }) : super(
+          requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,
           decorator: decorator ??
               (decoration == null
@@ -106,7 +108,7 @@ class FormeFilterChip<T extends Object> extends FormeField<List<T>> {
                         } else {
                           state.didChange(value..remove(item.data));
                         }
-                        state.requestFocus();
+                        state.requestFocusOnUserInteraction();
                       },
               );
               chips.add(Visibility(

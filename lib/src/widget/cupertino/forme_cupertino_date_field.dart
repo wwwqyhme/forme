@@ -159,7 +159,7 @@ class FormeCupertinoDateTimeField extends FormeField<DateTime?> {
                 semanticsDismissible: semanticsDismissible,
                 routeSettings: routeSettings,
               ).whenComplete(() {
-                state.requestFocus();
+                state.focusNode.requestFocus();
                 afterClose?.call();
               });
             }

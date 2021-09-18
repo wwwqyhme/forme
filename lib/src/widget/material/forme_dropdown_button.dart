@@ -41,11 +41,11 @@ class FormeDropdownButton<T extends Object> extends FormeField<T?> {
     Widget? icon,
     Color? iconDisabledColor,
     Color? iconEnabledColor,
-
-    /// used for [FormeInputDecorator], if you specific a [FormeFieldDecorator] , this will not work
     InputDecoration? decoration,
     FormeFieldDecorator<T?>? decorator,
+    bool requestFocusOnUserInteraction = true,
   }) : super(
+          requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
@@ -96,7 +96,7 @@ class FormeDropdownButton<T extends Object> extends FormeField<T?> {
                   ? null
                   : (value) {
                       state.didChange(value);
-                      state.requestFocus();
+                      state.requestFocusOnUserInteraction();
                     },
             );
 

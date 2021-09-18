@@ -174,7 +174,7 @@ class FormeCupertinoTimerField extends FormeField<Duration?> {
                 semanticsDismissible: semanticsDismissible,
                 routeSettings: routeSettings,
               ).whenComplete(() {
-                state.requestFocus();
+                state.focusNode.requestFocus();
                 afterClose?.call();
               });
             }

@@ -37,7 +37,9 @@ class FormeSwitch extends FormeField<bool> {
     ImageErrorListener? onActiveThumbImageError,
     ImageErrorListener? onInactiveThumbImageError,
     bool autofocus = false,
+    bool requestFocusOnUserInteraction = true,
   }) : super(
+          requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
@@ -62,7 +64,7 @@ class FormeSwitch extends FormeField<bool> {
                   ? null
                   : (_) {
                       state.didChange(!value);
-                      state.requestFocus();
+                      state.requestFocusOnUserInteraction();
                     },
               activeColor: activeColor,
               activeTrackColor: activeTrackColor,

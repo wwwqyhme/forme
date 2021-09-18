@@ -95,7 +95,9 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
     InputDecoration? decoration,
     FormeFieldDecorator<List<T>>? decorator,
     bool isThreeLine = false,
+    bool requestFocusOnUserInteraction = true,
   }) : super(
+            requestFocusOnUserInteraction: requestFocusOnUserInteraction,
             quietlyValidate: quietlyValidate,
             order: order,
             key: key,
@@ -112,12 +114,12 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
               final List<Widget> wrapWidgets = [];
 
               void changeValue(T value) {
-                state.requestFocus();
                 final List<T> values = List.of(state.value);
                 if (!values.remove(value)) {
                   values.add(value);
                 }
                 state.didChange(values);
+                state.requestFocusOnUserInteraction();
               }
 
               Widget createFormeListTileItem(

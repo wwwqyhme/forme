@@ -32,7 +32,9 @@ class FormeChoiceChip<T extends Object> extends FormeField<T?> {
     WrapCrossAlignment crossAxisAlignment = WrapCrossAlignment.start,
     TextDirection? textDirection,
     VerticalDirection verticalDirection = VerticalDirection.down,
+    bool requestFocusOnUserInteraction = true,
   }) : super(
+          requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
@@ -87,7 +89,7 @@ class FormeChoiceChip<T extends Object> extends FormeField<T?> {
                         } else {
                           state.didChange(item.data);
                         }
-                        state.requestFocus();
+                        state.requestFocusOnUserInteraction();
                       },
               );
               chips.add(Visibility(
