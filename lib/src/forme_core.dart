@@ -407,7 +407,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   bool get _hasAnyValidator => _hasValidator || _hasAsyncValidator;
 
   String? get errorText =>
-      (_formeState?.quietlyValidate ?? false || widget.quietlyValidate)
+      (_formeState?.quietlyValidate ?? false) || widget.quietlyValidate
           ? null
           : _error?.text;
 
@@ -586,7 +586,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   void onFocusChanged(bool hasFocus) {}
 
   bool get readOnly =>
-      _formeState?.readOnly ?? false || (_readOnly ?? widget.readOnly);
+      (_formeState?.readOnly ?? false) || (_readOnly ?? widget.readOnly);
 
   set readOnly(bool readOnly) {
     if (readOnly != _readOnly) {

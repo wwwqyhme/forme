@@ -91,7 +91,7 @@ class FormeDateTimeField extends FormeField<DateTime?> {
     RouteSettings? timeRouteSettings,
     SelectableDayPredicate? selectableDayPredicate,
     TransitionBuilder? builder,
-    bool? use24hFormat,
+    bool use24hFormat = false,
   }) : super(
           order: order,
           quietlyValidate: quietlyValidate,
@@ -155,8 +155,8 @@ class FormeDateTimeField extends FormeField<DateTime?> {
                             TimeOfDay(hour: value.hour, minute: value.minute),
                         builder: (context, child) {
                           return MediaQuery(
-                            data: MediaQuery.of(context).copyWith(
-                                alwaysUse24HourFormat: use24hFormat ?? false),
+                            data: MediaQuery.of(context)
+                                .copyWith(alwaysUse24HourFormat: use24hFormat),
                             child: child!,
                           );
                         }).then((value) {
