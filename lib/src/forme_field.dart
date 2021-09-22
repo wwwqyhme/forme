@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import '../forme.dart';
+import 'forme_field_scope.dart';
 
 typedef FormeValueChanged<T> = void Function(
     FormeFieldController<T>, T newValue);
@@ -100,7 +101,7 @@ class FormeField<T> extends StatefulWidget {
   @override
   FormeFieldState<T> createState() => FormeFieldState();
 
-  static T of<T extends FormeFieldController<dynamic>>(BuildContext context) {
-    return FormeKey.getFieldByContext<T>(context);
+  static FormeFieldController<dynamic>? of(BuildContext context) {
+    return FormeFieldScope.of(context);
   }
 }

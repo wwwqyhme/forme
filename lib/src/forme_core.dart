@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import '../forme.dart';
 
+import '../forme.dart';
+import 'forme_field_scope.dart';
 import 'forme_mounted_value_notifier.dart';
 
 /// form key is a global key , also used to manage form
@@ -94,11 +95,6 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   @override
   ValueListenable<FormeFieldController?> fieldListenable(String name) =>
       _currentController.fieldListenable(name);
-
-  static T getFieldByContext<T extends FormeFieldController<dynamic>>(
-      BuildContext context) {
-    return _InheritedFormeFieldController.of(context) as T;
-  }
 }
 
 /// build your form !
@@ -162,6 +158,9 @@ class Forme extends StatefulWidget {
 
   @override
   _FormeState createState() => _FormeState();
+
+  static FormeController? of(BuildContext context) =>
+      _FormeScope.of(context)?.controller;
 }
 
 class _FormeState extends State<Forme> {
@@ -619,7 +618,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       );
     }
 
-    return _InheritedFormeFieldController(controller, child);
+    return FormeFieldScope(controller, child);
   }
 
   void _clearError() {
@@ -807,23 +806,6 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   void onErrorChanged(FormeValidateError? error) {}
 }
 
-/// share FormFieldController in sub tree
-class _InheritedFormeFieldController extends InheritedWidget {
-  final FormeFieldController controller;
-
-  const _InheritedFormeFieldController(this.controller, Widget child)
-      : super(child: child);
-
-  @override
-  bool updateShouldNotify(covariant InheritedWidget oldWidget) => false;
-
-  static FormeFieldController of(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<_InheritedFormeFieldController>()!
-        .controller;
-  }
-}
-
 class _FormeController extends FormeController {
   final _FormeState state;
 
@@ -998,7 +980,7 @@ class _FormeFieldController<T> implements FormeFieldController<T> {
   bool get readOnly => state.readOnly;
 
   @override
-  FormeController? get formeController => FormeKey.of(state.context);
+  FormeController? get formeController => Forme.of(state.context);
 
   @override
   FocusNode? get focusNode => state._focusNode;
