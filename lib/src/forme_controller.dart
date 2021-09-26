@@ -204,6 +204,12 @@ abstract class FormeFieldController<T> {
   ///
   /// the `comparator` from [FormeField.comparator] is used to compare value
   bool get isValueChanged;
+
+  /// whether field has an async|sync validator
+  ///
+  /// when get error via [FormeFieldController.error] return null ,
+  /// it means field has not been validated or field has no validator
+  bool get hasValidator;
 }
 
 class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
@@ -262,4 +268,7 @@ class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
 
   @override
   BuildContext get context => delegate.context;
+
+  @override
+  bool get hasValidator => delegate.hasValidator;
 }

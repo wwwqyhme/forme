@@ -228,12 +228,17 @@ class _FormeState extends State<Forme> {
   }
 
   ValueNotifier<FormeFieldController?> fieldListenable(String name) {
-    FormeFieldController? controller;
-    states.where((element) => element.name == name).forEach((element) {
-      controller = element.controller;
-    });
-    return fieldNotifiers.putIfAbsent(
-        name, () => FormeMountedValueNotifier(controller, this));
+    return fieldNotifiers[name] ??
+        fieldNotifiers.putIfAbsent(name,
+            () => FormeMountedValueNotifier(getFieldController(name), this));
+  }
+
+  FormeFieldController? getFieldController(String name) {
+    final List<FormeFieldController> controllers = states
+        .where((element) => element.name == name)
+        .map((e) => e.controller)
+        .toList();
+    return controllers.isEmpty ? null : controllers.first;
   }
 
   void _validateForm() {
@@ -1033,4 +1038,7 @@ class _FormeFieldController<T> implements FormeFieldController<T> {
 
   @override
   BuildContext get context => state.context;
+
+  @override
+  bool get hasValidator => state._hasAnyValidator;
 }
