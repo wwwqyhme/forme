@@ -65,6 +65,7 @@ Widget forme = Forme(
 | asyncValidator | false | `FormeAsyncValidator` | async validator |
 | decorator | false | `FormeFieldDecorator` | used to decorator a field |
 | order | false | int | order of field |
+| requestFocusOnUserInteraction | false | bool | whether request focus when field value changed by user interaction |
 
 ### currently supported fields
 
@@ -122,12 +123,12 @@ Widget forme = Forme(
 
 when you use validators from `FormeValidates` , you must specific at least one errorText , otherwise errorText is an empty string
 
-### async validated
+### async validate
 
 async validator is supported after Forme 2.5.0 , you can specific an `asyncValidator` on `FormeField` , the unique difference
 between `validator` and `asyncValidator` is `asyncValidator` return a `Future<String>` and `validator` return a `String`
 
-#### when to perform a asyncValidator
+#### when to perform an asyncValidator
 
 if `FormeField.autovalidateMode` is `AutovalidateMode.disabled` , asyncValidator will never be performed unless you call `validate` from `FormeFieldController` manually.
 
@@ -228,6 +229,12 @@ List<FormeFieldController> controllers = formeKey.controllers;
 
 ``` Dart
 ValueListenable<FormeFieldController> fieldListenable = formeKey.fieldListenable(String name);
+```
+
+### get errorListenable
+
+``` Dart
+ValueListenable<FormeValidateErrors?> errorListenable = formeKey.errorListenable;
 ```
 
 ## Forme Field Methods
@@ -334,6 +341,12 @@ T? value = field.oldValue;
 
 ``` Dart
 bool isChanged = field.isValueChanged
+```
+
+### has validator
+
+``` Dart
+bool hasValidator = field.hasValidator
 ```
 
 ### get underlying TextEditingController of FormeTextField
