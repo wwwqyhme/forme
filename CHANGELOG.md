@@ -2,6 +2,9 @@
 
 1. support `hasValidator` on `FormeFieldController`
 2. support `errorListenable` on `FormeController`
+3. add `FormeValidateErrorBuilder` widget
+4. use `FormeField.of` get `FormeFieldController` and it is nullable
+5. use `Forme.of` get `FormeController` and it is nullable
 
 ## 3.0.0
 
