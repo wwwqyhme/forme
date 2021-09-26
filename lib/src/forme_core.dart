@@ -95,6 +95,10 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   @override
   ValueListenable<FormeFieldController?> fieldListenable(String name) =>
       _currentController.fieldListenable(name);
+
+  @override
+  ValueListenable<FormeValidateErrors?> get errorListenable =>
+      _currentController.errorListenable;
 }
 
 /// build your form !
@@ -167,6 +171,8 @@ class _FormeState extends State<Forme> {
   final List<FormeFieldState> states = [];
   late final _FormeController controller;
   final Map<String, ValueNotifier<FormeFieldController?>> fieldNotifiers = {};
+  late final FormeMountedValueNotifier<FormeValidateErrors?> errorNotifier =
+      FormeMountedValueNotifier(null, this);
 
   Map<String, dynamic> get initialValue => widget.initialValue;
 
@@ -210,6 +216,7 @@ class _FormeState extends State<Forme> {
 
   @override
   void dispose() {
+    errorNotifier.dispose();
     fieldNotifiers.forEach((key, value) {
       value.dispose();
     });
@@ -318,6 +325,9 @@ class _FormeState extends State<Forme> {
 
   void fieldErrorChange(
       FormeFieldController controller, FormeValidateError? error) {
+    errorNotifier.value = FormeValidateErrors(states
+        .asMap()
+        .map((key, value) => MapEntry(value.name, value.controller)));
     widget.onErrorChanged?.call(controller, error);
   }
 
@@ -946,6 +956,10 @@ class _FormeController extends FormeController {
   @override
   ValueListenable<FormeFieldController?> fieldListenable(String name) =>
       _ValueListenable(state.fieldListenable(name));
+
+  @override
+  ValueListenable<FormeValidateErrors?> get errorListenable =>
+      _ValueListenable(state.errorNotifier);
 }
 
 class _ValueListenable<T> extends ValueListenable<T> {

@@ -96,6 +96,9 @@ abstract class FormeController {
   ///   )
   ///   ```
   ValueListenable<FormeFieldController?> fieldListenable(String name);
+
+  /// used to listen any form field's error changed
+  ValueListenable<FormeValidateErrors?> get errorListenable;
 }
 
 abstract class FormeFieldController<T> {
