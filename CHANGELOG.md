@@ -1,3 +1,8 @@
+## 3.0.1
+
+1. support `hasValidator` on `FormeFieldController`
+2. support `errorListenable` on `FormeController`
+
 ## 3.0.0
 
 **Forme3 is not an upgrade but a simple version of Forme2**
