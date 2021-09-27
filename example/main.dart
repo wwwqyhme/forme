@@ -188,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       labelText: 'Dropdown',
                     ),
                     autovalidateMode: AutovalidateMode.onUserInteraction,
-                    onErrorChanged: (field, e) {},
+                    onValidationInfoChanged: (field, e) {},
                     asyncValidator: (field, v) {
                       return Future.delayed(const Duration(milliseconds: 500),
                           () {

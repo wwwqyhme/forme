@@ -8,8 +8,8 @@ typedef FormeAsyncValidator<T> = Future<String?> Function(
     FormeFieldController<T> field, T value);
 typedef FormeValidator<T> = String? Function(
     FormeFieldController<T> field, T value);
-typedef FormeErrorChanged<T> = void Function(
-    FormeFieldController<T> field, FormeValidateError? error);
+typedef FormeFieldValidationInfoChanged<T> = void Function(
+    FormeFieldController<T> field, FormeFieldValidationInfo info);
 typedef FormeFieldSetter<T> = void Function(
     FormeFieldController<T> field, T value);
 typedef FormeValueComparator<T> = bool Function(T oldValue, T newValue);
@@ -50,7 +50,7 @@ class FormeField<T> extends StatefulWidget {
   /// 2. after called [FormeFieldController.validate] method
   ///
   /// **errorText will be null if field's errorText from nonnull to null**
-  final FormeErrorChanged<T>? onErrorChanged;
+  final FormeFieldValidationInfoChanged<T>? onValidationInfoChanged;
 
   /// called after [FormeController] or [FormeFieldController] initialed
   ///
@@ -84,7 +84,7 @@ class FormeField<T> extends StatefulWidget {
     this.asyncValidatorDebounce,
     AutovalidateMode? autovalidateMode,
     this.onValueChanged,
-    this.onErrorChanged,
+    this.onValidationInfoChanged,
     this.validator,
     this.asyncValidator,
     this.order,

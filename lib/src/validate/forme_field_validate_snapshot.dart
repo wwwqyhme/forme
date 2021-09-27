@@ -13,12 +13,12 @@ class FormeValidateSnapshot {
     }
   }
 
-  /// no validate error can be found in these fields
-  bool get isValid => invalidFields.isEmpty;
+  /// all field is valid
+  bool get isValid => _snapshots.every((element) => element.isValid);
 
   /// get all invalid fields
   Iterable<FormeFieldValidateSnapshot> get invalidFields =>
-      _snapshots.where((element) => element.error?.invalid ?? false);
+      _snapshots.where((element) => element.isInvalid);
 
   /// get validated data
   ///
@@ -50,9 +50,7 @@ class FormeFieldValidateSnapshot<T> {
   final T value;
 
   /// validate result , may not equals the field's current error if performed another validate during async validation
-  ///
-  /// **if field does not has any validator , error will be null**
-  final FormeValidateError? error;
+  final FormeFieldValidationInfo info;
 
   final int order;
   final FormeFieldController<T> controller;
@@ -65,7 +63,7 @@ class FormeFieldValidateSnapshot<T> {
 
   FormeFieldValidateSnapshot(
     this.value,
-    this.error,
+    this.info,
     this.order,
     this.controller,
     this.isValueChangedDuringValidation,
@@ -73,5 +71,6 @@ class FormeFieldValidateSnapshot<T> {
   );
 
   /// whether field is invalid
-  bool get invalid => error?.invalid ?? false;
+  bool get isInvalid => info.isInvalid;
+  bool get isValid => info.isValid;
 }

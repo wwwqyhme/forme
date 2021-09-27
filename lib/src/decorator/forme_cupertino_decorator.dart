@@ -61,18 +61,14 @@ class FormeCupertinoInputDecorator<T> extends StatelessWidget {
         child: child,
       );
     }
-    return ValueListenableBuilder<FormeValidateError?>(
-      valueListenable: controller.errorTextListenable,
-      builder: (context, FormeValidateError? error, _child) {
+    return ValueListenableBuilder<FormeFieldValidationInfo>(
+      valueListenable: controller.validationInfoListenable,
+      builder: (context, FormeFieldValidationInfo info, _child) {
         return CupertinoFormRow(
           helper: helper,
           padding: padding,
           prefix: prefix,
-          error: error == null
-              ? null
-              : error.invalid
-                  ? Text(error.text!)
-                  : null,
+          error: info.isInvalid ? Text(info.error!) : null,
           child: child,
         );
       },
