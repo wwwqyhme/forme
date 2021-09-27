@@ -40,7 +40,7 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   bool get readOnly => _currentController.readOnly;
 
   @override
-  Map<FormeFieldController, String> get errors => _currentController.errors;
+  FormeValidationInfo get validationInfo => _currentController.validationInfo;
 
   @override
   T field<T extends FormeFieldController<dynamic>>(String name) =>
@@ -97,7 +97,7 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
       _currentController.fieldListenable(name);
 
   @override
-  ValueListenable<FormeValidationInfo?> get validationInfoListenable =>
+  ValueListenable<FormeValidationInfo> get validationInfoListenable =>
       _currentController.validationInfoListenable;
 }
 
@@ -124,7 +124,7 @@ class Forme extends StatefulWidget {
   /// **this property can be overwritten by field's initialValue**
   final Map<String, dynamic> initialValue;
 
-  /// used to listen field's validate error changed
+  /// used to listen field's validation info changed
   final FormeFieldValidationInfoChanged? onValidationInfoChanged;
 
   final WillPopCallback? onWillPop;
@@ -171,8 +171,9 @@ class _FormeState extends State<Forme> {
   final List<FormeFieldState> states = [];
   late final _FormeController controller;
   final Map<String, ValueNotifier<FormeFieldController?>> fieldNotifiers = {};
-  late final FormeMountedValueNotifier<FormeValidationInfo?>
-      validationInfoNotifier = FormeMountedValueNotifier(null, this);
+  late final FormeMountedValueNotifier<FormeValidationInfo>
+      validationInfoNotifier =
+      FormeMountedValueNotifier(const FormeValidationInfo({}), this);
 
   Map<String, dynamic> get initialValue => widget.initialValue;
 
@@ -858,18 +859,9 @@ class _FormeController extends FormeController {
   bool get readOnly => state.readOnly;
 
   @override
-  Map<FormeFieldController, String> get errors {
-    final Map<FormeFieldController, String> errorMap = {};
-    for (final FormeFieldState state in state.states) {
-      final FormeFieldController controller = state.controller;
-      final String? errorText = controller.validationInfo.error;
-      if (errorText == null) {
-        continue;
-      }
-      errorMap[controller] = errorText;
-    }
-    return errorMap;
-  }
+  FormeValidationInfo get validationInfo => FormeValidationInfo(state.states
+      .asMap()
+      .map((key, value) => MapEntry(value.name, value._validationInfo)));
 
   @override
   T field<T extends FormeFieldController<dynamic>>(String name) {
@@ -972,7 +964,7 @@ class _FormeController extends FormeController {
       _ValueListenable(state.fieldListenable(name));
 
   @override
-  ValueListenable<FormeValidationInfo?> get validationInfoListenable =>
+  ValueListenable<FormeValidationInfo> get validationInfoListenable =>
       _ValueListenable(state.validationInfoNotifier);
 }
 

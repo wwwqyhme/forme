@@ -49,7 +49,7 @@ class FormeFieldValidateSnapshot<T> {
   /// validated value , may not equals the field's value
   final T value;
 
-  /// validate result , may not equals the field's current error if performed another validate during async validation
+  /// validation info , may not equals the field's current validation info if performed another validate during async validation
   final FormeFieldValidationInfo info;
 
   final int order;

@@ -82,7 +82,7 @@ class FormeValidateErrorBuilder extends StatelessWidget {
   final String? name;
   final Widget? child;
   final Widget Function(BuildContext context, FormeFieldController? controller,
-      FormeFieldValidationInfo? error, Widget? child) builder;
+      FormeFieldValidationInfo? info, Widget? child) builder;
 
   @override
   Widget build(BuildContext context) {
@@ -97,8 +97,8 @@ class FormeValidateErrorBuilder extends StatelessWidget {
         (name == null || fieldController.name == name)) {
       return ValueListenableBuilder<FormeFieldValidationInfo>(
           valueListenable: fieldController.validationInfoListenable,
-          builder: (context, error, child) {
-            return builder(context, fieldController, error, child);
+          builder: (context, info, child) {
+            return builder(context, fieldController, info, child);
           });
     }
 
@@ -116,8 +116,8 @@ class FormeValidateErrorBuilder extends StatelessWidget {
           }
           return ValueListenableBuilder<FormeFieldValidationInfo>(
               valueListenable: controller.validationInfoListenable,
-              builder: (context, error, child) {
-                return builder(context, controller, error, child);
+              builder: (context, info, child) {
+                return builder(context, controller, info, child);
               });
         });
   }

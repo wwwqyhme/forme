@@ -42,14 +42,7 @@ class FormeField<T> extends StatefulWidget {
   final FormeValueChanged<T>? onValueChanged;
   final FormeFocusChanged<T>? onFocusChanged;
 
-  /// used to listen field's validate errorText changed
-  ///
-  /// triggered when:
-  ///
-  /// 1. if autovalidateMode is not disabled, **in this case, will triggered after current frame completed**
-  /// 2. after called [FormeFieldController.validate] method
-  ///
-  /// **errorText will be null if field's errorText from nonnull to null**
+  /// used to listen field's validation info changes
   final FormeFieldValidationInfoChanged<T>? onValidationInfoChanged;
 
   /// called after [FormeController] or [FormeFieldController] initialed

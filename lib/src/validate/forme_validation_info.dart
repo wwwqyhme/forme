@@ -72,6 +72,7 @@ class FormeValidationInfo {
   /// any field validate failed
   bool get isFail => _infos.values.any((element) => element.isFail);
 
-  /// get validation info of field by field name
-  FormeFieldValidationInfo? getValidationInfo(String name) => _infos[name];
+  /// get all fields validation info
+  Map<String, FormeFieldValidationInfo> get fieldInfos =>
+      Map.unmodifiable(_infos);
 }

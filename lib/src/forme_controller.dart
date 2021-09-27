@@ -21,10 +21,8 @@ abstract class FormeController {
   /// get form data
   Map<String, dynamic> get data;
 
-  /// get error msg after validated
-  ///
-  /// this method can get error even though  [Forme.quietlyValidate] is true
-  Map<FormeFieldController, String> get errors;
+  /// get validation info of Form
+  FormeValidationInfo get validationInfo;
 
   /// perform a validate
   ///
@@ -34,7 +32,7 @@ abstract class FormeController {
   ///
   /// if [clearError] is true, will clear field's error before validate
   ///
-  /// if [validateByOrder] is true, only one field will be validated at a time ! will not continue validate if any field validation not password or failed
+  /// if [validateByOrder] is true, only one field will be validated at a time ! will not continue validate if any field validation not passed or failed
   ///
   /// **this method is depends on [Future.wait] and eagerError is true**
   ///
@@ -97,8 +95,8 @@ abstract class FormeController {
   ///   ```
   ValueListenable<FormeFieldController?> fieldListenable(String name);
 
-  /// used to listen any form field's error changed
-  ValueListenable<FormeValidationInfo?> get validationInfoListenable;
+  /// used to listen any form field's validation info changed
+  ValueListenable<FormeValidationInfo> get validationInfoListenable;
 }
 
 abstract class FormeFieldController<T> {
@@ -149,15 +147,13 @@ abstract class FormeFieldController<T> {
   /// reset field
   ///
   /// 1. set field value to initialValue
-  /// 2. clear error message
+  /// 2. reset validation info
   void reset();
 
-  /// get error
-  ///
-  /// error is null means this field has not validated yet
+  /// get validation info
   ///
   /// 1. [FormeFieldValidationInfo.state] is `valid` , means field passed validation
-  /// 2. [FormeFieldValidationInfo.state] is `invalid` , means field not passed validation , [FormeFieldValidationInfo.text] is not null
+  /// 2. [FormeFieldValidationInfo.state] is `invalid` , means field not passed validation , [FormeFieldValidationInfo.error] is not null
   /// 3. [FormeFieldValidationInfo.state] is `validating` , means an async validation is in progress
   /// 4. [FormeFieldValidationInfo.state] is `fail` , means an error is occurred when performing an async validation , but [Form ValidateError] will not include this error , you must handle it by yourself
   /// 5. [FormeFieldValidationInfo.state] is `waiting` means field has not validated yet or reset after validate
