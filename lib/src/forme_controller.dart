@@ -93,9 +93,11 @@ abstract class FormeController {
   ///     FormeTextField(name:'username')
   ///   )
   ///   ```
-  ValueListenable<FormeFieldController?> fieldListenable(String name);
+  ValueListenable<FormeFieldController<T>?> fieldListenable<T>(String name);
 
-  /// used to listen any form field's validation info changed
+  /// used to listen any form field's validation info changes
+  ///
+  /// will also triggered when field registered to forme or unregistered
   ValueListenable<FormeValidationInfo> get validationInfoListenable;
 }
 

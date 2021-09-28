@@ -71,7 +71,7 @@ class ValueListenableBuilder2<A, B> extends StatelessWidget {
   }
 }
 
-class FormeFieldValidationInfoBuilder extends StatelessWidget {
+class FormeFieldValidationInfoBuilder<T> extends StatelessWidget {
   const FormeFieldValidationInfoBuilder({
     Key? key,
     this.name,
@@ -81,12 +81,15 @@ class FormeFieldValidationInfoBuilder extends StatelessWidget {
 
   final String? name;
   final Widget? child;
-  final Widget Function(BuildContext context, FormeFieldController? controller,
-      FormeFieldValidationInfo? info, Widget? child) builder;
+  final Widget Function(
+      BuildContext context,
+      FormeFieldController<T>? controller,
+      FormeFieldValidationInfo? info,
+      Widget? child) builder;
 
   @override
   Widget build(BuildContext context) {
-    final FormeFieldController? fieldController = FormeField.of(context);
+    final FormeFieldController<T>? fieldController = FormeField.of<T>(context);
 
     if (name == null && fieldController == null) {
       throw Exception(
@@ -108,8 +111,8 @@ class FormeFieldValidationInfoBuilder extends StatelessWidget {
       throw Exception('this widget must be placed in FormeField or Forme');
     }
 
-    return ValueListenableBuilder<FormeFieldController?>(
-        valueListenable: controller.fieldListenable(name!),
+    return ValueListenableBuilder<FormeFieldController<T>?>(
+        valueListenable: controller.fieldListenable<T>(name!),
         builder: (context, controller, child) {
           if (controller == null) {
             return builder(context, null, null, child);

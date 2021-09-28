@@ -59,20 +59,20 @@ class FormeValidationInfo {
 
   const FormeValidationInfo(this._infos);
 
-  /// all fields is valid or no validator
-  bool get isValidOrUnnecessary => _infos.values
+  /// form has no fields or  all fields is valid or no validator
+  bool get isValidOrUnnecessary => _infos.values.isEmpty || _infos.values
       .every((element) => element.isValid || element.isUnnecessary);
 
   /// any field is invalid
-  bool get isInvalid => _infos.values.any((element) => element.isInvalid);
+  bool get isInvalid => _infos.values.isNotEmpty && _infos.values.any((element) => element.isInvalid);
 
   /// any field is validating
-  bool get isValidating => _infos.values.any((element) => element.isValidating);
+  bool get isValidating => _infos.values.isNotEmpty && _infos.values.any((element) => element.isValidating);
 
   /// any field validate failed
-  bool get isFail => _infos.values.any((element) => element.isFail);
+  bool get isFail => _infos.values.isNotEmpty && _infos.values.any((element) => element.isFail);
 
   /// get all fields validation info
-  Map<String, FormeFieldValidationInfo> get fieldInfos =>
+  Map<String, FormeFieldValidationInfo> get fieldValidationInfos =>
       Map.unmodifiable(_infos);
 }

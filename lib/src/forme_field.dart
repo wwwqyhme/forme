@@ -94,7 +94,11 @@ class FormeField<T> extends StatefulWidget {
   @override
   FormeFieldState<T> createState() => FormeFieldState();
 
-  static FormeFieldController<dynamic>? of(BuildContext context) {
-    return FormeFieldScope.of(context);
+  static FormeFieldController<T>? of<T>(BuildContext context) {
+    final FormeFieldController? controller = FormeFieldScope.of(context);
+    if (controller == null) {
+      return null;
+    }
+    return controller as FormeFieldController<T>;
   }
 }

@@ -93,8 +93,8 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   List<FormeFieldController> get controllers => _currentController.controllers;
 
   @override
-  ValueListenable<FormeFieldController?> fieldListenable(String name) =>
-      _currentController.fieldListenable(name);
+  ValueListenable<FormeFieldController<T>?> fieldListenable<T>(String name) =>
+      _currentController.fieldListenable<T>(name);
 
   @override
   ValueListenable<FormeValidationInfo> get validationInfoListenable =>
@@ -324,11 +324,15 @@ class _FormeState extends State<Forme> {
     }
   }
 
-  void fieldValidationInfoChange(
-      FormeFieldController controller, FormeFieldValidationInfo info) {
+  void updateValidationInfo(){
     validationInfoNotifier.value = FormeValidationInfo(states
         .asMap()
         .map((key, value) => MapEntry(value.name, value._validationInfo)));
+  }
+
+  void fieldValidationInfoChange(
+      FormeFieldController controller, FormeFieldValidationInfo info) {
+    updateValidationInfo();
     widget.onValidationInfoChanged?.call(controller, info);
   }
 
@@ -343,11 +347,14 @@ class _FormeState extends State<Forme> {
   void registerField(FormeFieldState state) {
     states.add(state);
     fieldNotifiers[state.name]?.value = state.controller;
+    updateValidationInfo();
+
   }
 
   void unregisterField(FormeFieldState state) {
     states.remove(state);
     fieldNotifiers[state.name]?.value = null;
+    updateValidationInfo();
   }
 
   bool get isValueChanged => states.any((element) => element.isValueChanged);
@@ -960,8 +967,8 @@ class _FormeController extends FormeController {
       state.states.map((e) => e.controller).toList();
 
   @override
-  ValueListenable<FormeFieldController?> fieldListenable(String name) =>
-      _ValueListenable(state.fieldListenable(name));
+  ValueListenable<FormeFieldController<T>?> fieldListenable<T>(String name) =>
+      _FormeFieldControllerListenable<T>(state.fieldListenable(name));
 
   @override
   ValueListenable<FormeValidationInfo> get validationInfoListenable =>
@@ -982,6 +989,25 @@ class _ValueListenable<T> extends ValueListenable<T> {
 
   @override
   T get value => delegate.value;
+}
+
+class _FormeFieldControllerListenable<T>
+    extends ValueListenable<FormeFieldController<T>?> {
+  final ValueNotifier<FormeFieldController?> delegate;
+
+  const _FormeFieldControllerListenable(this.delegate);
+
+  @override
+  void addListener(VoidCallback listener) => delegate.addListener(listener);
+
+  @override
+  void removeListener(VoidCallback listener) =>
+      delegate.removeListener(listener);
+
+  @override
+  FormeFieldController<T>? get value => delegate.value == null
+      ? null
+      : delegate.value! as FormeFieldController<T>;
 }
 
 class _FormeFieldController<T> implements FormeFieldController<T> {
