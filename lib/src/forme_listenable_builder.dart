@@ -71,8 +71,8 @@ class ValueListenableBuilder2<A, B> extends StatelessWidget {
   }
 }
 
-class FormeValidateErrorBuilder extends StatelessWidget {
-  const FormeValidateErrorBuilder({
+class FormeFieldValidationInfoBuilder extends StatelessWidget {
+  const FormeFieldValidationInfoBuilder({
     Key? key,
     this.name,
     required this.builder,
