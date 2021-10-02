@@ -125,7 +125,7 @@ class Forme extends StatefulWidget {
   final Map<String, dynamic> initialValue;
 
   /// used to listen field's validation info changed
-  final FormeFieldValidationInfoChanged? onValidationInfoChanged;
+  final FormeFieldValidationInfoChanged? onValidationChanged;
 
   final WillPopCallback? onWillPop;
 
@@ -151,7 +151,7 @@ class Forme extends StatefulWidget {
     this.onValueChanged,
     required this.child,
     this.initialValue = const <String, dynamic>{},
-    this.onValidationInfoChanged,
+    this.onValidationChanged,
     this.onWillPop,
     this.quietlyValidate = false,
     this.onFocusChanged,
@@ -324,7 +324,7 @@ class _FormeState extends State<Forme> {
     }
   }
 
-  void updateValidationInfo(){
+  void updateValidationInfo() {
     validationInfoNotifier.value = FormeValidationInfo(states
         .asMap()
         .map((key, value) => MapEntry(value.name, value._validationInfo)));
@@ -333,7 +333,7 @@ class _FormeState extends State<Forme> {
   void fieldValidationInfoChange(
       FormeFieldController controller, FormeFieldValidationInfo info) {
     updateValidationInfo();
-    widget.onValidationInfoChanged?.call(controller, info);
+    widget.onValidationChanged?.call(controller, info);
   }
 
   void fieldFocusChange(FormeFieldController controller, bool hasFocus) {
@@ -348,7 +348,6 @@ class _FormeState extends State<Forme> {
     states.add(state);
     fieldNotifiers[state.name]?.value = state.controller;
     updateValidationInfo();
-
   }
 
   void unregisterField(FormeFieldState state) {
@@ -534,8 +533,8 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     });
 
     _validationInfoNotifier.addListener(() {
-      onValidationInfoChanged(_validationInfoNotifier.value);
-      widget.onValidationInfoChanged
+      onValidationChanged(_validationInfoNotifier.value);
+      widget.onValidationChanged
           ?.call(controller, _validationInfoNotifier.value);
       _formeState?.fieldValidationInfoChange(
           controller, _validationInfoNotifier.value);
@@ -840,7 +839,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   /// override this method if you want to listen validation info changed
   @protected
-  void onValidationInfoChanged(FormeFieldValidationInfo info) {}
+  void onValidationChanged(FormeFieldValidationInfo info) {}
 }
 
 class _FormeController extends FormeController {

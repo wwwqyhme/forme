@@ -43,7 +43,7 @@ class FormeField<T> extends StatefulWidget {
   final FormeFocusChanged<T>? onFocusChanged;
 
   /// used to listen field's validation info changes
-  final FormeFieldValidationInfoChanged<T>? onValidationInfoChanged;
+  final FormeFieldValidationInfoChanged<T>? onValidationChanged;
 
   /// called after [FormeController] or [FormeFieldController] initialed
   ///
@@ -77,7 +77,7 @@ class FormeField<T> extends StatefulWidget {
     this.asyncValidatorDebounce,
     AutovalidateMode? autovalidateMode,
     this.onValueChanged,
-    this.onValidationInfoChanged,
+    this.onValidationChanged,
     this.validator,
     this.asyncValidator,
     this.order,

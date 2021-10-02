@@ -36,7 +36,7 @@ differences:
 
 ## 2.5.0
 
-1. remove `onValueChanged`,`onValidationInfoChanged`,`onFocusChanged`,`onInitialed`,`validator`,`autovalidateMode` on `Field` , they are moved to `FormeFieldListener` , `validator` is renamed to `onValidate` 
+1. remove `onValueChanged`,`onValidationChanged`,`onFocusChanged`,`onInitialed`,`validator`,`autovalidateMode` on `Field` , they are moved to `FormeFieldListener` , `validator` is renamed to `onValidate` 
 2. support `onAsyncValidate` and `asyncValidatorDebounce` on `FormeValueFieldListener` to support async validate
 3. remove `fieldListenable` from `FormeFieldController`
 4. remove `lazyFieldListenable` from `FormeKey`
@@ -94,7 +94,7 @@ differences:
 
 1. StatefulField support `onInitialed` , used to listen `FormeFieldController` initialed
 2. add `FormeValidateUtils`
-3. bug fix : onValidationInfoChanged and errorTextListenable not triggered in build 
+3. bug fix : onValidationChanged and errorTextListenable not triggered in build 
 
 ## 2.0.0
 
