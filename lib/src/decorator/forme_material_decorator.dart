@@ -62,11 +62,12 @@ class FormeInputDecorator<T> extends StatelessWidget {
       }
       return ValueListenableBuilder2(
         controller.focusListenable,
-        controller.validationInfoListenable,
-        builder: (context, bool focus, FormeFieldValidationInfo info, _child) {
+        controller.validationListenable,
+        builder:
+            (context, bool focus, FormeFieldValidation validation, _child) {
           return InputDecorator(
             isFocused: focus,
-            decoration: _decoration.copyWith(errorText: info.error),
+            decoration: _decoration.copyWith(errorText: validation.error),
             child: child,
           );
         },
@@ -86,14 +87,14 @@ class FormeInputDecorator<T> extends StatelessWidget {
       }
       return ValueListenableBuilder3(
         controller.focusListenable,
-        controller.validationInfoListenable,
+        controller.validationListenable,
         controller.valueListenable,
-        builder: (context, bool focus, FormeFieldValidationInfo info, T? value,
-            _child) {
+        builder: (context, bool focus, FormeFieldValidation validation,
+            T? value, _child) {
           return InputDecorator(
             isEmpty: emptyChecker!(value),
             isFocused: focus,
-            decoration: _decoration.copyWith(errorText: info.error),
+            decoration: _decoration.copyWith(errorText: validation.error),
             child: child,
           );
         },

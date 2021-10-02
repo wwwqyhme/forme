@@ -98,7 +98,7 @@ class FormeCupertinoDateTimeField extends FormeField<DateTime?> {
     AutovalidateMode? autovalidateMode,
     FormeValueChanged<DateTime?>? onValueChanged,
     FormeFocusChanged<DateTime?>? onFocusChanged,
-    FormeFieldValidationInfoChanged<DateTime?>? onValidationChanged,
+    FormeFieldValidationChanged<DateTime?>? onValidationChanged,
     FormeFieldInitialed<DateTime?>? onInitialed,
     FormeFieldSetter<DateTime?>? onSaved,
     FormeValidator<DateTime?>? validator,

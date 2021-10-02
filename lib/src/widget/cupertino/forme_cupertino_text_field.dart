@@ -72,7 +72,7 @@ class FormeCupertinoTextField extends FormeField<String> {
     AutovalidateMode? autovalidateMode,
     FormeValueChanged<String>? onValueChanged,
     FormeFocusChanged<String>? onFocusChanged,
-    FormeFieldValidationInfoChanged<String>? onValidationChanged,
+    FormeFieldValidationChanged<String>? onValidationChanged,
     FormeFieldInitialed<String>? onInitialed,
     FormeFieldSetter<String>? onSaved,
     FormeValidator<String>? validator,

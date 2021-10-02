@@ -2,11 +2,11 @@ import 'package:flutter/widgets.dart';
 
 /// forme validate error
 @immutable
-class FormeFieldValidationInfo {
+class FormeFieldValidation {
   final String? error;
   final FormeValidationState state;
 
-  const FormeFieldValidationInfo(this.error, this.state);
+  const FormeFieldValidation(this.error, this.state);
 
   bool get isValid => state == FormeValidationState.valid;
 
@@ -25,7 +25,7 @@ class FormeFieldValidationInfo {
 
   @override
   bool operator ==(Object other) =>
-      other is FormeFieldValidationInfo &&
+      other is FormeFieldValidation &&
       other.error == error &&
       other.state == state;
 
@@ -54,36 +54,36 @@ enum FormeValidationState {
 }
 
 @immutable
-class FormeValidationInfo {
-  final Map<String, FormeFieldValidationInfo> _infos;
+class FormeValidation {
+  final Map<String, FormeFieldValidation> _validations;
 
-  const FormeValidationInfo(this._infos);
+  const FormeValidation(this._validations);
 
   /// whether form has any fields
-  bool get isEmpty => _infos.isEmpty;
+  bool get isEmpty => _validations.isEmpty;
 
   /// form has no fields or  all fields is valid or no validator or no fields in form
   bool get isValidOrUnnecessaryOrEmpty =>
       isEmpty ||
-      _infos.values
+      _validations.values
           .every((element) => element.isValid || element.isUnnecessary);
 
   /// any field is invalid
   bool get isInvalid =>
-      _infos.values.isNotEmpty &&
-      _infos.values.any((element) => element.isInvalid);
+      _validations.values.isNotEmpty &&
+      _validations.values.any((element) => element.isInvalid);
 
   /// any field is validating
   bool get isValidating =>
-      _infos.values.isNotEmpty &&
-      _infos.values.any((element) => element.isValidating);
+      _validations.values.isNotEmpty &&
+      _validations.values.any((element) => element.isValidating);
 
   /// any field validate failed
   bool get isFail =>
-      _infos.values.isNotEmpty &&
-      _infos.values.any((element) => element.isFail);
+      _validations.values.isNotEmpty &&
+      _validations.values.any((element) => element.isFail);
 
-  /// get all fields validation info
-  Map<String, FormeFieldValidationInfo> get fieldValidationInfos =>
-      Map.unmodifiable(_infos);
+  /// get all fields validations
+  Map<String, FormeFieldValidation> get validations =>
+      Map.unmodifiable(_validations);
 }

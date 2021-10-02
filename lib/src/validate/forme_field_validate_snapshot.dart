@@ -49,8 +49,8 @@ class FormeFieldValidateSnapshot<T> {
   /// validated value , may not equals the field's value
   final T value;
 
-  /// validation info , may not equals the field's current validation info if performed another validate during async validation
-  final FormeFieldValidationInfo info;
+  /// validation , may not equals the field's current validation  if performed another validate during async validation
+  final FormeFieldValidation validation;
 
   final int order;
   final FormeFieldController<T> controller;
@@ -63,7 +63,7 @@ class FormeFieldValidateSnapshot<T> {
 
   FormeFieldValidateSnapshot(
     this.value,
-    this.info,
+    this.validation,
     this.order,
     this.controller,
     this.isValueChangedDuringValidation,
@@ -71,6 +71,6 @@ class FormeFieldValidateSnapshot<T> {
   );
 
   /// whether field is invalid
-  bool get isInvalid => info.isInvalid;
-  bool get isValid => info.isValid;
+  bool get isInvalid => validation.isInvalid;
+  bool get isValid => validation.isValid;
 }

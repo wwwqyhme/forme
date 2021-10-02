@@ -37,7 +37,7 @@ class FormeSlider extends FormeField<double> {
     AutovalidateMode? autovalidateMode,
     FormeValueChanged<double>? onValueChanged,
     FormeFocusChanged<double>? onFocusChanged,
-    FormeFieldValidationInfoChanged<double>? onValidationChanged,
+    FormeFieldValidationChanged<double>? onValidationChanged,
     FormeFieldInitialed<double>? onInitialed,
     FormeFieldSetter<double>? onSaved,
     FormeValidator<double>? validator,

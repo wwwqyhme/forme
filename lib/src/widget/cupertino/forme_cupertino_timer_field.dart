@@ -92,7 +92,7 @@ class FormeCupertinoTimerField extends FormeField<Duration?> {
     AutovalidateMode? autovalidateMode,
     FormeValueChanged<Duration?>? onValueChanged,
     FormeFocusChanged<Duration?>? onFocusChanged,
-    FormeFieldValidationInfoChanged<Duration?>? onValidationChanged,
+    FormeFieldValidationChanged<Duration?>? onValidationChanged,
     FormeFieldInitialed<Duration?>? onInitialed,
     FormeFieldSetter<Duration?>? onSaved,
     FormeValidator<Duration?>? validator,

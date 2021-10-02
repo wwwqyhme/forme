@@ -20,7 +20,7 @@ class FormeFilterChip<T extends Object> extends FormeField<List<T>> {
     AutovalidateMode? autovalidateMode,
     FormeValueChanged<List<T>>? onValueChanged,
     FormeFocusChanged<List<T>>? onFocusChanged,
-    FormeFieldValidationInfoChanged<List<T>>? onValidationChanged,
+    FormeFieldValidationChanged<List<T>>? onValidationChanged,
     FormeFieldInitialed<List<T>>? onInitialed,
     FormeFieldSetter<List<T>>? onSaved,
     FormeValidator<List<T>>? validator,

@@ -28,7 +28,7 @@ class FormeCupertinoPicker extends FormeField<int> {
     AutovalidateMode? autovalidateMode,
     FormeValueChanged<int>? onValueChanged,
     FormeFocusChanged<int>? onFocusChanged,
-    FormeFieldValidationInfoChanged<int>? onValidationChanged,
+    FormeFieldValidationChanged<int>? onValidationChanged,
     FormeFieldInitialed<int>? onInitialed,
     FormeFieldSetter<int>? onSaved,
     FormeValidator<int>? validator,

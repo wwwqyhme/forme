@@ -21,8 +21,8 @@ abstract class FormeController {
   /// get form data
   Map<String, dynamic> get data;
 
-  /// get validation info of Form
-  FormeValidationInfo get validationInfo;
+  /// get validation of Form
+  FormeValidation get validation;
 
   /// perform a validate
   ///
@@ -95,10 +95,10 @@ abstract class FormeController {
   ///   ```
   ValueListenable<FormeFieldController<T>?> fieldListenable<T>(String name);
 
-  /// used to listen any form field's validation info changes
+  /// used to listen any form field's validation changes
   ///
   /// will also triggered when field registered to forme or unregistered
-  ValueListenable<FormeValidationInfo> get validationInfoListenable;
+  ValueListenable<FormeValidation> get validationListenable;
 }
 
 abstract class FormeFieldController<T> {
@@ -149,29 +149,29 @@ abstract class FormeFieldController<T> {
   /// reset field
   ///
   /// 1. set field value to initialValue
-  /// 2. reset validation info
+  /// 2. reset validation
   void reset();
 
-  /// get validation info
+  /// get validation
   ///
-  /// 1. [FormeFieldValidationInfo.state] is `valid` , means field passed validation
-  /// 2. [FormeFieldValidationInfo.state] is `invalid` , means field not passed validation , [FormeFieldValidationInfo.error] is not null
-  /// 3. [FormeFieldValidationInfo.state] is `validating` , means an async validation is in progress
-  /// 4. [FormeFieldValidationInfo.state] is `fail` , means an error is occurred when performing an async validation , but [Form ValidateError] will not include this error , you must handle it by yourself
-  /// 5. [FormeFieldValidationInfo.state] is `waiting` means field has not validated yet or reset after validate
-  /// 6. [FormeFieldValidationInfo.state] is `unnecessary` means field has no validators
+  /// 1. [FormeFieldValidation.state] is `valid` , means field passed validation
+  /// 2. [FormeFieldValidation.state] is `invalid` , means field not passed validation , [FormeFieldValidation.error] is not null
+  /// 3. [FormeFieldValidation.state] is `validating` , means an async validation is in progress
+  /// 4. [FormeFieldValidation.state] is `fail` , means an error is occurred when performing an async validation , but [Form ValidateError] will not include this error , you must handle it by yourself
+  /// 5. [FormeFieldValidation.state] is `waiting` means field has not validated yet or reset after validate
+  /// 6. [FormeFieldValidation.state] is `unnecessary` means field has no validators
   ///
   /// **you can still get error text even though [Forme.quietlyValidate] is true**
   ///
   /// **value notifier is always be trigger before errorNotifier , so  when you want to get error in onValueChanged , you should call this method in [WidgetsBinding.instance.addPostFrameCallback]**
-  FormeFieldValidationInfo get validationInfo;
+  FormeFieldValidation get validation;
 
-  /// get validation info listenable
+  /// get validation listenable
   ///
   /// it's useful when you want to display error by your custom way!
   ///
   /// this notifier is used for [ValueListenableBuilder]
-  ValueListenable<FormeFieldValidationInfo> get validationInfoListenable;
+  ValueListenable<FormeFieldValidation> get validationListenable;
 
   /// get value listenable
   ///
@@ -226,11 +226,11 @@ class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
   set value(T value) => delegate.value = value;
 
   @override
-  FormeFieldValidationInfo get validationInfo => delegate.validationInfo;
+  FormeFieldValidation get validation => delegate.validation;
 
   @override
-  ValueListenable<FormeFieldValidationInfo> get validationInfoListenable =>
-      delegate.validationInfoListenable;
+  ValueListenable<FormeFieldValidation> get validationListenable =>
+      delegate.validationListenable;
 
   @override
   ValueListenable<bool> get focusListenable => delegate.focusListenable;

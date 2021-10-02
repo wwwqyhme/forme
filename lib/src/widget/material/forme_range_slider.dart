@@ -39,7 +39,7 @@ class FormeRangeSlider extends FormeField<RangeValues> {
     AutovalidateMode? autovalidateMode,
     FormeValueChanged<RangeValues>? onValueChanged,
     FormeFocusChanged<RangeValues>? onFocusChanged,
-    FormeFieldValidationInfoChanged<RangeValues>? onValidationChanged,
+    FormeFieldValidationChanged<RangeValues>? onValidationChanged,
     FormeFieldInitialed<RangeValues>? onInitialed,
     FormeFieldSetter<RangeValues>? onSaved,
     FormeValidator<RangeValues>? validator,

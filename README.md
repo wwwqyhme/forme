@@ -37,7 +37,7 @@ Widget forme = Forme(
 | readOnly | false | `bool` | whether form should be readOnly,default is `false` |
 | onValueChanged | false | `FormeValueChanged` | listen form field's value change |
 | initialValue | false | `Map<String,dynamic>` | initialValue , **will override FormField's initialValue** |
-| onValidationChanged  | false | `FormeFieldValidationInfoChanged` | listen form field's errorText change  |
+| onValidationChanged  | false | `FormeFieldValidationChanged` | listen form field's errorText change  |
 | onWillPop | false | `WillPopCallback` | Signature for a callback that verifies that it's OK to call Navigator.pop |
 | quietlyValidate | false | `bool` | if this attribute is true , will not display default error text|
 | onFocusChanged | false | `FormeFocusChanged` | listen form field's focus change |
@@ -58,7 +58,7 @@ Widget forme = Forme(
 | autovalidateMode | false | `AutovalidateMode` | autovalidate mode |
 | onValueChanged | false | `FormeValueChanged` | triggered when field's value changed |
 | onFocusChanged | false | `FormeFocusChanged` | triggered when field's focus state changed |
-| onValidationChanged | false | `FormeFieldValidationInfoChanged` | triggered when field's validation error changed |
+| onValidationChanged | false | `FormeFieldValidationChanged` | triggered when field's validation error changed |
 | onInitialed | false | `FormeFieldInitialed` | triggered when field initialed |
 | onSaved | false | `FormeFieldSetter` | triggered when form saved |
 | validator | false | `FormeValidator` | sync validator |

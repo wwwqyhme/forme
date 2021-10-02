@@ -22,7 +22,7 @@ class FormeCupertinoSlidingSegmentedControl<T extends Object>
     AutovalidateMode? autovalidateMode,
     FormeValueChanged<T?>? onValueChanged,
     FormeFocusChanged<T?>? onFocusChanged,
-    FormeFieldValidationInfoChanged<T?>? onValidationChanged,
+    FormeFieldValidationChanged<T?>? onValidationChanged,
     FormeFieldInitialed<T?>? onInitialed,
     FormeFieldSetter<T?>? onSaved,
     FormeValidator<T?>? validator,

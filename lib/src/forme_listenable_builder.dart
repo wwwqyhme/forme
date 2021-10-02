@@ -71,8 +71,8 @@ class ValueListenableBuilder2<A, B> extends StatelessWidget {
   }
 }
 
-class FormeFieldValidationInfoBuilder<T> extends StatelessWidget {
-  const FormeFieldValidationInfoBuilder({
+class FormeFieldValidationBuilder<T> extends StatelessWidget {
+  const FormeFieldValidationBuilder({
     Key? key,
     this.name,
     required this.builder,
@@ -84,7 +84,7 @@ class FormeFieldValidationInfoBuilder<T> extends StatelessWidget {
   final Widget Function(
       BuildContext context,
       FormeFieldController<T>? controller,
-      FormeFieldValidationInfo? info,
+      FormeFieldValidation? validation,
       Widget? child) builder;
 
   @override
@@ -98,10 +98,10 @@ class FormeFieldValidationInfoBuilder<T> extends StatelessWidget {
 
     if (fieldController != null &&
         (name == null || fieldController.name == name)) {
-      return ValueListenableBuilder<FormeFieldValidationInfo>(
-          valueListenable: fieldController.validationInfoListenable,
-          builder: (context, info, child) {
-            return builder(context, fieldController, info, child);
+      return ValueListenableBuilder<FormeFieldValidation>(
+          valueListenable: fieldController.validationListenable,
+          builder: (context, validation, child) {
+            return builder(context, fieldController, validation, child);
           });
     }
 
@@ -117,10 +117,10 @@ class FormeFieldValidationInfoBuilder<T> extends StatelessWidget {
           if (controller == null) {
             return builder(context, null, null, child);
           }
-          return ValueListenableBuilder<FormeFieldValidationInfo>(
-              valueListenable: controller.validationInfoListenable,
-              builder: (context, info, child) {
-                return builder(context, controller, info, child);
+          return ValueListenableBuilder<FormeFieldValidation>(
+              valueListenable: controller.validationListenable,
+              builder: (context, validation, child) {
+                return builder(context, controller, validation, child);
               });
         });
   }

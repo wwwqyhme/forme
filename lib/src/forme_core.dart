@@ -40,7 +40,7 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   bool get readOnly => _currentController.readOnly;
 
   @override
-  FormeValidationInfo get validationInfo => _currentController.validationInfo;
+  FormeValidation get validation => _currentController.validation;
 
   @override
   T field<T extends FormeFieldController<dynamic>>(String name) =>
@@ -97,8 +97,8 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
       _currentController.fieldListenable<T>(name);
 
   @override
-  ValueListenable<FormeValidationInfo> get validationInfoListenable =>
-      _currentController.validationInfoListenable;
+  ValueListenable<FormeValidation> get validationListenable =>
+      _currentController.validationListenable;
 }
 
 /// build your form !
@@ -124,8 +124,8 @@ class Forme extends StatefulWidget {
   /// **this property can be overwritten by field's initialValue**
   final Map<String, dynamic> initialValue;
 
-  /// used to listen field's validation info changed
-  final FormeFieldValidationInfoChanged? onValidationChanged;
+  /// used to listen field's validation changed
+  final FormeFieldValidationChanged? onValidationChanged;
 
   final WillPopCallback? onWillPop;
 
@@ -171,9 +171,8 @@ class _FormeState extends State<Forme> {
   final List<FormeFieldState> states = [];
   late final _FormeController controller;
   final Map<String, ValueNotifier<FormeFieldController?>> fieldNotifiers = {};
-  late final FormeMountedValueNotifier<FormeValidationInfo>
-      validationInfoNotifier =
-      FormeMountedValueNotifier(const FormeValidationInfo({}), this);
+  late final FormeMountedValueNotifier<FormeValidation> validationNotifier =
+      FormeMountedValueNotifier(const FormeValidation({}), this);
 
   Map<String, dynamic> get initialValue => widget.initialValue;
 
@@ -217,7 +216,7 @@ class _FormeState extends State<Forme> {
 
   @override
   void dispose() {
-    validationInfoNotifier.dispose();
+    validationNotifier.dispose();
     fieldNotifiers.forEach((key, value) {
       value.dispose();
     });
@@ -324,16 +323,16 @@ class _FormeState extends State<Forme> {
     }
   }
 
-  void updateValidationInfo() {
-    validationInfoNotifier.value = FormeValidationInfo(states
+  void updateValidation() {
+    validationNotifier.value = FormeValidation(states
         .asMap()
-        .map((key, value) => MapEntry(value.name, value._validationInfo)));
+        .map((key, value) => MapEntry(value.name, value._validation)));
   }
 
-  void fieldValidationInfoChange(
-      FormeFieldController controller, FormeFieldValidationInfo info) {
-    updateValidationInfo();
-    widget.onValidationChanged?.call(controller, info);
+  void fieldValidationChange(
+      FormeFieldController controller, FormeFieldValidation validation) {
+    updateValidation();
+    widget.onValidationChanged?.call(controller, validation);
   }
 
   void fieldFocusChange(FormeFieldController controller, bool hasFocus) {
@@ -347,13 +346,13 @@ class _FormeState extends State<Forme> {
   void registerField(FormeFieldState state) {
     states.add(state);
     fieldNotifiers[state.name]?.value = state.controller;
-    updateValidationInfo();
+    updateValidation();
   }
 
   void unregisterField(FormeFieldState state) {
     states.remove(state);
     fieldNotifiers[state.name]?.value = null;
-    updateValidationInfo();
+    updateValidation();
   }
 
   bool get isValueChanged => states.any((element) => element.isValueChanged);
@@ -395,8 +394,8 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   late final FormeMountedValueNotifier<bool> _readOnlyNotifier =
       FormeMountedValueNotifier(false, this);
   late final FormeFieldController<T> controller;
-  late final FormeMountedValueNotifier<FormeFieldValidationInfo>
-      _validationInfoNotifier;
+  late final FormeMountedValueNotifier<FormeFieldValidation>
+      _validationNotifier;
   late final FormeMountedValueNotifier<T> _valueNotifier;
 
   int get order =>
@@ -408,7 +407,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   String get name => widget.name;
 
   T? _oldValue;
-  late FormeFieldValidationInfo _validationInfo;
+  late FormeFieldValidation _validation;
   Timer? _asyncValidatorDebounce;
   bool _ignoreValidate = false;
   bool _hasInteractedByUser = false;
@@ -427,14 +426,14 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   bool get _hasAnyValidator => _hasValidator || _hasAsyncValidator;
 
-  FormeFieldValidationInfo get _initialValidationState => _hasAnyValidator
-      ? const FormeFieldValidationInfo(null, FormeValidationState.waiting)
-      : const FormeFieldValidationInfo(null, FormeValidationState.unnecessary);
+  FormeFieldValidation get _initialValidationState => _hasAnyValidator
+      ? const FormeFieldValidation(null, FormeValidationState.waiting)
+      : const FormeFieldValidation(null, FormeValidationState.unnecessary);
 
   String? get errorText =>
       (_formeState?.quietlyValidate ?? false) || widget.quietlyValidate
           ? null
-          : _validationInfo.error;
+          : _validation.error;
 
   /// get initialValue
   T get initialValue =>
@@ -505,7 +504,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   @override
   void dispose() {
     _asyncValidatorDebounce?.cancel();
-    _validationInfoNotifier.dispose();
+    _validationNotifier.dispose();
     _valueNotifier.dispose();
     _focusNotifier.dispose();
     _readOnlyNotifier.dispose();
@@ -532,12 +531,10 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       _formeState?.fieldValueChange(controller, _valueNotifier.value);
     });
 
-    _validationInfoNotifier.addListener(() {
-      onValidationChanged(_validationInfoNotifier.value);
-      widget.onValidationChanged
-          ?.call(controller, _validationInfoNotifier.value);
-      _formeState?.fieldValidationInfoChange(
-          controller, _validationInfoNotifier.value);
+    _validationNotifier.addListener(() {
+      onValidationChanged(_validationNotifier.value);
+      widget.onValidationChanged?.call(controller, _validationNotifier.value);
+      _formeState?.fieldValidationChange(controller, _validationNotifier.value);
     });
   }
 
@@ -575,7 +572,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     final T oldValue = _value;
     setState(() {
       _validateGen++;
-      _validationInfo = _initialValidationState;
+      _validation = _initialValidationState;
       _hasInteractedByUser = false;
       _ignoreValidate = false;
       _oldValue = oldValue;
@@ -587,7 +584,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     if (!comparator(oldValue, initialValue)) {
       _valueNotifier.value = initialValue;
     }
-    _validationInfoNotifier.value = _initialValidationState;
+    _validationNotifier.value = _initialValidationState;
   }
 
   @protected
@@ -606,8 +603,8 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     _readOnlyNotifier.value = readOnly;
     _value = initialValue;
     _valueNotifier = FormeMountedValueNotifier(initialValue, this);
-    _validationInfo = _initialValidationState;
-    _validationInfoNotifier = FormeMountedValueNotifier(_validationInfo, this);
+    _validation = _initialValidationState;
+    _validationNotifier = FormeMountedValueNotifier(_validation, this);
   }
 
   /// override this method if you want to listen focus changed
@@ -654,15 +651,15 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   void _clearError() {
     _validateGen++;
     setState(() {
-      _validationInfo = _initialValidationState;
+      _validation = _initialValidationState;
     });
-    _validationInfoNotifier.value = _initialValidationState;
+    _validationNotifier.value = _initialValidationState;
   }
 
   void _validate2(VoidCallback onValid) {
     _asyncValidatorDebounce?.cancel();
     if (_ignoreValidate) {
-      if (_validationInfo.isValid) {
+      if (_validation.isValid) {
         onValid();
       }
       return;
@@ -690,27 +687,27 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     }
     final int gen = ++_validateGen;
 
-    void afterUpdateValidationInfo() {
-      if (_validationInfo.isValid) {
+    void afterUpdateValidation() {
+      if (_validation.isValid) {
         _validateValidCallback?.call();
       }
-      if (!_validationInfo.isValidating) {
+      if (!_validation.isValidating) {
         _validateValidCallback = null;
       }
     }
 
-    void notifyValidationInfo(FormeFieldValidationInfo info) {
-      _validationInfo = info;
-      afterUpdateValidationInfo();
+    void notifyValidation(FormeFieldValidation validation) {
+      _validation = validation;
+      afterUpdateValidation();
       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        _validationInfoNotifier.value = _validationInfo;
+        _validationNotifier.value = _validation;
       });
     }
 
     if (_hasValidator) {
       final String? errorText = widget.validator!(controller, value);
       if (errorText != null || !_hasAsyncValidator) {
-        notifyValidationInfo(FormeFieldValidationInfo(
+        notifyValidation(FormeFieldValidation(
             errorText,
             errorText == null
                 ? FormeValidationState.valid
@@ -719,14 +716,14 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       }
     }
     if (_hasAsyncValidator) {
-      notifyValidationInfo(const FormeFieldValidationInfo(
-          null, FormeValidationState.validating));
+      notifyValidation(
+          const FormeFieldValidation(null, FormeValidationState.validating));
       _asyncValidatorDebounce = Timer(
           widget.asyncValidatorDebounce ?? const Duration(milliseconds: 500),
           () {
-        FormeFieldValidationInfo? info;
+        FormeFieldValidation? validation;
         widget.asyncValidator!(controller, value).then((text) {
-          info = FormeFieldValidationInfo(
+          validation = FormeFieldValidation(
               text,
               text == null
                   ? FormeValidationState.valid
@@ -734,13 +731,12 @@ class FormeFieldState<T> extends State<FormeField<T>> {
         }).whenComplete(() {
           if (mounted && gen == _validateGen) {
             setState(() {
-              _validationInfo = info ??
-                  const FormeFieldValidationInfo(
-                      null, FormeValidationState.fail);
+              _validation = validation ??
+                  const FormeFieldValidation(null, FormeValidationState.fail);
               _ignoreValidate = true;
             });
-            afterUpdateValidationInfo();
-            _validationInfoNotifier.value = _validationInfo;
+            afterUpdateValidation();
+            _validationNotifier.value = _validation;
           }
         });
       });
@@ -763,7 +759,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
           Duration.zero,
           () => FormeFieldValidateSnapshot(
               value,
-              const FormeFieldValidationInfo(
+              const FormeFieldValidation(
                   null, FormeValidationState.unnecessary),
               order,
               controller,
@@ -776,29 +772,29 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       return !quietly && gen == _validateGen && mounted;
     }
 
-    void notify(FormeFieldValidationInfo info) {
+    void notify(FormeFieldValidation validation) {
       if (needNotify()) {
         setState(() {
-          _validationInfo = info;
+          _validation = validation;
         });
-        _validationInfoNotifier.value = _validationInfo;
+        _validationNotifier.value = _validation;
       }
     }
 
     if (_hasValidator) {
       final String? errorText = widget.validator!(controller, value);
       if (errorText != null || !_hasAsyncValidator) {
-        final FormeFieldValidationInfo info = FormeFieldValidationInfo(
+        final FormeFieldValidation validation = FormeFieldValidation(
             errorText,
             errorText == null
                 ? FormeValidationState.valid
                 : FormeValidationState.invalid);
-        notify(info);
+        notify(validation);
         return Future.delayed(
             Duration.zero,
             () => FormeFieldValidateSnapshot(
                   value,
-                  info,
+                  validation,
                   order,
                   controller,
                   false,
@@ -809,20 +805,20 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
     if (_hasAsyncValidator) {
       if (!quietly) {
-        notify(const FormeFieldValidationInfo(
-            null, FormeValidationState.validating));
+        notify(
+            const FormeFieldValidation(null, FormeValidationState.validating));
       }
 
       return widget.asyncValidator!(controller, value).then((text) {
-        final FormeFieldValidationInfo info = FormeFieldValidationInfo(
+        final FormeFieldValidation validation = FormeFieldValidation(
             text,
             text == null
                 ? FormeValidationState.valid
                 : FormeValidationState.invalid);
-        return FormeFieldValidateSnapshot(value, info, order, controller,
+        return FormeFieldValidateSnapshot(value, validation, order, controller,
             comparator(value, this.value), comparator(value, initialValue));
       }).whenComplete(() {
-        notify(const FormeFieldValidationInfo(null, FormeValidationState.fail));
+        notify(const FormeFieldValidation(null, FormeValidationState.fail));
       });
     }
 
@@ -837,9 +833,9 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   @protected
   void onValueChanged(T value) {}
 
-  /// override this method if you want to listen validation info changed
+  /// override this method if you want to listen validation changed
   @protected
-  void onValidationChanged(FormeFieldValidationInfo info) {}
+  void onValidationChanged(FormeFieldValidation validation) {}
 }
 
 class _FormeController extends FormeController {
@@ -865,9 +861,9 @@ class _FormeController extends FormeController {
   bool get readOnly => state.readOnly;
 
   @override
-  FormeValidationInfo get validationInfo => FormeValidationInfo(state.states
+  FormeValidation get validation => FormeValidation(state.states
       .asMap()
-      .map((key, value) => MapEntry(value.name, value._validationInfo)));
+      .map((key, value) => MapEntry(value.name, value._validation)));
 
   @override
   T field<T extends FormeFieldController<dynamic>>(String name) {
@@ -970,8 +966,8 @@ class _FormeController extends FormeController {
       _FormeFieldControllerListenable<T>(state.fieldListenable(name));
 
   @override
-  ValueListenable<FormeValidationInfo> get validationInfoListenable =>
-      _ValueListenable(state.validationInfoNotifier);
+  ValueListenable<FormeValidation> get validationListenable =>
+      _ValueListenable(state.validationNotifier);
 }
 
 class _ValueListenable<T> extends ValueListenable<T> {
@@ -1012,7 +1008,7 @@ class _FormeFieldControllerListenable<T>
 class _FormeFieldController<T> implements FormeFieldController<T> {
   final FormeFieldState<T> state;
   @override
-  final ValueListenable<FormeFieldValidationInfo> validationInfoListenable;
+  final ValueListenable<FormeFieldValidation> validationListenable;
   @override
   final ValueListenable<T> valueListenable;
   @override
@@ -1023,8 +1019,7 @@ class _FormeFieldController<T> implements FormeFieldController<T> {
   _FormeFieldController(this.state)
       : focusListenable = _ValueListenable(state._focusNotifier),
         readOnlyListenable = _ValueListenable(state._readOnlyNotifier),
-        validationInfoListenable =
-            _ValueListenable(state._validationInfoNotifier),
+        validationListenable = _ValueListenable(state._validationNotifier),
         valueListenable = _ValueListenable<T>(state._valueNotifier);
 
   @override
@@ -1046,7 +1041,7 @@ class _FormeFieldController<T> implements FormeFieldController<T> {
   T get value => state.value;
 
   @override
-  FormeFieldValidationInfo get validationInfo => state._validationInfo;
+  FormeFieldValidation get validation => state._validation;
 
   @override
   void reset() => state.reset();

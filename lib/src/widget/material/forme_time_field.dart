@@ -68,7 +68,7 @@ class FormeTimeField extends FormeField<TimeOfDay?> {
     ValueChanged<TimeOfDay?>? onSubmitted,
     FormeValueChanged<TimeOfDay?>? onValueChanged,
     FormeFocusChanged<TimeOfDay?>? onFocusChanged,
-    FormeFieldValidationInfoChanged<TimeOfDay?>? onValidationChanged,
+    FormeFieldValidationChanged<TimeOfDay?>? onValidationChanged,
     FormeFieldInitialed<TimeOfDay?>? onInitialed,
     FormeFieldSetter<TimeOfDay?>? onSaved,
     FormeValidator<TimeOfDay?>? validator,

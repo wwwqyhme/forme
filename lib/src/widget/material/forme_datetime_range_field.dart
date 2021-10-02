@@ -71,7 +71,7 @@ class FormeDateTimeRangeField extends FormeField<DateTimeRange?> {
     AutovalidateMode? autovalidateMode,
     FormeValueChanged<DateTimeRange?>? onValueChanged,
     FormeFocusChanged<DateTimeRange?>? onFocusChanged,
-    FormeFieldValidationInfoChanged<DateTimeRange?>? onValidationChanged,
+    FormeFieldValidationChanged<DateTimeRange?>? onValidationChanged,
     FormeFieldInitialed<DateTimeRange?>? onInitialed,
     FormeFieldSetter<DateTimeRange?>? onSaved,
     FormeValidator<DateTimeRange?>? validator,

@@ -14,7 +14,7 @@ class FormeCheckbox extends FormeField<bool> {
     AutovalidateMode? autovalidateMode,
     FormeValueChanged<bool>? onValueChanged,
     FormeFocusChanged<bool>? onFocusChanged,
-    FormeFieldValidationInfoChanged<bool>? onValidationChanged,
+    FormeFieldValidationChanged<bool>? onValidationChanged,
     FormeFieldInitialed<bool>? onInitialed,
     FormeFieldSetter<bool>? onSaved,
     FormeValidator<bool>? validator,

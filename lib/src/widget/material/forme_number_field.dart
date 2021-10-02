@@ -69,7 +69,7 @@ class FormeNumberField extends FormeField<num?> {
     AutovalidateMode? autovalidateMode,
     FormeValueChanged<num?>? onValueChanged,
     FormeFocusChanged<num?>? onFocusChanged,
-    FormeFieldValidationInfoChanged<num?>? onValidationChanged,
+    FormeFieldValidationChanged<num?>? onValidationChanged,
     FormeFieldInitialed<num?>? onInitialed,
     FormeFieldSetter<num?>? onSaved,
     FormeValidator<num?>? validator,
