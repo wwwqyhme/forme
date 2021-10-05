@@ -1,3 +1,10 @@
+## 3.1.0
+
+1. remove `hasValidator`
+2. `onErrorChanged` renamed to `onValidationChanged`
+3. `FormeValidateError` renamed to `FormeValidation`
+4. `FormeValidateState` renamed to `FormeValidationState` and add new state `unnecessary` and `waiting`
+
 ## 3.0.1
 
 1. support `hasValidator` on `FormeFieldController`
