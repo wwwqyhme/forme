@@ -191,16 +191,13 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
 }
 
 class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
-  TextEditingController? _textEditingController;
-  FocusNode? _focusNode;
+  TextEditingController? textEditingController;
 
   void initFieldView(
       TextEditingController textEditingController, FocusNode focusNode) {
-    final bool first = _textEditingController == null;
-    _textEditingController = textEditingController;
-    if (_focusNode != focusNode) {
-      super.focusNode = focusNode;
-    }
+    final bool first = this.textEditingController == null;
+    this.textEditingController = textEditingController;
+    super.focusNode = focusNode;
     if (first) {
       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
         (widget as FormeAutocomplete<T>).onFieldViewInitialed?.call(controller);
@@ -210,14 +207,14 @@ class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
 
   @override
   void onValueChanged(T? value) {
-    if (_textEditingController == null) {
+    if (textEditingController == null) {
       return;
     }
     if (value != null) {
       final String text =
           (widget as FormeAutocomplete).displayStringForOption(value);
-      if (_textEditingController!.text != text) {
-        _textEditingController!.text = text;
+      if (textEditingController!.text != text) {
+        textEditingController!.text = text;
       }
     }
   }
