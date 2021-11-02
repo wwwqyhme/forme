@@ -1,3 +1,8 @@
+## 3.1.2-beta
+
+1. support set `FocusNode` in `FormeFieldState`
+2. support `FormeAutocomplete`
+
 ## 3.1.1
 
 1. fix `FormeValidation` can not be found 

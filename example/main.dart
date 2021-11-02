@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
+import 'package:forme/src/widget/material/forme_autocomplete.dart';
 
 void main() {
   runApp(const MyApp());
@@ -203,6 +204,14 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                     name: 'dropdown',
                   ),
+                  FormeAutocomplete(
+                      decoration: const InputDecoration(
+                        labelText: 'Autocomplete',
+                      ),
+                      name: 'autocomplete',
+                      optionsBuilder: (TextEditingValue value) {
+                        return ['a', 'b', 'c'];
+                      }),
                   FormeCupertinoTextField(
                     name: 'cupertinoField',
                     decorator: const FormeCupertinoInputDecoratorBuilder(
