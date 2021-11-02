@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
-import 'package:forme/src/widget/material/forme_autocomplete.dart';
 
 void main() {
   runApp(const MyApp());
