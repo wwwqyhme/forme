@@ -212,6 +212,17 @@ class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
     }
   }
 
+  @override
+  void reset() {
+    super.reset();
+
+    if (value != null) {
+      textEditingController?.text = widget.displayStringForOption(value!);
+    } else {
+      textEditingController?.text = '';
+    }
+  }
+
   void initFieldView(
       TextEditingController textEditingController, FocusNode focusNode) {
     final bool first = this.textEditingController == null;

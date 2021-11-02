@@ -204,6 +204,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     name: 'dropdown',
                   ),
                   FormeAutocomplete(
+                      initialValue: 'c',
                       decoration: const InputDecoration(
                         labelText: 'Autocomplete',
                       ),
@@ -211,6 +212,11 @@ class _MyHomePageState extends State<MyHomePage> {
                       optionsBuilder: (TextEditingValue value) {
                         return ['a', 'b', 'c'];
                       }),
+                  TextButton(
+                      onPressed: () {
+                        key.reset();
+                      },
+                      child: const Text('reset form')),
                   FormeCupertinoTextField(
                     name: 'cupertinoField',
                     decorator: const FormeCupertinoInputDecoratorBuilder(
