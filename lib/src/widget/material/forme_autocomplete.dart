@@ -111,7 +111,9 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
                       text: displayStringForOption(initialValue)),
               optionsMaxHeight: optionsMaxHeight,
               optionsViewBuilder: optionsViewBuilder,
-              optionsBuilder: optionsBuilder,
+              optionsBuilder: readOnly
+                  ? (TextEditingValue value) => const Iterable.empty()
+                  : optionsBuilder,
               displayStringForOption: displayStringForOption,
               fieldViewBuilder:
                   (context, textEditingController, focusNode, onSubmitted) {
@@ -197,6 +199,9 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
 class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
   TextEditingController? textEditingController;
 
+  @override
+  FormeAutocomplete<T> get widget => super.widget as FormeAutocomplete<T>;
+
   void initFieldView(
       TextEditingController textEditingController, FocusNode focusNode) {
     final bool first = this.textEditingController == null;
@@ -204,7 +209,7 @@ class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
     super.focusNode = focusNode;
     if (first) {
       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        (widget as FormeAutocomplete<T>).onFieldViewInitialed?.call(controller);
+        widget.onFieldViewInitialed?.call(controller);
       });
     }
   }
@@ -215,8 +220,7 @@ class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
       return;
     }
     if (value != null) {
-      final String text =
-          (widget as FormeAutocomplete).displayStringForOption(value);
+      final String text = widget.displayStringForOption(value);
       if (textEditingController!.text != text) {
         textEditingController!.text = text;
       }
@@ -228,6 +232,9 @@ class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
     return FormeAutocompleteController(
         super.createFormeFieldController(), this);
   }
+
+  String? get displayStringForOption =>
+      value == null ? null : widget.displayStringForOption(value!);
 }
 
 class FormeAutocompleteController<T> extends FormeFieldControllerDelegate<T> {
@@ -237,6 +244,10 @@ class FormeAutocompleteController<T> extends FormeFieldControllerDelegate<T> {
       : _state = state,
         super(delegate);
 
+  /// get textFieldController of FieldView
   TextEditingController? get textFieldController =>
       _state.textEditingController;
+
+  /// get display string for current value
+  String? get displayString => _state.displayStringForOption;
 }

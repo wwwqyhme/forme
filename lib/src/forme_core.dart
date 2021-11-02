@@ -472,7 +472,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   /// if there's no focus node,will create a new one
   FocusNode get focusNode {
     if (_focusNode == null) {
-      focusNode = FocusNode();
+      focusNode = _DisposeRequiredFocusNode();
     }
     return _focusNode!;
   }
@@ -485,7 +485,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     if (_focusNode == focusNode) {
       return;
     }
-    if (_focusNode != null) {
+    if (_focusNode is _DisposeRequiredFocusNode) {
       _focusNode!.dispose();
     }
     _focusNode = focusNode;
@@ -522,7 +522,9 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     _valueNotifier.dispose();
     _focusNotifier.dispose();
     _readOnlyNotifier.dispose();
-    _focusNode?.dispose();
+    if (_focusNode is _DisposeRequiredFocusNode) {
+      _focusNode?.dispose();
+    }
     _formeState?.unregisterField(this);
     super.dispose();
   }
@@ -1076,3 +1078,7 @@ class _FormeFieldController<T> implements FormeFieldController<T> {
   @override
   BuildContext get context => state.context;
 }
+
+/// a focusnode created by FormeField itself rather than set by subclass ,
+/// so it's our responsibility to dispose it
+class _DisposeRequiredFocusNode extends FocusNode {}
