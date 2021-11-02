@@ -472,12 +472,26 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   /// if there's no focus node,will create a new one
   FocusNode get focusNode {
     if (_focusNode == null) {
-      _focusNode = FocusNode();
-      _focusNode!.addListener(() {
-        _focusNotifier.value = focusNode.hasFocus;
-      });
+      focusNode = FocusNode();
     }
-    return _focusNode ??= FocusNode();
+    return _focusNode!;
+  }
+
+  /// **this method should be called by subclass only!**
+  ///
+  /// if current focusNode is not null ,dispose current node & set new focusNode
+  @protected
+  set focusNode(FocusNode focusNode) {
+    if (_focusNode == focusNode) {
+      return;
+    }
+    if (_focusNode != null) {
+      _focusNode!.dispose();
+    }
+    _focusNode = focusNode;
+    _focusNode!.addListener(() {
+      _focusNotifier.value = focusNode.hasFocus;
+    });
   }
 
   bool get isValueChanged => !comparator(initialValue, value);
