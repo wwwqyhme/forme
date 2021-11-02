@@ -10,6 +10,10 @@ import '../../forme_field.dart';
 
 class FormeAutocomplete<T extends Object> extends FormeField<T?> {
   final AutocompleteOptionToString<T> displayStringForOption;
+
+  /// triggered after [Autocomplete] fieldViewBuilder called , will be only called once in [FormeAutocomplete]'s lifecycle
+  ///
+  /// use this listener instead of [FormeField]'s onInitialed
   final FormeFieldInitialed<T?>? onFieldViewInitialed;
 
   FormeAutocomplete({
@@ -218,4 +222,21 @@ class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
       }
     }
   }
+
+  @override
+  FormeFieldController<T?> createFormeFieldController() {
+    return FormeAutocompleteController(
+        super.createFormeFieldController(), this);
+  }
+}
+
+class FormeAutocompleteController<T> extends FormeFieldControllerDelegate<T> {
+  final _FormeAutoCompleteState _state;
+  FormeAutocompleteController(
+      FormeFieldController<T> delegate, _FormeAutoCompleteState state)
+      : _state = state,
+        super(delegate);
+
+  TextEditingController? get textFieldController =>
+      _state.textEditingController;
 }
