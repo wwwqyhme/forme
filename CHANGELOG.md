@@ -2,6 +2,7 @@
 
 1. support set `FocusNode` in `FormeFieldState`
 2. support `FormeAutocomplete`
+3. `FormeCheckbox` is `bool?` now
 
 ## 3.1.1
 
