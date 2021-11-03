@@ -52,7 +52,7 @@ class FormeCheckbox extends FormeField<bool?> {
           key: key,
           readOnly: readOnly,
           name: name,
-          initialValue: tristate ? initialValue : initialValue!,
+          initialValue: tristate ? initialValue : initialValue ?? false,
           builder: (state) {
             final bool readOnly = state.readOnly;
             final bool? value = state.value;
