@@ -4,7 +4,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:forme/forme.dart';
+
+import '../../forme_controller.dart';
+import '../../forme_core.dart';
+import '../../forme_field.dart';
 
 typedef FormeAutocompleteOptionsViewBuilder<T extends Object> = Widget Function(
     BuildContext context,
@@ -105,7 +108,8 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
           initialValue: initialValue,
           builder: (state) {
             final bool readOnly = state.readOnly;
-            _FormeAutoCompleteState _state = (state as _FormeAutoCompleteState);
+            final _FormeAutoCompleteState _state =
+                state as _FormeAutoCompleteState;
             return Autocomplete<T>(
               onSelected: (T t) {
                 state.didChange(t);
@@ -216,7 +220,7 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
                 return OrientationBuilder(builder: (context, orientation) {
                   WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
                     _state.optionsViewWidthNotifier.value =
-                        (context.findRenderObject() as RenderBox).size.width;
+                        (context.findRenderObject()! as RenderBox).size.width;
                   });
                   return field;
                 });
@@ -335,7 +339,7 @@ class _AutocompleteOptions<T extends Object> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    BoxConstraints constraints = width == null
+    final BoxConstraints constraints = width == null
         ? BoxConstraints(maxHeight: maxOptionsHeight)
         : BoxConstraints(maxHeight: maxOptionsHeight, maxWidth: width!);
     return Align(
