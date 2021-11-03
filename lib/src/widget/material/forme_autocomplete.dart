@@ -2,11 +2,15 @@ import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:forme/forme.dart';
 
-import '../../../forme.dart';
-import '../../forme_core.dart';
-import '../../forme_field.dart';
+typedef FormeAutocompleteOptionsViewBuilder<T extends Object> = Widget Function(
+    BuildContext context,
+    AutocompleteOnSelected<T> onSelected,
+    Iterable<T> options,
+    double? width);
 
 class FormeAutocomplete<T extends Object> extends FormeField<T?> {
   final AutocompleteOptionToString<T> displayStringForOption;
@@ -36,7 +40,7 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
     this.displayStringForOption = RawAutocomplete.defaultStringForOption,
     AutocompleteFieldViewBuilder? fieldViewBuilder,
     required AutocompleteOptionsBuilder<T> optionsBuilder,
-    AutocompleteOptionsViewBuilder<T>? optionsViewBuilder,
+    FormeAutocompleteOptionsViewBuilder<T>? optionsViewBuilder,
     double optionsMaxHeight = 200,
     InputDecoration? decoration,
     int? maxLines = 1,
@@ -101,6 +105,7 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
           initialValue: initialValue,
           builder: (state) {
             final bool readOnly = state.readOnly;
+            _FormeAutoCompleteState _state = (state as _FormeAutoCompleteState);
             return Autocomplete<T>(
               onSelected: (T t) {
                 state.didChange(t);
@@ -110,83 +115,111 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
                   : TextEditingValue(
                       text: displayStringForOption(initialValue)),
               optionsMaxHeight: optionsMaxHeight,
-              optionsViewBuilder: optionsViewBuilder,
+              optionsViewBuilder: (
+                BuildContext context,
+                AutocompleteOnSelected<T> onSelected,
+                Iterable<T> options,
+              ) {
+                return ValueListenableBuilder<double?>(
+                    valueListenable: _state.optionsViewWidthNotifier,
+                    builder: (context, width, _child) {
+                      return optionsViewBuilder?.call(
+                              context, onSelected, options, width) ??
+                          _AutocompleteOptions(
+                            displayStringForOption: displayStringForOption,
+                            onSelected: onSelected,
+                            options: options,
+                            maxOptionsHeight: optionsMaxHeight,
+                            width: width,
+                          );
+                    });
+              },
               optionsBuilder: readOnly
                   ? (TextEditingValue value) => const Iterable.empty()
                   : optionsBuilder,
               displayStringForOption: displayStringForOption,
               fieldViewBuilder:
                   (context, textEditingController, focusNode, onSubmitted) {
-                (state as _FormeAutoCompleteState)
-                    .initFieldView(textEditingController, focusNode);
+                _state.initFieldView(textEditingController, focusNode);
+                Widget field;
                 if (fieldViewBuilder != null) {
-                  return fieldViewBuilder(
+                  field = fieldViewBuilder(
                       context, textEditingController, focusNode, onSubmitted);
+                } else {
+                  field = TextField(
+                    enableIMEPersonalizedLearning:
+                        enableIMEPersonalizedLearning,
+                    focusNode: focusNode,
+                    controller: textEditingController,
+                    decoration:
+                        decoration?.copyWith(errorText: state.errorText),
+                    obscureText: obscureText,
+                    maxLines: maxLines,
+                    minLines: minLines,
+                    enabled: enabled,
+                    readOnly: readOnly,
+                    onTap: onTap,
+                    onEditingComplete: onEditingComplete,
+                    onSubmitted: readOnly
+                        ? null
+                        : (v) {
+                            onSubmitted();
+                          },
+                    onAppPrivateCommand: appPrivateCommandCallback,
+                    textInputAction: textInputAction,
+                    textCapitalization: textCapitalization,
+                    style: style,
+                    strutStyle: strutStyle,
+                    textAlign: textAlign,
+                    textAlignVertical: textAlignVertical,
+                    textDirection: textDirection,
+                    showCursor: showCursor,
+                    obscuringCharacter: obscuringCharacter,
+                    autocorrect: autocorrect,
+                    smartDashesType: smartDashesType,
+                    smartQuotesType: smartQuotesType,
+                    enableSuggestions: enableSuggestions,
+                    expands: expands,
+                    cursorWidth: cursorWidth,
+                    cursorHeight: cursorHeight,
+                    cursorRadius: cursorRadius,
+                    cursorColor: cursorColor,
+                    selectionHeightStyle: selectionHeightStyle,
+                    selectionWidthStyle: selectionWidthStyle,
+                    keyboardAppearance: keyboardAppearance,
+                    scrollPadding: scrollPadding,
+                    dragStartBehavior: dragStartBehavior,
+                    mouseCursor: mouseCursor,
+                    scrollPhysics: scrollPhysics,
+                    autofillHints: autofillHints,
+                    autofocus: autofocus,
+                    toolbarOptions: toolbarOptions,
+                    enableInteractiveSelection: enableInteractiveSelection,
+                    buildCounter: buildCounter,
+                    maxLengthEnforcement: maxLengthEnforcement,
+                    inputFormatters: inputFormatters,
+                    keyboardType: keyboardType,
+                    maxLength: maxLength,
+                    scrollController: scrollController,
+                    selectionControls: textSelectionControls,
+                    onChanged: readOnly
+                        ? null
+                        : (String v) {
+                            final T? value = state.value;
+                            if (value != null &&
+                                displayStringForOption(value) != v) {
+                              state.didChange(null);
+                            }
+                          },
+                  );
                 }
-                return TextField(
-                  enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
-                  focusNode: focusNode,
-                  controller: textEditingController,
-                  decoration: decoration?.copyWith(errorText: state.errorText),
-                  obscureText: obscureText,
-                  maxLines: maxLines,
-                  minLines: minLines,
-                  enabled: enabled,
-                  readOnly: readOnly,
-                  onTap: onTap,
-                  onEditingComplete: onEditingComplete,
-                  onSubmitted: readOnly
-                      ? null
-                      : (v) {
-                          onSubmitted();
-                        },
-                  onAppPrivateCommand: appPrivateCommandCallback,
-                  textInputAction: textInputAction,
-                  textCapitalization: textCapitalization,
-                  style: style,
-                  strutStyle: strutStyle,
-                  textAlign: textAlign,
-                  textAlignVertical: textAlignVertical,
-                  textDirection: textDirection,
-                  showCursor: showCursor,
-                  obscuringCharacter: obscuringCharacter,
-                  autocorrect: autocorrect,
-                  smartDashesType: smartDashesType,
-                  smartQuotesType: smartQuotesType,
-                  enableSuggestions: enableSuggestions,
-                  expands: expands,
-                  cursorWidth: cursorWidth,
-                  cursorHeight: cursorHeight,
-                  cursorRadius: cursorRadius,
-                  cursorColor: cursorColor,
-                  selectionHeightStyle: selectionHeightStyle,
-                  selectionWidthStyle: selectionWidthStyle,
-                  keyboardAppearance: keyboardAppearance,
-                  scrollPadding: scrollPadding,
-                  dragStartBehavior: dragStartBehavior,
-                  mouseCursor: mouseCursor,
-                  scrollPhysics: scrollPhysics,
-                  autofillHints: autofillHints,
-                  autofocus: autofocus,
-                  toolbarOptions: toolbarOptions,
-                  enableInteractiveSelection: enableInteractiveSelection,
-                  buildCounter: buildCounter,
-                  maxLengthEnforcement: maxLengthEnforcement,
-                  inputFormatters: inputFormatters,
-                  keyboardType: keyboardType,
-                  maxLength: maxLength,
-                  scrollController: scrollController,
-                  selectionControls: textSelectionControls,
-                  onChanged: readOnly
-                      ? null
-                      : (String v) {
-                          final T? value = state.value;
-                          if (value != null &&
-                              displayStringForOption(value) != v) {
-                            state.didChange(null);
-                          }
-                        },
-                );
+                return OrientationBuilder(builder: (context, orientation) {
+                  WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+                    _state.optionsViewWidthNotifier.value =
+                        (context.findRenderObject() as RenderBox).size.width;
+                  });
+                  return field;
+                });
               },
             );
           },
@@ -199,8 +232,16 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
 class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
   TextEditingController? textEditingController;
 
+  final ValueNotifier<double?> optionsViewWidthNotifier = ValueNotifier(null);
+
   @override
   FormeAutocomplete<T> get widget => super.widget as FormeAutocomplete<T>;
+
+  @override
+  void dispose() {
+    super.dispose();
+    optionsViewWidthNotifier.dispose();
+  }
 
   @override
   set readOnly(bool readOnly) {
@@ -271,4 +312,68 @@ class FormeAutocompleteController<T> extends FormeFieldControllerDelegate<T> {
 
   /// get display string for current value
   String? get displayString => _state.displayStringForOption;
+}
+
+// The default Material-style Autocomplete options.
+class _AutocompleteOptions<T extends Object> extends StatelessWidget {
+  const _AutocompleteOptions({
+    Key? key,
+    required this.displayStringForOption,
+    required this.onSelected,
+    required this.options,
+    required this.maxOptionsHeight,
+    required this.width,
+  }) : super(key: key);
+
+  final AutocompleteOptionToString<T> displayStringForOption;
+
+  final AutocompleteOnSelected<T> onSelected;
+
+  final Iterable<T> options;
+  final double maxOptionsHeight;
+  final double? width;
+
+  @override
+  Widget build(BuildContext context) {
+    BoxConstraints constraints = width == null
+        ? BoxConstraints(maxHeight: maxOptionsHeight)
+        : BoxConstraints(maxHeight: maxOptionsHeight, maxWidth: width!);
+    return Align(
+      alignment: Alignment.topLeft,
+      child: Material(
+        elevation: 4.0,
+        child: ConstrainedBox(
+          constraints: constraints,
+          child: ListView.builder(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            itemCount: options.length,
+            itemBuilder: (BuildContext context, int index) {
+              final T option = options.elementAt(index);
+              return InkWell(
+                onTap: () {
+                  onSelected(option);
+                },
+                child: Builder(builder: (BuildContext context) {
+                  final bool highlight =
+                      AutocompleteHighlightedOption.of(context) == index;
+                  if (highlight) {
+                    SchedulerBinding.instance!
+                        .addPostFrameCallback((Duration timeStamp) {
+                      Scrollable.ensureVisible(context, alignment: 0.5);
+                    });
+                  }
+                  return Container(
+                    color: highlight ? Theme.of(context).focusColor : null,
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(displayStringForOption(option)),
+                  );
+                }),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
 }
