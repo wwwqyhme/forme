@@ -89,11 +89,23 @@ class FormeCheckbox extends FormeField<bool?> {
 
 class _FormeCheckboxState extends FormeFieldState<bool?> {
   @override
+  FormeCheckbox get widget => super.widget as FormeCheckbox;
+
+  @override
   void updateFieldValueInDidUpdateWidget(FormeField<bool?> oldWidget) {
     super.updateFieldValueInDidUpdateWidget(oldWidget);
     final FormeCheckbox old = oldWidget as FormeCheckbox;
-    if (old.tristate && !(widget as FormeCheckbox).tristate && value == null) {
+    if (old.tristate && !widget.tristate && value == null) {
       setValue(false);
     }
+  }
+
+  @override
+  void didChange(bool? newValue) {
+    if (newValue == null && !widget.tristate) {
+      throw Exception(
+          'current value can not be null, set tristate to true if you want to support nullable');
+    }
+    super.didChange(newValue);
   }
 }
