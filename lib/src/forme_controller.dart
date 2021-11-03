@@ -194,7 +194,7 @@ abstract class FormeFieldController<T> {
   /// ```
   ///
   /// this notifier is used for [ValueListenableBuilder]
-  ValueListenable<T?> get valueListenable;
+  ValueListenable<T> get valueListenable;
 
   /// get old field value
   ///
@@ -261,7 +261,7 @@ class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
       delegate.validate(quietly: quietly);
 
   @override
-  ValueListenable<T?> get valueListenable => delegate.valueListenable;
+  ValueListenable<T> get valueListenable => delegate.valueListenable;
 
   @override
   BuildContext get context => delegate.context;
