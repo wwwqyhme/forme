@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../forme_core.dart';
 import '../../forme_field.dart';
 
 class FormeCheckbox extends FormeField<bool?> {
+  final bool tristate;
   FormeCheckbox({
     bool? initialValue,
     required String name,
@@ -32,7 +34,7 @@ class FormeCheckbox extends FormeField<bool?> {
     OutlinedBorder? shape,
     bool autofocus = false,
     BorderSide? side,
-    bool tristate = false,
+    this.tristate = false,
     bool requestFocusOnUserInteraction = true,
   }) : super(
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
@@ -80,4 +82,18 @@ class FormeCheckbox extends FormeField<bool?> {
             );
           },
         );
+
+  @override
+  FormeFieldState<bool?> createState() => _FormeCheckboxState();
+}
+
+class _FormeCheckboxState extends FormeFieldState<bool?> {
+  @override
+  void updateFieldValueInDidUpdateWidget(FormeField<bool?> oldWidget) {
+    super.updateFieldValueInDidUpdateWidget(oldWidget);
+    final FormeCheckbox old = oldWidget as FormeCheckbox;
+    if (old.tristate && !(widget as FormeCheckbox).tristate && value == null) {
+      setValue(false);
+    }
+  }
 }
