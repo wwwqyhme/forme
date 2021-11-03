@@ -480,6 +480,8 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   /// **this method should be called by subclass only!**
   ///
   /// if current focusNode is not null ,dispose current node & set new focusNode
+  ///
+  /// you need to dispose node you set before before you set another node
   @protected
   set focusNode(FocusNode focusNode) {
     if (_focusNode == focusNode) {

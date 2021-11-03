@@ -202,6 +202,27 @@ class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
   @override
   FormeAutocomplete<T> get widget => super.widget as FormeAutocomplete<T>;
 
+  @override
+  set readOnly(bool readOnly) {
+    super.readOnly = readOnly;
+
+    if (readOnly) {
+      //unfocus textField to hide options view
+      controller.focusNode?.unfocus();
+    }
+  }
+
+  @override
+  void reset() {
+    super.reset();
+
+    if (value != null) {
+      textEditingController?.text = widget.displayStringForOption(value!);
+    } else {
+      textEditingController?.text = '';
+    }
+  }
+
   void initFieldView(
       TextEditingController textEditingController, FocusNode focusNode) {
     final bool first = this.textEditingController == null;
