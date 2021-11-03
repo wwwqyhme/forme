@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../forme_field.dart';
 
-class FormeCheckbox extends FormeField<bool> {
+class FormeCheckbox extends FormeField<bool?> {
   FormeCheckbox({
-    bool initialValue = false,
+    bool? initialValue,
     required String name,
     bool readOnly = false,
     Key? key,
@@ -12,13 +12,13 @@ class FormeCheckbox extends FormeField<bool> {
     bool quietlyValidate = false,
     Duration? asyncValidatorDebounce,
     AutovalidateMode? autovalidateMode,
-    FormeValueChanged<bool>? onValueChanged,
-    FormeFocusChanged<bool>? onFocusChanged,
-    FormeFieldValidationChanged<bool>? onValidationChanged,
-    FormeFieldInitialed<bool>? onInitialed,
-    FormeFieldSetter<bool>? onSaved,
-    FormeValidator<bool>? validator,
-    FormeAsyncValidator<bool>? asyncValidator,
+    FormeValueChanged<bool?>? onValueChanged,
+    FormeFocusChanged<bool?>? onFocusChanged,
+    FormeFieldValidationChanged<bool?>? onValidationChanged,
+    FormeFieldInitialed<bool?>? onInitialed,
+    FormeFieldSetter<bool?>? onSaved,
+    FormeValidator<bool?>? validator,
+    FormeAsyncValidator<bool?>? asyncValidator,
     Color? activeColor,
     MouseCursor? mouseCursor,
     MaterialStateProperty<Color?>? fillColor,
@@ -50,10 +50,10 @@ class FormeCheckbox extends FormeField<bool> {
           key: key,
           readOnly: readOnly,
           name: name,
-          initialValue: initialValue,
+          initialValue: tristate ? initialValue : initialValue!,
           builder: (state) {
             final bool readOnly = state.readOnly;
-            final bool value = state.value;
+            final bool? value = state.value;
             return Checkbox(
               autofocus: autofocus,
               focusNode: state.focusNode,
@@ -73,8 +73,8 @@ class FormeCheckbox extends FormeField<bool> {
               value: value,
               onChanged: readOnly
                   ? null
-                  : (_) {
-                      state.didChange(!value);
+                  : (value) {
+                      state.didChange(value);
                       state.requestFocusOnUserInteraction();
                     },
             );
