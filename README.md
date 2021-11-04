@@ -85,6 +85,8 @@ Widget forme = Forme(
 | FormeDropdownButton | T | true | 
 | FormeListTile|  List&lt; T&gt; | false |
 | FormeRadioGroup|  T | true |
+| FormeAutocomplete|  T | true |
+| FormeAsyncAutocomplete|  T | true |
 | FormeCupertinoTextField|  string | false |
 | FormeCupertinoDateTimeField|  DateTime | true |
 | FormeCupertinoNumberField|  num | true |

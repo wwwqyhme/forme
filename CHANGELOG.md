@@ -1,8 +1,9 @@
-## 3.1.2-beta
+## 3.1.2
 
 1. support set `FocusNode` in `FormeFieldState`
 2. support `FormeAutocomplete`
 3. `FormeCheckbox` is `bool?` now
+4. support `FormeAsyncAutocomplete`
 
 ## 3.1.1
 
