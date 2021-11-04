@@ -420,8 +420,7 @@ class _FormeAsyncAutoCompleteState<T extends Object>
     debounce?.cancel();
     oldTextValue = null;
     options = [];
-    gen = 0;
-    optionsGen = 0;
+    optionsGen = ++gen;
     super.reset();
     stateNotifier.value = FormeAsyncAutocompleteSearchState.waiting;
     controller.focusNode?.unfocus();
