@@ -452,7 +452,7 @@ class _FormeAsyncAutoCompleteState<T extends Object>
 
   @override
   FormeFieldController<T?> createFormeFieldController() {
-    return FormeAutocompleteController._(
+    return FormeAsnycAutocompleteController._(
         super.createFormeFieldController(), this);
   }
 
@@ -460,10 +460,12 @@ class _FormeAsyncAutoCompleteState<T extends Object>
       value == null ? null : widget.displayStringForOption(value!);
 }
 
-class FormeAutocompleteController<T> extends FormeFieldControllerDelegate<T> {
+class FormeAsnycAutocompleteController<T>
+    extends FormeFieldControllerDelegate<T> {
   final _FormeAsyncAutoCompleteState _state;
   final ValueListenable<FormeAsyncAutocompleteSearchState> stateListenable;
-  FormeAutocompleteController._(FormeFieldController<T> delegate, this._state)
+  FormeAsnycAutocompleteController._(
+      FormeFieldController<T> delegate, this._state)
       : stateListenable = ValueListenableDelegate(_state.stateNotifier),
         super(delegate);
 

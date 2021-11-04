@@ -106,14 +106,12 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
           readOnly: readOnly,
           name: name,
           initialValue: initialValue,
-          builder: (state) {
+          builder: (genericState) {
+            final _FormeAutoCompleteState<T> state =
+                genericState as _FormeAutoCompleteState<T>;
             final bool readOnly = state.readOnly;
-            final _FormeAutoCompleteState _state =
-                state as _FormeAutoCompleteState;
             return Autocomplete<T>(
-              onSelected: (T t) {
-                state.didChange(t);
-              },
+              onSelected: state.didChange,
               initialValue: initialValue == null
                   ? null
                   : TextEditingValue(
@@ -125,7 +123,7 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
                 Iterable<T> options,
               ) {
                 return ValueListenableBuilder<double?>(
-                    valueListenable: _state.optionsViewWidthNotifier,
+                    valueListenable: state.optionsViewWidthNotifier,
                     builder: (context, width, _child) {
                       return optionsViewBuilder?.call(
                               context, onSelected, options, width) ??
@@ -144,7 +142,7 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
               displayStringForOption: displayStringForOption,
               fieldViewBuilder:
                   (context, textEditingController, focusNode, onSubmitted) {
-                _state.initFieldView(textEditingController, focusNode);
+                state.initFieldView(textEditingController, focusNode);
                 Widget field;
                 if (fieldViewBuilder != null) {
                   field = fieldViewBuilder(
@@ -222,7 +220,7 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
                     final RenderObject? renderObject =
                         context.findRenderObject();
                     if (renderObject != null && renderObject is RenderBox) {
-                      _state.optionsViewWidthNotifier.value =
+                      state.optionsViewWidthNotifier.value =
                           renderObject.size.width;
                     }
                   });
@@ -299,7 +297,7 @@ class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
 
   @override
   FormeFieldController<T?> createFormeFieldController() {
-    return FormeAutocompleteController(
+    return FormeAutocompleteController._(
         super.createFormeFieldController(), this);
   }
 
@@ -309,10 +307,8 @@ class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
 
 class FormeAutocompleteController<T> extends FormeFieldControllerDelegate<T> {
   final _FormeAutoCompleteState _state;
-  FormeAutocompleteController(
-      FormeFieldController<T> delegate, _FormeAutoCompleteState state)
-      : _state = state,
-        super(delegate);
+  FormeAutocompleteController._(FormeFieldController<T> delegate, this._state)
+      : super(delegate);
 
   /// get textFieldController of FieldView
   TextEditingController? get textFieldController =>
