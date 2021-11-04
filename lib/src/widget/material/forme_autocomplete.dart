@@ -219,8 +219,12 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
                 }
                 return OrientationBuilder(builder: (context, orientation) {
                   WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-                    _state.optionsViewWidthNotifier.value =
-                        (context.findRenderObject()! as RenderBox).size.width;
+                    final RenderObject? renderObject =
+                        context.findRenderObject();
+                    if (renderObject != null && renderObject is RenderBox) {
+                      _state.optionsViewWidthNotifier.value =
+                          renderObject.size.width;
+                    }
                   });
                   return field;
                 });
