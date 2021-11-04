@@ -985,23 +985,7 @@ class _FormeController extends FormeController {
 
   @override
   ValueListenable<FormeValidation> get validationListenable =>
-      _ValueListenable(state.validationNotifier);
-}
-
-class _ValueListenable<T> extends ValueListenable<T> {
-  final ValueNotifier<T> delegate;
-
-  const _ValueListenable(this.delegate);
-
-  @override
-  void addListener(VoidCallback listener) => delegate.addListener(listener);
-
-  @override
-  void removeListener(VoidCallback listener) =>
-      delegate.removeListener(listener);
-
-  @override
-  T get value => delegate.value;
+      ValueListenableDelegate(state.validationNotifier);
 }
 
 class _FormeFieldControllerListenable<T>
@@ -1035,10 +1019,11 @@ class _FormeFieldController<T> implements FormeFieldController<T> {
   final ValueListenable<bool> readOnlyListenable;
 
   _FormeFieldController(this.state)
-      : focusListenable = _ValueListenable(state._focusNotifier),
-        readOnlyListenable = _ValueListenable(state._readOnlyNotifier),
-        validationListenable = _ValueListenable(state._validationNotifier),
-        valueListenable = _ValueListenable<T>(state._valueNotifier);
+      : focusListenable = ValueListenableDelegate(state._focusNotifier),
+        readOnlyListenable = ValueListenableDelegate(state._readOnlyNotifier),
+        validationListenable =
+            ValueListenableDelegate(state._validationNotifier),
+        valueListenable = ValueListenableDelegate<T>(state._valueNotifier);
 
   @override
   bool get readOnly => state.readOnly;

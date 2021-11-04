@@ -1,21 +1,21 @@
+import 'dart:async';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
-import '../../forme_controller.dart';
-import '../../forme_core.dart';
-import '../../forme_field.dart';
+import '../../../forme.dart';
+import '../../forme_mounted_value_notifier.dart';
 
-typedef FormeAutocompleteOptionsViewBuilder<T extends Object> = Widget Function(
-    BuildContext context,
-    AutocompleteOnSelected<T> onSelected,
-    Iterable<T> options,
-    double? width);
+typedef FormeAsyncAutocompleteOptionsBuilder<T> = Future<Iterable<T>> Function(
+    TextEditingValue value);
 
-class FormeAutocomplete<T extends Object> extends FormeField<T?> {
+typedef FormeSearchCondition = bool Function(TextEditingValue value);
+
+class FormeAsyncAutocomplete<T extends Object> extends FormeField<T?> {
   final AutocompleteOptionToString<T> displayStringForOption;
 
   /// triggered after [Autocomplete] fieldViewBuilder called , will be only called once in [FormeAutocomplete]'s lifecycle
@@ -23,7 +23,15 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
   /// use this listener instead of [FormeField]'s onInitialed
   final FormeFieldInitialed<T?>? onFieldViewInitialed;
 
-  FormeAutocomplete({
+  /// async loader debounce
+  final Duration? debounce;
+
+  final FormeAsyncAutocompleteOptionsBuilder<T> optionsBuilder;
+
+  final double optionsMaxHeight;
+  final FormeSearchCondition? searchCondition;
+
+  FormeAsyncAutocomplete({
     T? initialValue,
     required String name,
     bool readOnly = false,
@@ -42,9 +50,8 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
     bool requestFocusOnUserInteraction = true,
     this.displayStringForOption = RawAutocomplete.defaultStringForOption,
     AutocompleteFieldViewBuilder? fieldViewBuilder,
-    required AutocompleteOptionsBuilder<T> optionsBuilder,
     FormeAutocompleteOptionsViewBuilder<T>? optionsViewBuilder,
-    double optionsMaxHeight = 200,
+    this.optionsMaxHeight = 200,
     InputDecoration? decoration,
     int? maxLines = 1,
     TextInputType? keyboardType,
@@ -90,6 +97,9 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
     ScrollController? scrollController,
     TextSelectionControls? textSelectionControls,
     bool enableIMEPersonalizedLearning = true,
+    this.debounce,
+    required this.optionsBuilder,
+    this.searchCondition,
   }) : super(
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,
@@ -108,55 +118,104 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
           initialValue: initialValue,
           builder: (state) {
             final bool readOnly = state.readOnly;
-            final _FormeAutoCompleteState _state =
-                state as _FormeAutoCompleteState;
-            return Autocomplete<T>(
+            final _FormeAsyncAutoCompleteState<T> _state =
+                state as _FormeAsyncAutoCompleteState<T>;
+            return RawAutocomplete<T>(
               onSelected: (T t) {
                 state.didChange(t);
+                state.effictiveTextEditingController.selection =
+                    TextSelection.collapsed(
+                        offset: displayStringForOption(t).length);
               },
               initialValue: initialValue == null
                   ? null
                   : TextEditingValue(
                       text: displayStringForOption(initialValue)),
-              optionsMaxHeight: optionsMaxHeight,
-              optionsViewBuilder: (
-                BuildContext context,
-                AutocompleteOnSelected<T> onSelected,
-                Iterable<T> options,
-              ) {
+              optionsViewBuilder: (BuildContext context,
+                  AutocompleteOnSelected<T> onSelected, Iterable<T> options) {
+                void onOptionSelected(T option) {
+                  onSelected(option);
+                  _state.clearOptionsAndWaiting();
+                }
+
                 return ValueListenableBuilder<double?>(
                     valueListenable: _state.optionsViewWidthNotifier,
                     builder: (context, width, _child) {
-                      return optionsViewBuilder?.call(
-                              context, onSelected, options, width) ??
+                      return optionsViewBuilder?.call(context, onOptionSelected,
+                              _state.options, width) ??
                           AutocompleteOptions(
                             displayStringForOption: displayStringForOption,
-                            onSelected: onSelected,
-                            options: options,
+                            onSelected: onOptionSelected,
+                            options: _state.options,
                             maxOptionsHeight: optionsMaxHeight,
                             width: width,
                           );
                     });
               },
-              optionsBuilder: readOnly
-                  ? (TextEditingValue value) => const Iterable.empty()
-                  : optionsBuilder,
+              optionsBuilder: (TextEditingValue value) {
+                if (_state.success) {
+                  return _state.options;
+                }
+                return const Iterable.empty();
+              },
               displayStringForOption: displayStringForOption,
               fieldViewBuilder:
                   (context, textEditingController, focusNode, onSubmitted) {
                 _state.initFieldView(textEditingController, focusNode);
+                void onFieldSubmitted() {
+                  onSubmitted();
+                  _state.clearOptionsAndWaiting();
+                }
+
                 Widget field;
                 if (fieldViewBuilder != null) {
                   field = fieldViewBuilder(
-                      context, textEditingController, focusNode, onSubmitted);
+                      context,
+                      _state.effictiveTextEditingController,
+                      focusNode,
+                      onFieldSubmitted);
                 } else {
                   field = TextField(
                     enableIMEPersonalizedLearning:
                         enableIMEPersonalizedLearning,
                     focusNode: focusNode,
-                    controller: textEditingController,
-                    decoration:
-                        decoration?.copyWith(errorText: state.errorText),
+                    controller: _state.effictiveTextEditingController,
+                    decoration: decoration?.copyWith(
+                        errorText: state.errorText,
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ValueListenableBuilder<
+                                    FormeAsyncAutocompleteSearchState>(
+                                valueListenable: _state.stateNotifier,
+                                builder: (context, state, child) {
+                                  switch (state) {
+                                    case FormeAsyncAutocompleteSearchState
+                                        .loading:
+                                      return const Padding(
+                                        padding: EdgeInsets.all(0),
+                                        child: SizedBox(
+                                          height: 16,
+                                          width: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 3,
+                                          ),
+                                        ),
+                                      );
+                                    case FormeAsyncAutocompleteSearchState
+                                        .success:
+                                      return const SizedBox.shrink();
+                                    case FormeAsyncAutocompleteSearchState
+                                        .error:
+                                      return const Icon(Icons.dangerous,
+                                          color: Colors.redAccent);
+                                    case FormeAsyncAutocompleteSearchState
+                                        .waiting:
+                                      return const SizedBox.shrink();
+                                  }
+                                }),
+                          ],
+                        )),
                     obscureText: obscureText,
                     maxLines: maxLines,
                     minLines: minLines,
@@ -167,7 +226,7 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
                     onSubmitted: readOnly
                         ? null
                         : (v) {
-                            onSubmitted();
+                            onFieldSubmitted();
                           },
                     onAppPrivateCommand: appPrivateCommandCallback,
                     textInputAction: textInputAction,
@@ -234,21 +293,118 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
         );
 
   @override
-  FormeFieldState<T?> createState() => _FormeAutoCompleteState();
+  FormeFieldState<T?> createState() => _FormeAsyncAutoCompleteState();
 }
 
-class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
+class _FormeAsyncAutoCompleteState<T extends Object>
+    extends FormeFieldState<T?> {
   TextEditingController? textEditingController;
-
+  late final TextEditingController effictiveTextEditingController;
+  late final ValueNotifier<FormeAsyncAutocompleteSearchState> stateNotifier =
+      FormeMountedValueNotifier(
+          FormeAsyncAutocompleteSearchState.waiting, this);
   final ValueNotifier<double?> optionsViewWidthNotifier = ValueNotifier(null);
 
+  int gen = 0;
+  int optionsGen = 0;
+  Iterable<T> options = [];
+  Timer? debounce;
+  String? oldTextValue;
+
+  bool get success =>
+      stateNotifier.value == FormeAsyncAutocompleteSearchState.success;
+  bool get error =>
+      stateNotifier.value == FormeAsyncAutocompleteSearchState.error;
+
   @override
-  FormeAutocomplete<T> get widget => super.widget as FormeAutocomplete<T>;
+  void beforeInitiation() {
+    super.beforeInitiation();
+    final String initialText = initialValue == null
+        ? ''
+        : widget.displayStringForOption(initialValue!);
+    effictiveTextEditingController = TextEditingController(text: initialText);
+  }
+
+  @override
+  void afterInitiation() {
+    super.afterInitiation();
+    effictiveTextEditingController.addListener(() {
+      final String text = effictiveTextEditingController.text;
+      if (value != null && widget.displayStringForOption(value!) == text) {
+        return;
+      }
+
+      if (oldTextValue == text) {
+        return;
+      }
+
+      oldTextValue = text;
+
+      if (widget.searchCondition != null) {
+        final bool performSearch =
+            widget.searchCondition!(effictiveTextEditingController.value);
+
+        if (!performSearch) {
+          clearOptionsAndWaiting();
+          return;
+        }
+      }
+      queryOptions(effictiveTextEditingController.value);
+    });
+  }
+
+  @override
+  FormeAsyncAutocomplete<T> get widget =>
+      super.widget as FormeAsyncAutocomplete<T>;
+
+  void clearOptionsAndWaiting() {
+    debounce?.cancel();
+    options = [];
+    optionsGen = ++gen;
+    stateNotifier.value = FormeAsyncAutocompleteSearchState.waiting;
+    updateTextEditingController();
+  }
+
+  void queryOptions(TextEditingValue value) {
+    stateNotifier.value = FormeAsyncAutocompleteSearchState.loading;
+    oldTextValue = value.text;
+    final int currentGen = ++gen;
+    debounce?.cancel();
+    debounce = Timer(widget.debounce ?? const Duration(milliseconds: 500), () {
+      if (!mounted) {
+        return;
+      }
+      widget.optionsBuilder(value).then((options) {
+        if (currentGen == gen) {
+          this.options = options;
+          optionsGen = gen;
+        }
+      }).whenComplete(() {
+        if (currentGen == gen && mounted) {
+          if (optionsGen == gen) {
+            stateNotifier.value = FormeAsyncAutocompleteSearchState.success;
+          } else {
+            stateNotifier.value = FormeAsyncAutocompleteSearchState.error;
+          }
+          if (success) {
+            updateTextEditingController();
+          }
+        }
+      });
+    });
+  }
+
+  void updateTextEditingController() {
+    textEditingController?.text = textEditingController?.text == '' ? '*' : '';
+  }
 
   @override
   void dispose() {
-    super.dispose();
+    debounce?.cancel();
+    stateNotifier.dispose();
     optionsViewWidthNotifier.dispose();
+    effictiveTextEditingController.dispose();
+    super.dispose();
   }
 
   @override
@@ -256,20 +412,25 @@ class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
     super.readOnly = readOnly;
 
     if (readOnly) {
-      //unfocus textField to hide options view
-      controller.focusNode?.unfocus();
+      clearOptionsAndWaiting();
     }
   }
 
   @override
   void reset() {
+    debounce?.cancel();
+    oldTextValue = null;
+    options = [];
+    gen = 0;
+    optionsGen = 0;
     super.reset();
-
     if (value != null) {
-      textEditingController?.text = widget.displayStringForOption(value!);
+      effictiveTextEditingController.text =
+          widget.displayStringForOption(value!);
     } else {
-      textEditingController?.text = '';
+      effictiveTextEditingController.text = '';
     }
+    stateNotifier.value = FormeAsyncAutocompleteSearchState.waiting;
   }
 
   void initFieldView(
@@ -286,13 +447,10 @@ class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
 
   @override
   void onValueChanged(T? value) {
-    if (textEditingController == null) {
-      return;
-    }
     if (value != null) {
       final String text = widget.displayStringForOption(value);
-      if (textEditingController!.text != text) {
-        textEditingController!.text = text;
+      if (effictiveTextEditingController.text != text) {
+        effictiveTextEditingController.text = text;
       }
     }
   }
@@ -308,80 +466,20 @@ class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
 }
 
 class FormeAutocompleteController<T> extends FormeFieldControllerDelegate<T> {
-  final _FormeAutoCompleteState _state;
+  final _FormeAsyncAutoCompleteState _state;
+  final ValueListenable<FormeAsyncAutocompleteSearchState> stateListenable;
   FormeAutocompleteController(
-      FormeFieldController<T> delegate, _FormeAutoCompleteState state)
+      FormeFieldController<T> delegate, _FormeAsyncAutoCompleteState state)
       : _state = state,
+        stateListenable = ValueListenableDelegate(state.stateNotifier),
         super(delegate);
 
-  /// get textFieldController of FieldView
-  TextEditingController? get textFieldController =>
-      _state.textEditingController;
+  /// get textFieldController used for Field view
+  TextEditingController get textFieldController =>
+      _state.effictiveTextEditingController;
 
   /// get display string for current value
   String? get displayString => _state.displayStringForOption;
 }
 
-// The default Material-style Autocomplete options.
-class AutocompleteOptions<T extends Object> extends StatelessWidget {
-  const AutocompleteOptions({
-    Key? key,
-    required this.displayStringForOption,
-    required this.onSelected,
-    required this.options,
-    required this.maxOptionsHeight,
-    required this.width,
-  }) : super(key: key);
-
-  final AutocompleteOptionToString<T> displayStringForOption;
-
-  final AutocompleteOnSelected<T> onSelected;
-
-  final Iterable<T> options;
-  final double maxOptionsHeight;
-  final double? width;
-
-  @override
-  Widget build(BuildContext context) {
-    final BoxConstraints constraints = width == null
-        ? BoxConstraints(maxHeight: maxOptionsHeight)
-        : BoxConstraints(maxHeight: maxOptionsHeight, maxWidth: width!);
-    return Align(
-      alignment: Alignment.topLeft,
-      child: Material(
-        elevation: 4.0,
-        child: ConstrainedBox(
-          constraints: constraints,
-          child: ListView.builder(
-            padding: EdgeInsets.zero,
-            shrinkWrap: true,
-            itemCount: options.length,
-            itemBuilder: (BuildContext context, int index) {
-              final T option = options.elementAt(index);
-              return InkWell(
-                onTap: () {
-                  onSelected(option);
-                },
-                child: Builder(builder: (BuildContext context) {
-                  final bool highlight =
-                      AutocompleteHighlightedOption.of(context) == index;
-                  if (highlight) {
-                    SchedulerBinding.instance!
-                        .addPostFrameCallback((Duration timeStamp) {
-                      Scrollable.ensureVisible(context, alignment: 0.5);
-                    });
-                  }
-                  return Container(
-                    color: highlight ? Theme.of(context).focusColor : null,
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(displayStringForOption(option)),
-                  );
-                }),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-}
+enum FormeAsyncAutocompleteSearchState { loading, success, error, waiting }
