@@ -325,29 +325,31 @@ class _FormeAsyncAutoCompleteState<T extends Object>
   @override
   void afterInitiation() {
     super.afterInitiation();
-    effectiveController.addListener(() {
-      final String text = effectiveController.text;
-      if (value != null && widget.displayStringForOption(value!) == text) {
+    effectiveController.addListener(fieldChange);
+  }
+
+  void fieldChange() {
+    final String text = effectiveController.text;
+    if (value != null && widget.displayStringForOption(value!) == text) {
+      return;
+    }
+
+    if (oldTextValue == text) {
+      return;
+    }
+
+    oldTextValue = text;
+
+    if (widget.searchCondition != null) {
+      final bool performSearch =
+          widget.searchCondition!(effectiveController.value);
+
+      if (!performSearch) {
+        clearOptionsAndWaiting();
         return;
       }
-
-      if (oldTextValue == text) {
-        return;
-      }
-
-      oldTextValue = text;
-
-      if (widget.searchCondition != null) {
-        final bool performSearch =
-            widget.searchCondition!(effectiveController.value);
-
-        if (!performSearch) {
-          clearOptionsAndWaiting();
-          return;
-        }
-      }
-      queryOptions(effectiveController.value);
-    });
+    }
+    queryOptions(effectiveController.value);
   }
 
   @override
@@ -421,12 +423,16 @@ class _FormeAsyncAutoCompleteState<T extends Object>
     gen = 0;
     optionsGen = 0;
     super.reset();
+    stateNotifier.value = FormeAsyncAutocompleteSearchState.waiting;
+    controller.focusNode?.unfocus();
+    // we do not want to perform a search
+    effectiveController.removeListener(fieldChange);
     if (value != null) {
       effectiveController.text = widget.displayStringForOption(value!);
     } else {
       effectiveController.text = '';
     }
-    stateNotifier.value = FormeAsyncAutocompleteSearchState.waiting;
+    effectiveController.addListener(fieldChange);
   }
 
   void initFieldView(

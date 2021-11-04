@@ -263,6 +263,7 @@ class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
   void reset() {
     super.reset();
 
+    controller.focusNode?.unfocus();
     if (value != null) {
       textEditingController?.text = widget.displayStringForOption(value!);
     } else {
