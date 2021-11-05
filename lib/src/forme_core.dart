@@ -827,17 +827,18 @@ class FormeFieldState<T> extends State<FormeField<T>> {
         notify(
             const FormeFieldValidation(null, FormeValidationState.validating));
       }
-
+      FormeFieldValidation? validation;
       return widget.asyncValidator!(controller, value).then((text) {
-        final FormeFieldValidation validation = FormeFieldValidation(
+        validation = FormeFieldValidation(
             text,
             text == null
                 ? FormeValidationState.valid
                 : FormeValidationState.invalid);
-        return FormeFieldValidateSnapshot(value, validation, order, controller,
+        return FormeFieldValidateSnapshot(value, validation!, order, controller,
             comparator(value, this.value), comparator(value, initialValue));
       }).whenComplete(() {
-        notify(const FormeFieldValidation(null, FormeValidationState.fail));
+        notify(validation ??
+            const FormeFieldValidation(null, FormeValidationState.fail));
       });
     }
 
