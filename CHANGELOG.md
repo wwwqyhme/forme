@@ -1,3 +1,7 @@
+## 3.1.3 
+
+1. `FormeAsyncAutocomplete` can override default suffixIcon
+
 ## 3.1.2
 
 1. support set `FocusNode` in `FormeFieldState`
