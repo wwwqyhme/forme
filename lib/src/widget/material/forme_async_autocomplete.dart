@@ -331,26 +331,23 @@ class _FormeAsyncAutoCompleteState<T extends Object>
 
   void fieldChange() {
     final String text = effectiveController.text;
-    if (value != null && widget.displayStringForOption(value!) == text) {
-      return;
-    }
-
-    if (oldTextValue == text) {
-      return;
-    }
-
-    oldTextValue = text;
-
-    if (widget.searchCondition != null) {
-      final bool performSearch =
-          widget.searchCondition!(effectiveController.value);
-
-      if (!performSearch) {
-        clearOptionsAndWaiting();
+    if (oldTextValue != text) {
+      oldTextValue = text;
+      if (value != null && widget.displayStringForOption(value!) == text) {
         return;
       }
+
+      if (widget.searchCondition != null) {
+        final bool performSearch =
+            widget.searchCondition!(effectiveController.value);
+
+        if (!performSearch) {
+          clearOptionsAndWaiting();
+          return;
+        }
+      }
+      queryOptions(effectiveController.value);
     }
-    queryOptions(effectiveController.value);
   }
 
   @override
@@ -367,7 +364,6 @@ class _FormeAsyncAutoCompleteState<T extends Object>
 
   void queryOptions(TextEditingValue value) {
     stateNotifier.value = FormeAsyncAutocompleteSearchState.loading;
-    oldTextValue = value.text;
     final int currentGen = ++gen;
     debounce?.cancel();
     debounce = Timer(widget.debounce ?? const Duration(milliseconds: 500), () {
