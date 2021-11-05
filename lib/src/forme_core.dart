@@ -835,7 +835,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
                 ? FormeValidationState.valid
                 : FormeValidationState.invalid);
         return FormeFieldValidateSnapshot(value, validation!, order, controller,
-            comparator(value, this.value), comparator(value, initialValue));
+            !comparator(value, this.value), !comparator(value, initialValue));
       }).whenComplete(() {
         notify(validation ??
             const FormeFieldValidation(null, FormeValidationState.fail));
