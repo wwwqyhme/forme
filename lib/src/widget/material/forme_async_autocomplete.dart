@@ -179,40 +179,41 @@ class FormeAsyncAutocomplete<T extends Object> extends FormeField<T?> {
                     controller: state.effectiveController,
                     decoration: decoration?.copyWith(
                         errorText: state.errorText,
-                        suffixIcon: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ValueListenableBuilder<
-                                    FormeAsyncAutocompleteSearchState>(
-                                valueListenable: state.stateNotifier,
-                                builder: (context, state, child) {
-                                  switch (state) {
-                                    case FormeAsyncAutocompleteSearchState
-                                        .loading:
-                                      return const Padding(
-                                        padding: EdgeInsets.all(0),
-                                        child: SizedBox(
-                                          height: 16,
-                                          width: 16,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 3,
-                                          ),
-                                        ),
-                                      );
-                                    case FormeAsyncAutocompleteSearchState
-                                        .success:
-                                      return const SizedBox.shrink();
-                                    case FormeAsyncAutocompleteSearchState
-                                        .error:
-                                      return const Icon(Icons.dangerous,
-                                          color: Colors.redAccent);
-                                    case FormeAsyncAutocompleteSearchState
-                                        .waiting:
-                                      return const SizedBox.shrink();
-                                  }
-                                }),
-                          ],
-                        )),
+                        suffixIcon: decoration.suffixIcon ??
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ValueListenableBuilder<
+                                        FormeAsyncAutocompleteSearchState>(
+                                    valueListenable: state.stateNotifier,
+                                    builder: (context, state, child) {
+                                      switch (state) {
+                                        case FormeAsyncAutocompleteSearchState
+                                            .loading:
+                                          return const Padding(
+                                            padding: EdgeInsets.all(0),
+                                            child: SizedBox(
+                                              height: 16,
+                                              width: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 3,
+                                              ),
+                                            ),
+                                          );
+                                        case FormeAsyncAutocompleteSearchState
+                                            .success:
+                                          return const SizedBox.shrink();
+                                        case FormeAsyncAutocompleteSearchState
+                                            .error:
+                                          return const Icon(Icons.dangerous,
+                                              color: Colors.redAccent);
+                                        case FormeAsyncAutocompleteSearchState
+                                            .waiting:
+                                          return const SizedBox.shrink();
+                                      }
+                                    }),
+                              ],
+                            )),
                     obscureText: obscureText,
                     maxLines: maxLines,
                     minLines: minLines,
