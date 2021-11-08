@@ -1,3 +1,12 @@
+## 3.1.5
+
+1. replace EdgeInsets with EdgeInsetsGeometry in some files
+2. bug fix: if value in `FormeNumerTextField` bigger than max ,backspace will not work
+
+## 3.1.4
+
+1. bug fix
+
 ## 3.1.3 
 
 1. `FormeAsyncAutocomplete` can override default suffixIcon
