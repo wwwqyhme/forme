@@ -10,7 +10,7 @@ class FormeListTileItem<T extends Object> {
   final Widget title;
   final bool readOnly;
   final bool visible;
-  final EdgeInsets padding;
+  final EdgeInsetsGeometry padding;
 
   /// only work when split = 1
   final Widget? secondary;
@@ -22,18 +22,18 @@ class FormeListTileItem<T extends Object> {
   final T data;
   final bool ignoreSplit;
 
-  FormeListTileItem(
-      {required this.title,
-      this.subtitle,
-      this.secondary,
-      ListTileControlAffinity? controlAffinity,
-      this.readOnly = false,
-      this.visible = true,
-      this.dense = false,
-      EdgeInsets? padding,
-      required this.data,
-      this.ignoreSplit = false})
-      : controlAffinity = controlAffinity ?? ListTileControlAffinity.platform,
+  FormeListTileItem({
+    required this.title,
+    this.subtitle,
+    this.secondary,
+    ListTileControlAffinity? controlAffinity,
+    this.readOnly = false,
+    this.visible = true,
+    this.dense = false,
+    EdgeInsetsGeometry? padding,
+    required this.data,
+    this.ignoreSplit = false,
+  })  : controlAffinity = controlAffinity ?? ListTileControlAffinity.platform,
         padding = padding ?? EdgeInsets.zero;
 }
 

@@ -144,8 +144,8 @@ class FormeChipItem<T extends Object> {
   final Widget label;
   final Widget? avatar;
   final T data;
-  final EdgeInsets? labelPadding;
-  final EdgeInsets padding;
+  final EdgeInsetsGeometry? labelPadding;
+  final EdgeInsetsGeometry padding;
   final bool readOnly;
   final bool visible;
   final String? tooltip;
@@ -169,7 +169,7 @@ class FormeChipItem<T extends Object> {
     required this.label,
     this.avatar,
     required this.data,
-    EdgeInsets? padding,
+    EdgeInsetsGeometry? padding,
     this.readOnly = false,
     this.visible = true,
     this.labelPadding,

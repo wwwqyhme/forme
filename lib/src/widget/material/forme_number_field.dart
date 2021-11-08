@@ -197,7 +197,12 @@ class FormeNumberField extends FormeField<num?> {
           }
         }
 
+        final double? oldParsed = double.tryParse(oldValue.text);
+
         if (max != null && parsed > max) {
+          if (oldParsed != null && oldParsed > parsed) {
+            return newValue;
+          }
           return oldValue;
         }
         return newValue;

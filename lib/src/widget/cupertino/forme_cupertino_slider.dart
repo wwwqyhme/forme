@@ -91,7 +91,7 @@ class FormeCupertinoSliderFullWidthDecorator
     extends FormeCupertinoInputDecoratorBuilder<double> {
   FormeCupertinoSliderFullWidthDecorator({
     Widget? prefix,
-    EdgeInsets? padding,
+    EdgeInsetsGeometry? padding,
     Widget? helper,
   }) : super(
           wrapper: (child) {
