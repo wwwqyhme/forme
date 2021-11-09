@@ -105,7 +105,9 @@ class FormeAsyncAutocomplete<T extends Object> extends FormeField<T?> {
     required this.optionsBuilder,
     this.searchCondition,
     FormeFieldDecorator<T?>? decorator,
+    bool registrable = true,
   }) : super(
+          registrable: registrable,
           decorator: decorator,
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,

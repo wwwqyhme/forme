@@ -96,7 +96,9 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
     FormeFieldDecorator<List<T>>? decorator,
     bool isThreeLine = false,
     bool requestFocusOnUserInteraction = true,
+    bool registrable = true,
   }) : super(
+            registrable: registrable,
             requestFocusOnUserInteraction: requestFocusOnUserInteraction,
             quietlyValidate: quietlyValidate,
             order: order,

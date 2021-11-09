@@ -77,7 +77,9 @@ class FormeNumberField extends FormeField<num?> {
     this.max,
     this.allowNegative = false,
     FormeFieldDecorator<num?>? decorator,
+    bool registrable = true,
   }) : super(
+          registrable: registrable,
           decorator: decorator,
           order: order,
           quietlyValidate: quietlyValidate,

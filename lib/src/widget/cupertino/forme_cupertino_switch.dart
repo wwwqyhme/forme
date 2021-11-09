@@ -24,7 +24,9 @@ class FormeCupertinoSwitch extends FormeField<bool> {
     FormeAsyncValidator<bool>? asyncValidator,
     FormeFieldDecorator<bool>? decorator,
     bool requestFocusOnUserInteraction = true,
+    bool registrable = true,
   }) : super(
+          registrable: registrable,
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,

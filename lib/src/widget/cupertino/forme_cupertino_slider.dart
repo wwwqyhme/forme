@@ -32,7 +32,9 @@ class FormeCupertinoSlider extends FormeField<double> {
     FormeValidator<double>? validator,
     FormeAsyncValidator<double>? asyncValidator,
     FormeFieldDecorator<double>? decorator,
+    bool registrable = true,
   }) : super(
+          registrable: registrable,
           order: order,
           decorator: decorator,
           key: key,

@@ -42,7 +42,9 @@ class FormeSlider extends FormeField<double> {
     FormeFieldSetter<double>? onSaved,
     FormeValidator<double>? validator,
     FormeAsyncValidator<double>? asyncValidator,
+    bool registrable = true,
   }) : super(
+          registrable: registrable,
           order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,

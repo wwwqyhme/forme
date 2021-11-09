@@ -89,7 +89,9 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
     TextSelectionControls? textSelectionControls,
     bool enableIMEPersonalizedLearning = true,
     FormeFieldDecorator<T?>? decorator,
+    bool registrable = true,
   }) : super(
+          registrable: registrable,
           decorator: decorator,
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,

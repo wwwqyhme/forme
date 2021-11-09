@@ -89,7 +89,9 @@ class FormeDateTimeRangeField extends FormeField<DateTimeRange?> {
     RouteSettings? routeSettings,
     TransitionBuilder? builder,
     FormeFieldDecorator<DateTimeRange?>? decorator,
+    bool registrable = true,
   }) : super(
+          registrable: registrable,
           decorator: decorator,
           order: order,
           quietlyValidate: quietlyValidate,

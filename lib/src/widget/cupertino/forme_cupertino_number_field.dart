@@ -84,7 +84,9 @@ class FormeCupertinoNumberField extends FormeField<num?> {
     FormeValidator<num?>? validator,
     FormeAsyncValidator<num?>? asyncValidator,
     FormeFieldDecorator<num?>? decorator,
+    bool registrable = true,
   }) : super(
+          registrable: registrable,
           enabled: enabled,
           key: key,
           decorator: decorator,

@@ -345,14 +345,17 @@ class _FormeState extends State<Forme> {
   }
 
   void registerField(FormeFieldState state) {
-    states.add(state);
-    fieldNotifiers[state.name]?.value = state.controller;
+    if (!states.contains(state)) {
+      states.add(state);
+      fieldNotifiers[state.name]?.value = state.controller;
+    }
     updateValidation();
   }
 
   void unregisterField(FormeFieldState state) {
-    states.remove(state);
-    fieldNotifiers[state.name]?.value = null;
+    if (states.remove(state)) {
+      fieldNotifiers[state.name]?.value = null;
+    }
     updateValidation();
   }
 
@@ -509,7 +512,9 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     _init = true;
     beforeInitiation();
     controller = createFormeFieldController();
-    _formeState?.registerField(this);
+    if (widget.registrable) {
+      _formeState?.registerField(this);
+    }
     afterInitiation();
     widget.onInitialed?.call(controller);
   }
@@ -574,6 +579,15 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   @override
   void didUpdateWidget(FormeField<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.registrable && !widget.registrable) {
+      _formeState?.unregisterField(this);
+    }
+
+    if (!oldWidget.registrable && widget.registrable) {
+      _formeState?.registerField(this);
+    }
+
     final T oldValue = _value;
     updateFieldValueInDidUpdateWidget(oldWidget);
     if (!comparator(oldValue, _value)) {

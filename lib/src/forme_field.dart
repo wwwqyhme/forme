@@ -67,10 +67,16 @@ class FormeField<T> extends StatefulWidget {
   /// whether request focus when field value changed
   final bool requestFocusOnUserInteraction;
 
+  /// whether this field can be registered to `Forme`
+  ///
+  /// useful when you want to create a field relies on another FormeField
+  final bool registrable;
+
   const FormeField({
     Key? key,
     required this.name,
     this.readOnly = false,
+    required this.registrable,
     required this.builder,
     this.enabled = true,
     required this.initialValue,

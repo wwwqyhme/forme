@@ -39,7 +39,9 @@ class FormeSwitch extends FormeField<bool> {
     bool autofocus = false,
     bool requestFocusOnUserInteraction = true,
     FormeFieldDecorator<bool>? decorator,
+    bool registrable = true,
   }) : super(
+          registrable: registrable,
           decorator: decorator,
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,

@@ -98,7 +98,9 @@ class FormeCupertinoTimerField extends FormeField<Duration?> {
     FormeValidator<Duration?>? validator,
     FormeAsyncValidator<Duration?>? asyncValidator,
     FormeFieldDecorator<Duration?>? decorator,
+    bool registrable = true,
   }) : super(
+          registrable: registrable,
           enabled: enabled,
           readOnly: readOnly,
           decorator: decorator,

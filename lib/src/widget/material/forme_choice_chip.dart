@@ -33,7 +33,9 @@ class FormeChoiceChip<T extends Object> extends FormeField<T?> {
     TextDirection? textDirection,
     VerticalDirection verticalDirection = VerticalDirection.down,
     bool requestFocusOnUserInteraction = true,
+    bool registrable = true,
   }) : super(
+          registrable: registrable,
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,
           quietlyValidate: quietlyValidate,

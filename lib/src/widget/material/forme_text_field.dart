@@ -73,7 +73,11 @@ class FormeTextField extends FormeField<String> {
     FormeValidator<String>? validator,
     FormeAsyncValidator<String>? asyncValidator,
     bool enableIMEPersonalizedLearning = true,
+    FormeFieldDecorator<String>? decorator,
+    bool registrable = true,
   }) : super(
+          registrable: registrable,
+          decorator: decorator,
           order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,

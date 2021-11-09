@@ -59,7 +59,9 @@ class FormeRadioGroup<T extends Object> extends FormeField<T?> {
     InputDecoration? decoration,
     FormeFieldDecorator<T?>? decorator,
     bool requestFocusOnUserInteraction = true,
+    bool registrable = true,
   }) : super(
+            registrable: registrable,
             requestFocusOnUserInteraction: requestFocusOnUserInteraction,
             quietlyValidate: quietlyValidate,
             asyncValidatorDebounce: asyncValidatorDebounce,

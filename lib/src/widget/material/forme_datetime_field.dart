@@ -90,7 +90,9 @@ class FormeDateTimeField extends FormeField<DateTime?> {
     TransitionBuilder? builder,
     bool use24hFormat = false,
     FormeFieldDecorator<DateTime?>? decorator,
+    bool registrable = true,
   }) : super(
+          registrable: registrable,
           decorator: decorator,
           order: order,
           quietlyValidate: quietlyValidate,

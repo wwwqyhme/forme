@@ -29,7 +29,9 @@ class FormeCupertinoSlidingSegmentedControl<T extends Object>
     FormeAsyncValidator<T?>? asyncValidator,
     FormeFieldDecorator<T?>? decorator,
     bool requestFocusOnUserInteraction = true,
+    bool registrable = true,
   }) : super(
+            registrable: registrable,
             requestFocusOnUserInteraction: requestFocusOnUserInteraction,
             decorator: decorator,
             quietlyValidate: quietlyValidate,

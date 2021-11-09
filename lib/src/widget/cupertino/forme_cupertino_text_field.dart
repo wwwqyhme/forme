@@ -79,7 +79,9 @@ class FormeCupertinoTextField extends FormeField<String> {
     FormeAsyncValidator<String>? asyncValidator,
     FormeFieldDecorator<String>? decorator,
     bool enableIMEPersonalizedLearning = true,
+    bool registrable = true,
   }) : super(
+            registrable: registrable,
             enabled: enabled,
             decorator: decorator,
             quietlyValidate: quietlyValidate,

@@ -103,7 +103,9 @@ class FormeCupertinoDateTimeField extends FormeField<DateTime?> {
     FormeFieldSetter<DateTime?>? onSaved,
     FormeValidator<DateTime?>? validator,
     FormeAsyncValidator<DateTime?>? asyncValidator,
+    bool registrable = true,
   }) : super(
+          registrable: registrable,
           readOnly: readOnly,
           enabled: enabled,
           decorator: decorator,

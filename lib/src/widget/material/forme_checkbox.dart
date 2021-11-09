@@ -36,7 +36,9 @@ class FormeCheckbox extends FormeField<bool?> {
     this.tristate = false,
     bool requestFocusOnUserInteraction = true,
     FormeFieldDecorator<bool>? decorator,
+    bool registrable = true,
   }) : super(
+          registrable: registrable,
           decorator: decorator,
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,

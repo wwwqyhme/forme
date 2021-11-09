@@ -80,7 +80,9 @@ class FormeTimeField extends FormeField<TimeOfDay?> {
     TransitionBuilder? builder,
     bool requestFocusOnUserInteraction = true,
     FormeFieldDecorator<TimeOfDay?>? decorator,
+    bool registrable = true,
   }) : super(
+          registrable: registrable,
           decorator: decorator,
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,
