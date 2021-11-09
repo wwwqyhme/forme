@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import '../../forme_field.dart';
+import '../../../forme.dart';
 
 class FormeSwitch extends FormeField<bool> {
   FormeSwitch({
@@ -38,7 +38,9 @@ class FormeSwitch extends FormeField<bool> {
     ImageErrorListener? onInactiveThumbImageError,
     bool autofocus = false,
     bool requestFocusOnUserInteraction = true,
+    FormeFieldDecorator<bool>? decorator,
   }) : super(
+          decorator: decorator,
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,
           quietlyValidate: quietlyValidate,

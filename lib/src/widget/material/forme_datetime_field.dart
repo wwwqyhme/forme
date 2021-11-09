@@ -6,10 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
-import '../../forme_core.dart';
-import '../../forme_field.dart';
-import '../forme_datetime_formatter.dart';
-import '../forme_datetime_type.dart';
+import '../../../forme.dart';
 
 class FormeDateTimeField extends FormeField<DateTime?> {
   FormeDateTimeField({
@@ -92,7 +89,9 @@ class FormeDateTimeField extends FormeField<DateTime?> {
     SelectableDayPredicate? selectableDayPredicate,
     TransitionBuilder? builder,
     bool use24hFormat = false,
+    FormeFieldDecorator<DateTime?>? decorator,
   }) : super(
+          decorator: decorator,
           order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,

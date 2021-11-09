@@ -6,8 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
-import '../../forme_core.dart';
-import '../../forme_field.dart';
+import '../../../forme.dart';
 
 class FormeNumberField extends FormeField<num?> {
   final int decimal;
@@ -77,7 +76,9 @@ class FormeNumberField extends FormeField<num?> {
     this.decimal = 0,
     this.max,
     this.allowNegative = false,
+    FormeFieldDecorator<num?>? decorator,
   }) : super(
+          decorator: decorator,
           order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,

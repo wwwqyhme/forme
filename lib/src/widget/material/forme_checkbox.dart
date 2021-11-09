@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../forme_core.dart';
-import '../../forme_field.dart';
+import '../../../forme.dart';
 
 class FormeCheckbox extends FormeField<bool?> {
   final bool tristate;
@@ -36,7 +35,9 @@ class FormeCheckbox extends FormeField<bool?> {
     BorderSide? side,
     this.tristate = false,
     bool requestFocusOnUserInteraction = true,
+    FormeFieldDecorator<bool>? decorator,
   }) : super(
+          decorator: decorator,
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,
           quietlyValidate: quietlyValidate,

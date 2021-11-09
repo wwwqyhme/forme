@@ -5,9 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
-import '../../forme_controller.dart';
-import '../../forme_core.dart';
-import '../../forme_field.dart';
+import '../../../forme.dart';
 
 typedef FormeAutocompleteOptionsViewBuilder<T extends Object> = Widget Function(
     BuildContext context,

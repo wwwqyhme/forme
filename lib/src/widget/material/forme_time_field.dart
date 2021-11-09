@@ -6,8 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
-import '../../forme_core.dart';
-import '../../forme_field.dart';
+import '../../../forme.dart';
 
 typedef FormeTimeFieldFormatter = String Function(TimeOfDay timeOfDay);
 
@@ -80,7 +79,9 @@ class FormeTimeField extends FormeField<TimeOfDay?> {
     RouteSettings? routeSettings,
     TransitionBuilder? builder,
     bool requestFocusOnUserInteraction = true,
+    FormeFieldDecorator<TimeOfDay?>? decorator,
   }) : super(
+          decorator: decorator,
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,
           quietlyValidate: quietlyValidate,

@@ -6,9 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
-import '../../forme_core.dart';
-import '../../forme_field.dart';
-import '../forme_datetime_formatter.dart';
+import '../../../forme.dart';
 
 class FormeDateTimeRangeField extends FormeField<DateTimeRange?> {
   final DateTime? firstDate;
@@ -90,7 +88,9 @@ class FormeDateTimeRangeField extends FormeField<DateTimeRange?> {
     String? fieldEndLabelText,
     RouteSettings? routeSettings,
     TransitionBuilder? builder,
+    FormeFieldDecorator<DateTimeRange?>? decorator,
   }) : super(
+          decorator: decorator,
           order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
