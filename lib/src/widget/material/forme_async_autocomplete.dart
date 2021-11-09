@@ -107,7 +107,7 @@ class FormeAsyncAutocomplete<T extends Object> extends FormeField<T?> {
     bool registrable = true,
   }) : super(
           registrable: registrable,
-          decorator: decorator,
+          // decorator: decorator,
           order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
@@ -284,7 +284,9 @@ class FormeAsyncAutocomplete<T extends Object> extends FormeField<T?> {
                           renderObject.size.width;
                     }
                   });
-                  return field;
+                  return decorator == null
+                      ? field
+                      : decorator.build(state.controller, field);
                 });
               },
             );
