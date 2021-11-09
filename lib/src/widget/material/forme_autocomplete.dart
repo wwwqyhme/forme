@@ -90,7 +90,9 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
     ScrollController? scrollController,
     TextSelectionControls? textSelectionControls,
     bool enableIMEPersonalizedLearning = true,
+    FormeFieldDecorator<T?>? decorator,
   }) : super(
+          decorator: decorator,
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,
           quietlyValidate: quietlyValidate,

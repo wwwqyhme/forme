@@ -105,7 +105,9 @@ class FormeAsyncAutocomplete<T extends Object> extends FormeField<T?> {
     this.debounce,
     required this.optionsBuilder,
     this.searchCondition,
+    FormeFieldDecorator<T?>? decorator,
   }) : super(
+          decorator: decorator,
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,
           quietlyValidate: quietlyValidate,
