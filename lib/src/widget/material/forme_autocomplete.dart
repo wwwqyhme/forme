@@ -37,7 +37,6 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
     FormeAsyncValidator<T?>? asyncValidator,
     FormeFieldValidationChanged<T?>? onValidationChanged,
     this.onFieldViewInitialed,
-    bool requestFocusOnUserInteraction = true,
     this.displayStringForOption = RawAutocomplete.defaultStringForOption,
     AutocompleteFieldViewBuilder? fieldViewBuilder,
     required AutocompleteOptionsBuilder<T> optionsBuilder,
@@ -93,7 +92,6 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
   }) : super(
           registrable: registrable,
           decorator: decorator,
-          requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,
           quietlyValidate: quietlyValidate,
           asyncValidatorDebounce: asyncValidatorDebounce,
