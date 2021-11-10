@@ -203,15 +203,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                     name: 'dropdown',
                   ),
-                  FormeAutocomplete(
-                      initialValue: 'c',
-                      decoration: const InputDecoration(
-                        labelText: 'Autocomplete',
-                      ),
-                      name: 'autocomplete',
-                      optionsBuilder: (TextEditingValue value) {
-                        return ['a', 'b', 'c'];
-                      }),
                   TextButton(
                       onPressed: () {
                         key.reset();
