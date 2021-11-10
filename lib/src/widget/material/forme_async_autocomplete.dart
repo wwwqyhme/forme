@@ -304,7 +304,7 @@ class _FormeAsyncAutoCompleteState<T extends Object>
   late final ValueNotifier<FormeAsyncAutocompleteSearchState> stateNotifier =
       FormeMountedValueNotifier(
           FormeAsyncAutocompleteSearchState.waiting, this);
-  final ValueNotifier<double?> optionsViewWidthNotifier = ValueNotifier(null);
+  late final ValueNotifier<double?> optionsViewWidthNotifier = FormeMountedValueNotifier(null,this);
 
   int gen = 0;
   int optionsGen = 0;

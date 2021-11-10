@@ -240,7 +240,8 @@ class FormeAutocomplete<T extends Object> extends FormeField<T?> {
 class _FormeAutoCompleteState<T extends Object> extends FormeFieldState<T?> {
   TextEditingController? textEditingController;
 
-  final ValueNotifier<double?> optionsViewWidthNotifier = ValueNotifier(null);
+  late final ValueNotifier<double?> optionsViewWidthNotifier =
+      FormeMountedValueNotifier(null, this);
 
   @override
   FormeAutocomplete<T> get widget => super.widget as FormeAutocomplete<T>;
