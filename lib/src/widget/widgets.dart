@@ -9,8 +9,6 @@ export 'cupertino/forme_cupertino_text_field.dart';
 export 'cupertino/forme_cupertino_timer_field.dart';
 export 'forme_datetime_formatter.dart';
 export 'forme_datetime_type.dart';
-export 'material/forme_async_autocomplete.dart';
-export 'material/forme_autocomplete.dart';
 export 'material/forme_checkbox.dart';
 export 'material/forme_choice_chip.dart';
 export 'material/forme_datetime_field.dart';
