@@ -130,7 +130,7 @@ class FormeAsyncAutocomplete<T extends Object> extends FormeField<T?> {
               onSelected: (T t) {
                 state.didChange(t);
                 state.effectiveController.selection = TextSelection.collapsed(
-                    offset: displayStringForOption(t).length);
+                    offset: state.effectiveController.text.length);
               },
               optionsViewBuilder: (BuildContext context,
                   AutocompleteOnSelected<T> onSelected, Iterable<T> options) {
@@ -304,7 +304,8 @@ class _FormeAsyncAutoCompleteState<T extends Object>
   late final ValueNotifier<FormeAsyncAutocompleteSearchState> stateNotifier =
       FormeMountedValueNotifier(
           FormeAsyncAutocompleteSearchState.waiting, this);
-  late final ValueNotifier<double?> optionsViewWidthNotifier = FormeMountedValueNotifier(null,this);
+  late final ValueNotifier<double?> optionsViewWidthNotifier =
+      FormeMountedValueNotifier(null, this);
 
   int gen = 0;
   int optionsGen = 0;
