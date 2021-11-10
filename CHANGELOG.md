@@ -1,3 +1,8 @@
+## 3.1.6
+
+1. move to `FormeAutocomplete` & `FormeAsyncAutocomplete` to `forme_fields` package
+2. **`FormeInputDecoratorBuilder`'s wrapper and emptyChecker add `FormFieldController<T>` as second argument , this will break your codes**
+
 ## 3.1.5
 
 1. replace EdgeInsets with EdgeInsetsGeometry in some files
