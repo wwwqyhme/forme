@@ -69,7 +69,7 @@ class FormeDropdownButton<T extends Object> extends FormeField<T?> {
                   : FormeInputDecoratorBuilder<T?>(
                       decoration: decoration,
                       emptyChecker: (value, controller) => value == null,
-                      wrapper: (child) {
+                      wrapper: (child, controller) {
                         return DropdownButtonHideUnderline(child: child);
                       })),
           builder: (state) {

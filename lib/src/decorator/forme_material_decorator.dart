@@ -7,7 +7,8 @@ class FormeInputDecoratorBuilder<T> implements FormeFieldDecorator<T> {
   final bool Function(T? value, FormeFieldController<T> controller)?
       emptyChecker;
   final InputDecoration? decoration;
-  final Widget Function(Widget child)? wrapper;
+  final Widget Function(Widget child, FormeFieldController<T> controller)?
+      wrapper;
 
   @override
   Widget build(
@@ -41,12 +42,14 @@ class FormeInputDecorator<T> extends StatelessWidget {
   final bool Function(T? value, FormeFieldController<T> controller)?
       emptyChecker;
   final InputDecoration? decoration;
-  final Widget Function(Widget child)? wrapper;
+  final Widget Function(Widget child, FormeFieldController<T> controller)?
+      wrapper;
   final FormeFieldController<T> controller;
 
   @override
   Widget build(BuildContext context) {
-    final Widget child = wrapper == null ? this.child : wrapper!(this.child);
+    final Widget child =
+        wrapper == null ? this.child : wrapper!(this.child, controller);
     final InputDecoration _decoration = decoration ?? const InputDecoration();
 
     if (emptyChecker == null) {
