@@ -4,7 +4,8 @@ import '../../forme.dart';
 class FormeInputDecoratorBuilder<T> implements FormeFieldDecorator<T> {
   const FormeInputDecoratorBuilder(
       {this.emptyChecker, this.decoration, this.wrapper});
-  final bool Function(T? value)? emptyChecker;
+  final bool Function(T? value, FormeFieldController<T> controller)?
+      emptyChecker;
   final InputDecoration? decoration;
   final Widget Function(Widget child)? wrapper;
 
@@ -37,7 +38,8 @@ class FormeInputDecorator<T> extends StatelessWidget {
   }) : super(key: key);
 
   final Widget child;
-  final bool Function(T? value)? emptyChecker;
+  final bool Function(T? value, FormeFieldController<T> controller)?
+      emptyChecker;
   final InputDecoration? decoration;
   final Widget Function(Widget child)? wrapper;
   final FormeFieldController<T> controller;
@@ -78,7 +80,7 @@ class FormeInputDecorator<T> extends StatelessWidget {
             controller.focusListenable, controller.valueListenable,
             builder: (context, bool focus, T? value, child) {
           return InputDecorator(
-            isEmpty: emptyChecker!(value),
+            isEmpty: emptyChecker!(value, controller),
             isFocused: focus,
             decoration: _decoration,
             child: child,
@@ -92,7 +94,7 @@ class FormeInputDecorator<T> extends StatelessWidget {
         builder: (context, bool focus, FormeFieldValidation validation,
             T? value, _child) {
           return InputDecorator(
-            isEmpty: emptyChecker!(value),
+            isEmpty: emptyChecker!(value, controller),
             isFocused: focus,
             decoration: _decoration.copyWith(errorText: validation.error),
             child: child,
