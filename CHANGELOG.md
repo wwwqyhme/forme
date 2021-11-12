@@ -1,3 +1,7 @@
+## 3.1.7
+
+1. first argument of `FormeInputDecoratorBuilder`'s emptyChecker has been replaced by `T`
+
 ## 3.1.6
 
 1. move to `FormeAutocomplete` & `FormeAsyncAutocomplete` to `forme_fields` package

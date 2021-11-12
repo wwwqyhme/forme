@@ -4,7 +4,7 @@ import '../../forme.dart';
 class FormeInputDecoratorBuilder<T> implements FormeFieldDecorator<T> {
   const FormeInputDecoratorBuilder(
       {this.emptyChecker, this.decoration, this.wrapper});
-  final bool Function(T? value, FormeFieldController<T> controller)?
+  final bool Function(T value, FormeFieldController<T> controller)?
       emptyChecker;
   final InputDecoration? decoration;
   final Widget Function(Widget child, FormeFieldController<T> controller)?
@@ -39,7 +39,7 @@ class FormeInputDecorator<T> extends StatelessWidget {
   }) : super(key: key);
 
   final Widget child;
-  final bool Function(T? value, FormeFieldController<T> controller)?
+  final bool Function(T value, FormeFieldController<T> controller)?
       emptyChecker;
   final InputDecoration? decoration;
   final Widget Function(Widget child, FormeFieldController<T> controller)?
@@ -81,7 +81,7 @@ class FormeInputDecorator<T> extends StatelessWidget {
       if (FormeKey.of(context)?.quietlyValidate ?? false) {
         return ValueListenableBuilder2(
             controller.focusListenable, controller.valueListenable,
-            builder: (context, bool focus, T? value, child) {
+            builder: (context, bool focus, T value, child) {
           return InputDecorator(
             isEmpty: emptyChecker!(value, controller),
             isFocused: focus,
@@ -94,8 +94,8 @@ class FormeInputDecorator<T> extends StatelessWidget {
         controller.focusListenable,
         controller.validationListenable,
         controller.valueListenable,
-        builder: (context, bool focus, FormeFieldValidation validation,
-            T? value, _child) {
+        builder: (context, bool focus, FormeFieldValidation validation, T value,
+            _child) {
           return InputDecorator(
             isEmpty: emptyChecker!(value, controller),
             isFocused: focus,

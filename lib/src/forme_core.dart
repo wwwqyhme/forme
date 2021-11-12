@@ -6,7 +6,6 @@ import 'package:flutter/widgets.dart';
 import '../forme.dart';
 import 'forme_field_scope.dart';
 import 'forme_mounted_value_notifier.dart';
-import 'value_listenable_delegate.dart';
 
 /// form key is a global key , also used to manage form
 class FormeKey extends LabeledGlobalKey<State> implements FormeController {
@@ -1001,7 +1000,7 @@ class _FormeController extends FormeController {
 
   @override
   ValueListenable<FormeValidation> get validationListenable =>
-      ValueListenableDelegate(state.validationNotifier);
+      FormeValueListenableDelegate(state.validationNotifier);
 }
 
 class _FormeFieldControllerListenable<T>
@@ -1035,11 +1034,12 @@ class _FormeFieldController<T> implements FormeFieldController<T> {
   final ValueListenable<bool> readOnlyListenable;
 
   _FormeFieldController(this.state)
-      : focusListenable = ValueListenableDelegate(state._focusNotifier),
-        readOnlyListenable = ValueListenableDelegate(state._readOnlyNotifier),
+      : focusListenable = FormeValueListenableDelegate(state._focusNotifier),
+        readOnlyListenable =
+            FormeValueListenableDelegate(state._readOnlyNotifier),
         validationListenable =
-            ValueListenableDelegate(state._validationNotifier),
-        valueListenable = ValueListenableDelegate<T>(state._valueNotifier);
+            FormeValueListenableDelegate(state._validationNotifier),
+        valueListenable = FormeValueListenableDelegate<T>(state._valueNotifier);
 
   @override
   bool get readOnly => state.readOnly;
