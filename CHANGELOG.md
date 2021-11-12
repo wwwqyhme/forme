@@ -1,4 +1,4 @@
-## 3.1.7
+## 3.1.8
 
 1. first argument of `FormeInputDecoratorBuilder`'s emptyChecker has been replaced by `T`
 
