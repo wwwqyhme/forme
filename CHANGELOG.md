@@ -1,3 +1,8 @@
+## 3.1.9
+
+1. support `FormeCheckboxTile`
+2. support `FormeSwitchTile`
+
 ## 3.1.8
 
 1. first argument of `FormeInputDecoratorBuilder`'s emptyChecker has been replaced by `T`

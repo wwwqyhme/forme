@@ -84,8 +84,10 @@ Widget forme = Forme(
 | FormeRangeSlider|  RangeValues | false|
 | FormeFilterChip|  List&lt; T&gt; | false |
 | FormeChoiceChip|  T | true |
-| FormeCheckbox| bool | false |
+| FormeCheckbox| bool | true |
+| FormeCheckboxListTile | bool | true |
 | FormeSwitch| bool | false |
+| FormeSwitchTile| bool | false |
 | FormeDropdownButton | T | true | 
 | FormeListTile|  List&lt; T&gt; | false |
 | FormeRadioGroup|  T | true |
