@@ -29,7 +29,7 @@ class FormeMountedValueNotifier<T> extends ValueNotifier<T> {
 }
 
 class FormeValueListenableDelegate<T> extends ValueListenable<T> {
-  final ValueNotifier<T> _delegate;
+  final ValueListenable<T> _delegate;
 
   const FormeValueListenableDelegate(this._delegate);
 

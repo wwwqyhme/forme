@@ -16,7 +16,6 @@ typedef FormeFieldValidationChanged<T> = void Function(
     FormeFieldController<T> field, FormeFieldValidation validation);
 typedef FormeFieldSetter<T> = void Function(
     FormeFieldController<T> field, T value);
-typedef FormeValueComparator<T> = bool Function(T oldValue, T newValue);
 typedef FormeFocusChanged<T> = void Function(
     FormeFieldController<T> field, bool hasFocus);
 typedef FormeFieldInitialed<T> = void Function(FormeFieldController<T> field);
@@ -40,9 +39,6 @@ class FormeField<T> extends StatefulWidget {
   /// 7. when get validation from `FormeController` , this field will be ignored
   final bool enabled;
   final T initialValue;
-
-  /// comparator is used to check whether value changed
-  final FormeValueComparator<T>? comparator;
 
   /// used to support [Forme.autovalidateByOrder]
   ///
@@ -124,7 +120,6 @@ class FormeField<T> extends StatefulWidget {
     this.order,
     this.onSaved,
     this.quietlyValidate = false,
-    this.comparator,
     this.onFocusChanged,
     this.onInitialed,
     this.decorator,

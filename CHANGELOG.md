@@ -15,6 +15,7 @@ if field is disabled:
 ```
 
 2. asyncValidator add a  isValid function param ,**API BREAK**
+3. remove `comparator` from `FormeField` , you can override `FormeFieldState`'s compareValue method do the same
 
 ## 3.1.10
 

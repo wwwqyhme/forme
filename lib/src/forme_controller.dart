@@ -69,7 +69,7 @@ abstract class FormeController {
   ///
   /// this method is relay on [FormeField.initialValue] and [Forme.initialValue]
   ///
-  /// **comparator from [FormeField.comparator] is used to compare two values **
+  /// value is compared by [FormeFieldState.compareValue]
   bool get isValueChanged;
 
   /// get all registered controllers
@@ -211,7 +211,7 @@ abstract class FormeFieldController<T> {
   ///
   /// this method is relay on [FormeField.initialValue] and [Forme.initialValue]
   ///
-  /// the `comparator` from [FormeField.comparator] is used to compare value
+  /// value is compared by [FormeFieldState.compareValue]
   bool get isValueChanged;
 
   /// whether field is enabled

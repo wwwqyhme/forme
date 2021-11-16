@@ -171,7 +171,7 @@ class _FormeState extends State<Forme> {
   final List<FormeFieldState> states = [];
   late final _FormeController controller;
   final Map<String, ValueNotifier<FormeFieldController?>> fieldNotifiers = {};
-  late final FormeMountedValueNotifier<FormeValidation> validationNotifier =
+  late final ValueNotifier<FormeValidation> validationNotifier =
       FormeMountedValueNotifier(const FormeValidation({}), this);
 
   Map<String, dynamic> get initialValue => widget.initialValue;
@@ -395,16 +395,15 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   _FormeState? _formeState;
 
-  late final FormeMountedValueNotifier<bool> _focusNotifier =
+  late final ValueNotifier<bool> _focusNotifier =
       FormeMountedValueNotifier(false, this);
-  late final FormeMountedValueNotifier<bool> _readOnlyNotifier =
+  late final ValueNotifier<bool> _readOnlyNotifier =
       FormeMountedValueNotifier(false, this);
-  late final FormeMountedValueNotifier<bool> _enabledNotifier =
+  late final ValueNotifier<bool> _enabledNotifier =
       FormeMountedValueNotifier(false, this);
   late final FormeFieldController<T> controller;
-  late final FormeMountedValueNotifier<FormeFieldValidation>
-      _validationNotifier;
-  late final FormeMountedValueNotifier<T> _valueNotifier;
+  late final ValueNotifier<FormeFieldValidation> _validationNotifier;
+  late final _ValueMountedNotifier<T> _valueNotifier;
 
   int get order =>
       widget.order ??
@@ -452,23 +451,22 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   AutovalidateMode get autovalidateMode => widget.autovalidateMode;
 
-  FormeValueComparator<T> get comparator =>
-      widget.comparator ??
-      (a, b) {
-        if (a == b) {
-          return true;
-        }
-        if (a is List && b is List) {
-          return listEquals<dynamic>(a, b);
-        }
-        if (a is Set && b is Set) {
-          return setEquals<dynamic>(a, b);
-        }
-        if (a is Map && b is Map) {
-          return mapEquals<dynamic, dynamic>(a, b);
-        }
-        return false;
-      };
+  /// override this method if default compare can not meet your needs
+  bool compareValue(T a, T b) {
+    if (a == b) {
+      return true;
+    }
+    if (a is List && b is List) {
+      return listEquals<dynamic>(a, b);
+    }
+    if (a is Set && b is Set) {
+      return setEquals<dynamic>(a, b);
+    }
+    if (a is Map && b is Map) {
+      return mapEquals<dynamic, dynamic>(a, b);
+    }
+    return false;
+  }
 
   bool get needValidate =>
       _hasAnyValidator &&
@@ -510,7 +508,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     });
   }
 
-  bool get isValueChanged => !comparator(initialValue, value);
+  bool get isValueChanged => !compareValue(initialValue, value);
 
   @override
   void didChangeDependencies() {
@@ -576,7 +574,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   @mustCallSuper
   void didChange(T newValue) {
     final T oldValue = _value;
-    if (!comparator(oldValue, newValue)) {
+    if (!compareValue(oldValue, newValue)) {
       setState(() {
         _hasInteractedByUser = true;
         _value = newValue;
@@ -601,7 +599,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
     final T oldValue = _value;
     updateFieldValueInDidUpdateWidget(oldWidget);
-    if (!comparator(oldValue, _value)) {
+    if (!compareValue(oldValue, _value)) {
       _oldValue = oldValue;
       _valueNotifier.value = _value;
     }
@@ -625,7 +623,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       _alwaysValidateOnNextBuild = false;
     });
     _fieldChange();
-    if (!comparator(oldValue, initialValue)) {
+    if (!compareValue(oldValue, initialValue)) {
       _valueNotifier.value = initialValue;
     }
     _validationNotifier.value = _initialValidationState;
@@ -647,7 +645,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     _readOnlyNotifier.value = readOnly;
     _enabledNotifier.value = enabled;
     _value = initialValue;
-    _valueNotifier = FormeMountedValueNotifier(initialValue, this);
+    _valueNotifier = _ValueMountedNotifier(initialValue, this);
     _validation = _initialValidationState;
     _validationNotifier = FormeMountedValueNotifier(_validation, this);
   }
@@ -888,8 +886,13 @@ class FormeFieldState<T> extends State<FormeField<T>> {
             text == null
                 ? FormeValidationState.valid
                 : FormeValidationState.invalid);
-        return FormeFieldValidateSnapshot(value, validation!, order, controller,
-            !comparator(value, this.value), !comparator(value, initialValue));
+        return FormeFieldValidateSnapshot(
+            value,
+            validation!,
+            order,
+            controller,
+            !compareValue(value, this.value),
+            !compareValue(value, initialValue));
       }).whenComplete(() {
         notify(validation ??
             const FormeFieldValidation(null, FormeValidationState.fail));
@@ -1145,3 +1148,36 @@ class _FormeFieldController<T> implements FormeFieldController<T> {
 /// a focusnode created by FormeField itself rather than set by subclass ,
 /// so it's our responsibility to dispose it
 class _DisposeRequiredFocusNode extends FocusNode {}
+
+class _ValueMountedNotifier<T> extends ChangeNotifier
+    implements ValueListenable<T> {
+  final FormeFieldState<T> state;
+  _ValueMountedNotifier(this._value, this.state);
+  @override
+  T get value => _value;
+  T _value;
+  set value(T newValue) {
+    if (!state.mounted) {
+      return;
+    }
+    if (state.compareValue(_value, newValue)) {
+      return;
+    }
+    _value = newValue;
+    notifyListeners();
+  }
+
+  @override
+  void addListener(VoidCallback listener) {
+    if (state.mounted) {
+      super.addListener(listener);
+    }
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    if (state.mounted) {
+      super.removeListener(listener);
+    }
+  }
+}
