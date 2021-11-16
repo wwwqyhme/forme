@@ -1,3 +1,17 @@
+## 3.2.0
+
+### support `enabled` on `FormeField`
+
+if field is disabled:
+
+1. field will lose focus and can not be focused , but you still can get focusNode from `FormeFieldController` and set `canRequestFocus` to true and require focus
+2. field's validators are ignored (manually validation will  be also ignored)
+3. field is readOnly
+4. value will be ignored when get form data
+5. value can still be changed via `FormeFieldController`
+6. validation state will always be `FormeValidationState.unnecessary`
+7. when get validation from `FormeController` , this field will be ignored
+
 ## 3.1.10
 
 1. support `FormeCheckboxTile`

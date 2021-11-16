@@ -192,7 +192,7 @@ class _FormeState extends State<Forme> {
         _readOnly = readOnly;
       });
       for (final element in states) {
-        element._readOnlyNotifier.value = readOnly;
+        element._readOnlyNotifier.value = element.readOnly;
       }
     }
   }
@@ -666,7 +666,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       setState(() {
         _readOnly = readOnly;
       });
-      _readOnlyNotifier.value = readOnly;
+      _readOnlyNotifier.value = this.readOnly;
     }
   }
 
@@ -681,7 +681,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       });
       _readOnlyNotifier.value = readOnly;
       _validationNotifier.value = _initialValidationState;
-      _enabledNotifier.value = enabled;
+      _enabledNotifier.value = this.enabled;
     }
   }
 
@@ -1089,7 +1089,6 @@ class _FormeFieldController<T> implements FormeFieldController<T> {
   @override
   FormeController? get formeController => Forme.of(state.context);
 
-  // TODO focusNode delegate ?
   @override
   FocusNode? get focusNode => state._focusNode;
 
