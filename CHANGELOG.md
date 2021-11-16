@@ -1,7 +1,8 @@
 ## 3.2.0
 
-### support `enabled` on `FormeField`
+1.  support `enabled` on `FormeField`
 
+```
 if field is disabled:
 
 1. field will lose focus and can not be focused , but you still can get focusNode from `FormeFieldController` and set `canRequestFocus` to true and require focus
@@ -11,6 +12,9 @@ if field is disabled:
 5. value can still be changed via `FormeFieldController`
 6. validation state will always be `FormeValidationState.unnecessary`
 7. when get validation from `FormeController` , this field will be ignored
+```
+
+2. asyncValidator add a  isValid function param ,**API BREAK**
 
 ## 3.1.10
 
