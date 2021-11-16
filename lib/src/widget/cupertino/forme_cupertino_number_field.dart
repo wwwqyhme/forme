@@ -85,6 +85,7 @@ class FormeCupertinoNumberField extends FormeField<num?> {
     FormeAsyncValidator<num?>? asyncValidator,
     FormeFieldDecorator<num?>? decorator,
     bool registrable = true,
+    bool enableIMEPersonalizedLearning = true,
   }) : super(
           registrable: registrable,
           enabled: enabled,
@@ -106,6 +107,7 @@ class FormeCupertinoNumberField extends FormeField<num?> {
           initialValue: initialValue,
           builder: (state) {
             final bool readOnly = state.readOnly;
+            final bool enabled = state.enabled;
             final FocusNode focusNode = state.focusNode;
             final TextEditingController textEditingController =
                 (state as _NumberFieldState).textEditingController;
@@ -129,6 +131,8 @@ class FormeCupertinoNumberField extends FormeField<num?> {
             }
 
             return buildCupertinoTextField(
+              enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
+              enabled: enabled,
               focusNode: focusNode,
               textEditingController: textEditingController,
               decoration: decoration,

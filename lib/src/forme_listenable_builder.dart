@@ -3,6 +3,51 @@ import 'package:flutter/widgets.dart';
 
 import '../forme.dart';
 
+class ValueListenableBuilder4<A, B, C, D> extends StatelessWidget {
+  const ValueListenableBuilder4(
+    this.first,
+    this.second,
+    this.third,
+    this.fourth, {
+    Key? key,
+    required this.builder,
+    this.child,
+  }) : super(key: key);
+
+  final ValueListenable<A> first;
+  final ValueListenable<B> second;
+  final ValueListenable<C> third;
+  final ValueListenable<D> fourth;
+  final Widget? child;
+  final Widget Function(BuildContext context, A a, B b, C c, D d, Widget? child)
+      builder;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<A>(
+      valueListenable: first,
+      builder: (_, a, __) {
+        return ValueListenableBuilder<B>(
+          valueListenable: second,
+          builder: (context, b, __) {
+            return ValueListenableBuilder<C>(
+              valueListenable: third,
+              builder: (context, c, __) {
+                return ValueListenableBuilder<D>(
+                  valueListenable: fourth,
+                  builder: (context, d, __) {
+                    return builder(context, a, b, c, d, child);
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
 class ValueListenableBuilder3<A, B, C> extends StatelessWidget {
   const ValueListenableBuilder3(
     this.first,

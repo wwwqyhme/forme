@@ -89,6 +89,7 @@ CupertinoTextField buildCupertinoTextField({
 }) {
   if (borderless) {
     return CupertinoTextField.borderless(
+      enabled: enabled,
       enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
       focusNode: focusNode,
       controller: textEditingController,
@@ -145,6 +146,7 @@ CupertinoTextField buildCupertinoTextField({
     );
   }
   return CupertinoTextField(
+    enabled: enabled,
     enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
     focusNode: focusNode,
     controller: textEditingController,

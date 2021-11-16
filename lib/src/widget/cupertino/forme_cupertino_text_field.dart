@@ -103,6 +103,7 @@ class FormeCupertinoTextField extends FormeField<String> {
               final _FormeCupertinoTextFieldState state =
                   baseState as _FormeCupertinoTextFieldState;
               final bool readOnly = state.readOnly;
+              final bool enabled = state.enabled;
               final FocusNode focusNode = state.focusNode;
               final TextEditingController textEditingController =
                   state.textEditingController;
@@ -111,6 +112,7 @@ class FormeCupertinoTextField extends FormeField<String> {
               }
 
               return buildCupertinoTextField(
+                enabled: enabled,
                 enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
                 focusNode: focusNode,
                 textEditingController: textEditingController,

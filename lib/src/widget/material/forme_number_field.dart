@@ -99,6 +99,7 @@ class FormeNumberField extends FormeField<num?> {
           initialValue: initialValue,
           builder: (baseState) {
             final bool readOnly = baseState.readOnly;
+            final bool enabled = baseState.enabled;
             final _FormeNumberFieldState state =
                 baseState as _FormeNumberFieldState;
             final List<TextInputFormatter> formatters = numberFormatters(

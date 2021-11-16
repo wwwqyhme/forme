@@ -96,6 +96,7 @@ class FormeTextField extends FormeField<String> {
           initialValue: initialValue ?? '',
           builder: (baseState) {
             final bool readOnly = baseState.readOnly;
+            final bool enabled = baseState.enabled;
             final _FormeTextFieldState state =
                 baseState as _FormeTextFieldState;
 

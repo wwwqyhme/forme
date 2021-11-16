@@ -103,6 +103,7 @@ class FormeTimeField extends FormeField<TimeOfDay?> {
           initialValue: initialValue,
           builder: (baseState) {
             final bool readOnly = baseState.readOnly;
+            final bool enabled = baseState.enabled;
             final _FormeTimeFieldState state =
                 baseState as _FormeTimeFieldState;
 

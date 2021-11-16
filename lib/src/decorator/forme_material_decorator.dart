@@ -54,52 +54,61 @@ class FormeInputDecorator<T> extends StatelessWidget {
 
     if (emptyChecker == null) {
       if (FormeKey.of(context)?.quietlyValidate ?? false) {
-        return ValueListenableBuilder<bool>(
-          valueListenable: controller.focusListenable,
-          builder: (context, focus, _child) {
+        return ValueListenableBuilder2<bool, bool>(
+          controller.focusListenable,
+          controller.enabledListenable,
+          builder: (context, focus, enabled, _child) {
             return InputDecorator(
               isFocused: focus,
-              decoration: _decoration,
+              decoration: _decoration.copyWith(enabled: enabled),
               child: child,
             );
           },
         );
       }
-      return ValueListenableBuilder2(
+      return ValueListenableBuilder3(
         controller.focusListenable,
         controller.validationListenable,
-        builder:
-            (context, bool focus, FormeFieldValidation validation, _child) {
+        controller.enabledListenable,
+        builder: (context, bool focus, FormeFieldValidation validation,
+            bool enabled, _child) {
           return InputDecorator(
             isFocused: focus,
-            decoration: _decoration.copyWith(errorText: validation.error),
+            decoration: _decoration.copyWith(
+              errorText: validation.error,
+              enabled: enabled,
+            ),
             child: child,
           );
         },
       );
     } else {
       if (FormeKey.of(context)?.quietlyValidate ?? false) {
-        return ValueListenableBuilder2(
-            controller.focusListenable, controller.valueListenable,
-            builder: (context, bool focus, T value, child) {
+        return ValueListenableBuilder3<bool, T, bool>(
+            controller.focusListenable,
+            controller.valueListenable,
+            controller.enabledListenable,
+            builder: (context, bool focus, T value, bool enabled, child) {
           return InputDecorator(
             isEmpty: emptyChecker!(value, controller),
             isFocused: focus,
-            decoration: _decoration,
+            decoration: _decoration.copyWith(enabled: enabled),
             child: child,
           );
         });
       }
-      return ValueListenableBuilder3(
+      return ValueListenableBuilder4(
         controller.focusListenable,
         controller.validationListenable,
         controller.valueListenable,
+        controller.enabledListenable,
         builder: (context, bool focus, FormeFieldValidation validation, T value,
-            _child) {
+            bool enabled, _child) {
           return InputDecorator(
             isEmpty: emptyChecker!(value, controller),
             isFocused: focus,
-            decoration: _decoration.copyWith(errorText: validation.error),
+            decoration: _decoration.copyWith(
+                errorText: validation.error, enabled: enabled),
             child: child,
           );
         },

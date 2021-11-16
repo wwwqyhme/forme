@@ -111,6 +111,7 @@ class FormeDateTimeRangeField extends FormeField<DateTimeRange?> {
           initialValue: initialValue,
           builder: (baseState) {
             final bool readOnly = baseState.readOnly;
+            final bool enabled = baseState.enabled;
             final _FormeDateTimeRangeFieldState state =
                 baseState as _FormeDateTimeRangeFieldState;
 

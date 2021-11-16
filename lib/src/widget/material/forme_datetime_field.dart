@@ -112,6 +112,7 @@ class FormeDateTimeField extends FormeField<DateTime?> {
           initialValue: initialValue,
           builder: (baseState) {
             final readOnly = baseState.readOnly;
+            final bool enabled = baseState.enabled;
             final state = baseState as _FormeDateTimeFieldState;
             final _firstDate = firstDate ?? DateTime(1970);
             final _lastDate = lastDate ?? DateTime(2099);

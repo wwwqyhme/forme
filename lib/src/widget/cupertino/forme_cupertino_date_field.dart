@@ -104,6 +104,7 @@ class FormeCupertinoDateTimeField extends FormeField<DateTime?> {
     FormeValidator<DateTime?>? validator,
     FormeAsyncValidator<DateTime?>? asyncValidator,
     bool registrable = true,
+    bool enableIMEPersonalizedLearning = true,
   }) : super(
           registrable: registrable,
           readOnly: readOnly,
@@ -125,6 +126,7 @@ class FormeCupertinoDateTimeField extends FormeField<DateTime?> {
           initialValue: initialValue,
           builder: (state) {
             final bool readOnly = state.readOnly;
+            final bool enabled = state.enabled;
             final FocusNode focusNode = state.focusNode;
             final TextEditingController textEditingController =
                 (state as _FormeCupertinoDateFieldState).textEditingController;
@@ -167,6 +169,8 @@ class FormeCupertinoDateTimeField extends FormeField<DateTime?> {
             }
 
             return buildCupertinoTextField(
+              enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
+              enabled: enabled,
               focusNode: focusNode,
               textEditingController: textEditingController,
               decoration: decoration,

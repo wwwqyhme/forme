@@ -99,6 +99,7 @@ class FormeCupertinoTimerField extends FormeField<Duration?> {
     FormeAsyncValidator<Duration?>? asyncValidator,
     FormeFieldDecorator<Duration?>? decorator,
     bool registrable = true,
+    bool enableIMEPersonalizedLearning = true,
   }) : super(
           registrable: registrable,
           enabled: enabled,
@@ -120,6 +121,7 @@ class FormeCupertinoTimerField extends FormeField<Duration?> {
           initialValue: initialValue,
           builder: (state) {
             final bool readOnly = state.readOnly;
+            final bool enabled = state.enabled;
             final FocusNode focusNode = state.focusNode;
             final TextEditingController textEditingController =
                 (state as _FormeCupertinoTimerFieldState).textEditingController;
@@ -182,6 +184,8 @@ class FormeCupertinoTimerField extends FormeField<Duration?> {
             }
 
             return buildCupertinoTextField(
+              enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
+              enabled: enabled,
               focusNode: focusNode,
               textEditingController: textEditingController,
               decoration: decoration,
