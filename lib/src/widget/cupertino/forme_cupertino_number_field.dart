@@ -179,7 +179,7 @@ class FormeCupertinoNumberField extends FormeField<num?> {
               onTap: onTap,
               scrollController: scrollController,
               scrollPhysics: scrollPhysics,
-              autofillHints: autofillHints,
+              autofillHints: readOnly ? null : autofillHints,
               borderless: borderless,
             );
           },

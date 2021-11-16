@@ -92,6 +92,7 @@ class FormeDateTimeField extends FormeField<DateTime?> {
     FormeFieldDecorator<DateTime?>? decorator,
     bool registrable = true,
   }) : super(
+          enabled: enabled,
           registrable: registrable,
           decorator: decorator,
           order: order,
@@ -214,7 +215,7 @@ class FormeDateTimeField extends FormeField<DateTime?> {
               dragStartBehavior: dragStartBehavior,
               mouseCursor: mouseCursor,
               scrollPhysics: scrollPhysics,
-              autofillHints: autofillHints,
+              autofillHints: readOnly ? null : autofillHints,
               autofocus: autofocus,
               toolbarOptions: toolbarOptions,
               enableInteractiveSelection: enableInteractiveSelection,

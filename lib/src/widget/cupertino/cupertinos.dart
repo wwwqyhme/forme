@@ -139,7 +139,7 @@ CupertinoTextField buildCupertinoTextField({
       onTap: onTap,
       scrollController: scrollController,
       scrollPhysics: scrollPhysics,
-      autofillHints: autofillHints,
+      autofillHints: readOnly ? null : autofillHints,
       onChanged: onChanged,
       inputFormatters: inputFormatters,
     );
@@ -195,7 +195,7 @@ CupertinoTextField buildCupertinoTextField({
     onTap: onTap,
     scrollController: scrollController,
     scrollPhysics: scrollPhysics,
-    autofillHints: autofillHints,
+    autofillHints: readOnly ? null : autofillHints,
     onChanged: onChanged,
     inputFormatters: inputFormatters,
   );

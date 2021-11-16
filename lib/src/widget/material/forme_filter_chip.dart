@@ -42,7 +42,9 @@ class FormeFilterChip<T extends Object> extends FormeField<List<T>> {
     VerticalDirection verticalDirection = VerticalDirection.down,
     bool requestFocusOnUserInteraction = true,
     bool registrable = true,
+    bool enabled = true,
   }) : super(
+          enabled: enabled,
           registrable: registrable,
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,

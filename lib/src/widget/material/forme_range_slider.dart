@@ -45,7 +45,9 @@ class FormeRangeSlider extends FormeField<RangeValues> {
     FormeValidator<RangeValues>? validator,
     FormeAsyncValidator<RangeValues>? asyncValidator,
     bool registrable = true,
+    bool enabled = true,
   }) : super(
+            enabled: enabled,
             registrable: registrable,
             quietlyValidate: quietlyValidate,
             asyncValidatorDebounce: asyncValidatorDebounce,

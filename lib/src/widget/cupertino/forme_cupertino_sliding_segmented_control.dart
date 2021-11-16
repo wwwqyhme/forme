@@ -30,7 +30,9 @@ class FormeCupertinoSlidingSegmentedControl<T extends Object>
     FormeFieldDecorator<T?>? decorator,
     bool requestFocusOnUserInteraction = true,
     bool registrable = true,
+    bool enabled = true,
   }) : super(
+            enabled: enabled,
             registrable: registrable,
             requestFocusOnUserInteraction: requestFocusOnUserInteraction,
             decorator: decorator,

@@ -135,6 +135,12 @@ abstract class FormeFieldController<T> {
   /// will trigger when [Forme] or field's readOnly state changed
   ValueListenable<bool> get readOnlyListenable;
 
+  /// enabled listenable
+  ///
+  ///
+  /// will trigger when [Forme] or field's readOnly state changed
+  ValueListenable<bool> get enabledListenable;
+
   /// get current value of field
   T get value;
 
@@ -207,6 +213,22 @@ abstract class FormeFieldController<T> {
   ///
   /// the `comparator` from [FormeField.comparator] is used to compare value
   bool get isValueChanged;
+
+  /// whether field is enabled
+  bool get enabled;
+
+  /// enable|disable field
+  ///
+  /// if field is disabled
+  ///
+  /// 1. field will lose focus and can not be focused
+  /// 2. field's validators are ignored (manually validation will  be also ignored)
+  /// 3. field is readOnly
+  /// 4. value will be ignored when get form data
+  /// 5. value can still be changed via `FormeFieldController`
+  /// 6. validation state will be set to `unnecessary` and will always be `FormeValidationState.unnecessary`
+  /// 7. when get validation from `FormeController` , this field will be ignored
+  set enabled(bool enabled);
 }
 
 class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
@@ -254,6 +276,9 @@ class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
   ValueListenable<bool> get readOnlyListenable => delegate.readOnlyListenable;
 
   @override
+  ValueListenable<bool> get enabledListenable => delegate.enabledListenable;
+
+  @override
   void reset() => delegate.reset();
 
   @override
@@ -265,4 +290,10 @@ class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
 
   @override
   BuildContext get context => delegate.context;
+
+  @override
+  bool get enabled => delegate.enabled;
+
+  @override
+  set enabled(bool enabled) => delegate.enabled = enabled;
 }

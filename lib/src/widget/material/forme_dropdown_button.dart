@@ -45,7 +45,9 @@ class FormeDropdownButton<T extends Object> extends FormeField<T?> {
     FormeFieldDecorator<T?>? decorator,
     bool requestFocusOnUserInteraction = true,
     bool registrable = true,
+    bool enabled = true,
   }) : super(
+          enabled: enabled,
           registrable: registrable,
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           order: order,

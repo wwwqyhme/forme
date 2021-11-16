@@ -25,7 +25,9 @@ class FormeCupertinoSwitch extends FormeField<bool> {
     FormeFieldDecorator<bool>? decorator,
     bool requestFocusOnUserInteraction = true,
     bool registrable = true,
+    bool enabled = true,
   }) : super(
+          enabled: enabled,
           registrable: registrable,
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           quietlyValidate: quietlyValidate,

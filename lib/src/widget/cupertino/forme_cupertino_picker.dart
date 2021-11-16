@@ -35,7 +35,9 @@ class FormeCupertinoPicker extends FormeField<int> {
     FormeAsyncValidator<int>? asyncValidator,
     FormeFieldDecorator<int>? decorator,
     bool registrable = true,
+    bool enabled = true,
   }) : super(
+          enabled: enabled,
           registrable: registrable,
           decorator: decorator,
           quietlyValidate: quietlyValidate,

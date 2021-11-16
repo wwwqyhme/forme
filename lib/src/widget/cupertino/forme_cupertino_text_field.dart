@@ -163,7 +163,7 @@ class FormeCupertinoTextField extends FormeField<String> {
                 onTap: onTap,
                 scrollController: scrollController,
                 scrollPhysics: scrollPhysics,
-                autofillHints: autofillHints,
+                autofillHints: readOnly ? null : autofillHints,
                 borderless: borderless,
               );
             });

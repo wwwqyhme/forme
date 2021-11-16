@@ -97,7 +97,9 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
     bool isThreeLine = false,
     bool requestFocusOnUserInteraction = true,
     bool registrable = true,
+    bool enabled = true,
   }) : super(
+            enabled: enabled,
             registrable: registrable,
             requestFocusOnUserInteraction: requestFocusOnUserInteraction,
             quietlyValidate: quietlyValidate,

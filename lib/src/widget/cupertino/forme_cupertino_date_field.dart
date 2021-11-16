@@ -214,7 +214,7 @@ class FormeCupertinoDateTimeField extends FormeField<DateTime?> {
               onTap: readOnly ? null : pickTime,
               scrollController: scrollController,
               scrollPhysics: scrollPhysics,
-              autofillHints: autofillHints,
+              autofillHints: readOnly ? null : autofillHints,
               borderless: borderless,
             );
           },

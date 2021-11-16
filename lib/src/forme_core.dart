@@ -250,7 +250,7 @@ class _FormeState extends State<Forme> {
   void _validateForm() {
     if (widget.autovalidateByOrder) {
       final List<FormeFieldState> valueFieldStates = states
-          .where((element) => element._hasAnyValidator)
+          .where((element) => element._hasAnyValidator && element.enabled)
           .toList()
         ..sort((a, b) => a.order.compareTo(b.order));
       if (valueFieldStates.isEmpty) {
@@ -259,7 +259,9 @@ class _FormeState extends State<Forme> {
       _validateByOrder(valueFieldStates);
     } else {
       for (final element in states) {
-        element._validate2(() {});
+        if (element.enabled) {
+          element._validate2(() {});
+        }
       }
     }
   }
@@ -389,12 +391,15 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   bool _init = false;
   FocusNode? _focusNode;
   bool? _readOnly;
+  bool? _enabled;
 
   _FormeState? _formeState;
 
   late final FormeMountedValueNotifier<bool> _focusNotifier =
       FormeMountedValueNotifier(false, this);
   late final FormeMountedValueNotifier<bool> _readOnlyNotifier =
+      FormeMountedValueNotifier(false, this);
+  late final FormeMountedValueNotifier<bool> _enabledNotifier =
       FormeMountedValueNotifier(false, this);
   late final FormeFieldController<T> controller;
   late final FormeMountedValueNotifier<FormeFieldValidation>
@@ -429,14 +434,16 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   bool get _hasAnyValidator => _hasValidator || _hasAsyncValidator;
 
-  FormeFieldValidation get _initialValidationState => _hasAnyValidator
-      ? const FormeFieldValidation(null, FormeValidationState.waiting)
-      : const FormeFieldValidation(null, FormeValidationState.unnecessary);
+  FormeFieldValidation get _initialValidationState =>
+      _hasAnyValidator && enabled
+          ? const FormeFieldValidation(null, FormeValidationState.waiting)
+          : const FormeFieldValidation(null, FormeValidationState.unnecessary);
 
-  String? get errorText =>
-      (_formeState?.quietlyValidate ?? false) || widget.quietlyValidate
-          ? null
-          : _validation.error;
+  String? get errorText => !enabled ||
+          (_formeState?.quietlyValidate ?? false) ||
+          widget.quietlyValidate
+      ? null
+      : _validation.error;
 
   /// get initialValue
   T get initialValue =>
@@ -465,7 +472,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   bool get needValidate =>
       _hasAnyValidator &&
-      widget.enabled &&
+      enabled &&
       ((autovalidateMode == AutovalidateMode.always) ||
           (autovalidateMode == AutovalidateMode.onUserInteraction &&
               _hasInteractedByUser));
@@ -476,6 +483,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   FocusNode get focusNode {
     if (_focusNode == null) {
       focusNode = _DisposeRequiredFocusNode();
+      focusNode.canRequestFocus = enabled;
     }
     return _focusNode!;
   }
@@ -494,6 +502,9 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       _focusNode!.dispose();
     }
     _focusNode = focusNode;
+    if (!enabled) {
+      _focusNode!.canRequestFocus = false;
+    }
     _focusNode!.addListener(() {
       _focusNotifier.value = focusNode.hasFocus;
     });
@@ -528,6 +539,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     _validationNotifier.dispose();
     _valueNotifier.dispose();
     _focusNotifier.dispose();
+    _enabledNotifier.dispose();
     _readOnlyNotifier.dispose();
     if (_focusNode is _DisposeRequiredFocusNode) {
       _focusNode?.dispose();
@@ -633,6 +645,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   @mustCallSuper
   void beforeInitiation() {
     _readOnlyNotifier.value = readOnly;
+    _enabledNotifier.value = enabled;
     _value = initialValue;
     _valueNotifier = FormeMountedValueNotifier(initialValue, this);
     _validation = _initialValidationState;
@@ -644,16 +657,35 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   void onFocusChanged(bool hasFocus) {}
 
   bool get readOnly =>
-      (_formeState?.readOnly ?? false) || (_readOnly ?? widget.readOnly);
+      (_formeState?.readOnly ?? false) ||
+      (_readOnly ?? widget.readOnly) ||
+      !(_enabled ?? widget.enabled);
 
   set readOnly(bool readOnly) {
-    if (readOnly != _readOnly) {
+    if (readOnly != this.readOnly) {
       setState(() {
         _readOnly = readOnly;
       });
       _readOnlyNotifier.value = readOnly;
     }
   }
+
+  set enabled(bool enabled) {
+    if (enabled != this.enabled) {
+      setState(() {
+        _enabled = enabled;
+        _validateGen++;
+        _validation = _initialValidationState;
+        _hasInteractedByUser = false;
+        _focusNode?.canRequestFocus = enabled;
+      });
+      _readOnlyNotifier.value = readOnly;
+      _validationNotifier.value = _initialValidationState;
+      _enabledNotifier.value = enabled;
+    }
+  }
+
+  bool get enabled => _enabled ?? widget.enabled;
 
   void requestFocusOnUserInteraction() {
     if (_hasInteractedByUser && widget.requestFocusOnUserInteraction) {
@@ -681,8 +713,8 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   }
 
   void _clearError() {
-    _validateGen++;
     setState(() {
+      _validateGen++;
       _validation = _initialValidationState;
     });
     _validationNotifier.value = _initialValidationState;
@@ -786,7 +818,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   Future<FormeFieldValidateSnapshot<T>> _performValidate(
       {bool quietly = false}) {
     final T value = this.value;
-    if (!_hasAnyValidator) {
+    if (!_hasAnyValidator || !enabled) {
       return Future.delayed(
           Duration.zero,
           () => FormeFieldValidateSnapshot(
@@ -879,7 +911,10 @@ class _FormeController extends FormeController {
   @override
   Map<String, dynamic> get data {
     final Map<String, dynamic> map = <String, dynamic>{};
-    for (final element in state.states) {
+    for (final FormeFieldState element in state.states) {
+      if (!element.enabled) {
+        continue;
+      }
       final String name = element.name;
       final dynamic value = element.value;
       map[name] = value;
@@ -895,6 +930,8 @@ class _FormeController extends FormeController {
 
   @override
   FormeValidation get validation => FormeValidation(state.states
+      .where((element) => element.enabled)
+      .toList()
       .asMap()
       .map((key, value) => MapEntry(value.name, value._validation)));
 
@@ -921,6 +958,7 @@ class _FormeController extends FormeController {
     final List<FormeFieldState> states = (state.states
             .where((element) =>
                 element._hasAnyValidator &&
+                element.enabled &&
                 (names.isEmpty || names.contains(element.name)))
             .toList()
           ..sort((a, b) => a.order.compareTo(b.order)))
@@ -1032,11 +1070,15 @@ class _FormeFieldController<T> implements FormeFieldController<T> {
   final ValueListenable<bool> focusListenable;
   @override
   final ValueListenable<bool> readOnlyListenable;
+  @override
+  final ValueListenable<bool> enabledListenable;
 
   _FormeFieldController(this.state)
       : focusListenable = FormeValueListenableDelegate(state._focusNotifier),
         readOnlyListenable =
             FormeValueListenableDelegate(state._readOnlyNotifier),
+        enabledListenable =
+            FormeValueListenableDelegate(state._enabledNotifier),
         validationListenable =
             FormeValueListenableDelegate(state._validationNotifier),
         valueListenable = FormeValueListenableDelegate<T>(state._valueNotifier);
@@ -1047,6 +1089,7 @@ class _FormeFieldController<T> implements FormeFieldController<T> {
   @override
   FormeController? get formeController => Forme.of(state.context);
 
+  // TODO focusNode delegate ?
   @override
   FocusNode? get focusNode => state._focusNode;
 
@@ -1080,6 +1123,12 @@ class _FormeFieldController<T> implements FormeFieldController<T> {
 
   @override
   BuildContext get context => state.context;
+
+  @override
+  bool get enabled => state.enabled;
+
+  @override
+  set enabled(bool enabled) => state.enabled = enabled;
 }
 
 /// a focusnode created by FormeField itself rather than set by subclass ,

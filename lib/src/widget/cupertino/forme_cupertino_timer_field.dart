@@ -229,7 +229,7 @@ class FormeCupertinoTimerField extends FormeField<Duration?> {
               onTap: readOnly ? null : pickDuration,
               scrollController: scrollController,
               scrollPhysics: scrollPhysics,
-              autofillHints: autofillHints,
+              autofillHints: readOnly ? null : autofillHints,
               borderless: borderless,
             );
           },

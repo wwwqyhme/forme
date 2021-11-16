@@ -37,7 +37,9 @@ class FormeCheckboxTile extends FormeField<bool?> {
     ListTileControlAffinity controlAffinity = ListTileControlAffinity.platform,
     EdgeInsets? contentPadding,
     bool selected = false,
+    bool enabled = true,
   }) : super(
+          enabled: enabled,
           registrable: registrable,
           decorator: decorator,
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,

@@ -79,6 +79,7 @@ class FormeNumberField extends FormeField<num?> {
     FormeFieldDecorator<num?>? decorator,
     bool registrable = true,
   }) : super(
+          enabled: enabled,
           registrable: registrable,
           decorator: decorator,
           order: order,
@@ -158,7 +159,7 @@ class FormeNumberField extends FormeField<num?> {
               dragStartBehavior: dragStartBehavior,
               mouseCursor: mouseCursor,
               scrollPhysics: scrollPhysics,
-              autofillHints: autofillHints,
+              autofillHints: readOnly ? null : autofillHints,
               autofocus: autofocus,
               toolbarOptions: toolbarOptions,
               enableInteractiveSelection: enableInteractiveSelection,

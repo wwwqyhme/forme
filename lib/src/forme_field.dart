@@ -22,6 +22,18 @@ class FormeField<T> extends StatefulWidget {
   final String name;
   final bool readOnly;
   final FormeFieldBuilder<T> builder;
+
+  /// whether field is enabled,
+  ///
+  /// if field is disabled:
+  ///
+  /// 1. field can not be focused
+  /// 2. field's validators are ignored (manually validation will  be also ignored)
+  /// 3. field is readOnly
+  /// 4. value will be ignored when get form data
+  /// 5. value can still be changed via `FormeFieldController`
+  /// 6. validation state will always be `FormeValidationState.unnecessary
+  /// 7. when get validation from `FormeController` , this field will be ignored
   final bool enabled;
   final T initialValue;
 
