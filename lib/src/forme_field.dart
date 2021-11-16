@@ -5,7 +5,7 @@ import 'forme_field_scope.dart';
 typedef FormeValueChanged<T> = void Function(
     FormeFieldController<T>, T newValue);
 typedef FormeAsyncValidator<T> = Future<String?> Function(
-    FormeFieldController<T> field, T value);
+    FormeFieldController<T> field, T value, int gen);
 typedef FormeValidator<T> = String? Function(
     FormeFieldController<T> field, T value);
 typedef FormeFieldValidationChanged<T> = void Function(

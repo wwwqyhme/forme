@@ -786,7 +786,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
           widget.asyncValidatorDebounce ?? const Duration(milliseconds: 500),
           () {
         FormeFieldValidation? validation;
-        widget.asyncValidator!(controller, value).then((text) {
+        widget.asyncValidator!(controller, value, gen).then((text) {
           validation = FormeFieldValidation(
               text,
               text == null
@@ -873,7 +873,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
             const FormeFieldValidation(null, FormeValidationState.validating));
       }
       FormeFieldValidation? validation;
-      return widget.asyncValidator!(controller, value).then((text) {
+      return widget.asyncValidator!(controller, value, gen).then((text) {
         validation = FormeFieldValidation(
             text,
             text == null
@@ -1128,6 +1128,10 @@ class _FormeFieldController<T> implements FormeFieldController<T> {
 
   @override
   set enabled(bool enabled) => state.enabled = enabled;
+
+  @override
+  bool isValidValidationGen(int gen) =>
+      state.mounted && state._validateGen == gen;
 }
 
 /// a focusnode created by FormeField itself rather than set by subclass ,

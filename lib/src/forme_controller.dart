@@ -229,6 +229,8 @@ abstract class FormeFieldController<T> {
   /// 6. validation state will be set to `unnecessary` and will always be `FormeValidationState.unnecessary`
   /// 7. when get validation from `FormeController` , this field will be ignored
   set enabled(bool enabled);
+
+  bool isValidValidationGen(int gen);
 }
 
 class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
@@ -296,4 +298,7 @@ class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
 
   @override
   set enabled(bool enabled) => delegate.enabled = enabled;
+
+  @override
+  bool isValidValidationGen(int gen) => delegate.isValidValidationGen(gen);
 }
