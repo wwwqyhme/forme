@@ -4,8 +4,12 @@ import 'forme_field_scope.dart';
 
 typedef FormeValueChanged<T> = void Function(
     FormeFieldController<T>, T newValue);
+
 typedef FormeAsyncValidator<T> = Future<String?> Function(
-    FormeFieldController<T> field, T value, int gen);
+  FormeFieldController<T> field,
+  T value,
+  bool Function() isValid,
+);
 typedef FormeValidator<T> = String? Function(
     FormeFieldController<T> field, T value);
 typedef FormeFieldValidationChanged<T> = void Function(
@@ -70,6 +74,25 @@ class FormeField<T> extends StatefulWidget {
   /// used to perform an async validate
   ///
   /// if you specific both asyncValidator and validator , asyncValidator will only worked after validator passed
+  ///
+  /// `isValid` is used to check whether this validation is valid or not
+  /// if you want to update ui before you return validation result , you should call `isValid()` first
+  ///
+  /// eg:
+  ///
+  /// ```
+  /// asyncValidator:(controller,value,isValid) {
+  ///   return Future.delayed(const Duration(millseconds:500),(){
+  ///     if(isValid()) {
+  ///       updateUI();
+  ///     }
+  ///     return validationResult;
+  ///   });
+  /// }
+  /// ```
+  ///
+  /// if `isValid()` is false, it means widget is unmounted or another async validation is performed
+  /// or reset is called
   final FormeAsyncValidator<T>? asyncValidator;
   final FormeFieldSetter<T>? onSaved;
 

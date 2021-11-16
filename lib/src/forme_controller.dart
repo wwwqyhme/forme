@@ -230,75 +230,75 @@ abstract class FormeFieldController<T> {
   /// 7. when get validation from `FormeController` , this field will be ignored
   set enabled(bool enabled);
 
-  bool isValidValidationGen(int gen);
+  bool get mounted;
 }
 
 class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
-  const FormeFieldControllerDelegate(this.delegate);
-  final FormeFieldController<T> delegate;
+  const FormeFieldControllerDelegate(this._delegate);
+  final FormeFieldController<T> _delegate;
 
   @override
-  bool get readOnly => delegate.readOnly;
+  bool get readOnly => _delegate.readOnly;
 
   @override
-  set readOnly(bool readOnly) => delegate.readOnly = readOnly;
+  set readOnly(bool readOnly) => _delegate.readOnly = readOnly;
 
   @override
-  T get value => delegate.value;
+  T get value => _delegate.value;
 
   @override
-  set value(T value) => delegate.value = value;
+  set value(T value) => _delegate.value = value;
 
   @override
-  FormeFieldValidation get validation => delegate.validation;
+  FormeFieldValidation get validation => _delegate.validation;
 
   @override
   ValueListenable<FormeFieldValidation> get validationListenable =>
-      delegate.validationListenable;
+      _delegate.validationListenable;
 
   @override
-  ValueListenable<bool> get focusListenable => delegate.focusListenable;
+  ValueListenable<bool> get focusListenable => _delegate.focusListenable;
 
   @override
-  FocusNode? get focusNode => delegate.focusNode;
+  FocusNode? get focusNode => _delegate.focusNode;
 
   @override
-  FormeController? get formeController => delegate.formeController;
+  FormeController? get formeController => _delegate.formeController;
 
   @override
-  bool get isValueChanged => delegate.isValueChanged;
+  bool get isValueChanged => _delegate.isValueChanged;
 
   @override
-  String get name => delegate.name;
+  String get name => _delegate.name;
 
   @override
-  T? get oldValue => delegate.oldValue;
+  T? get oldValue => _delegate.oldValue;
 
   @override
-  ValueListenable<bool> get readOnlyListenable => delegate.readOnlyListenable;
+  ValueListenable<bool> get readOnlyListenable => _delegate.readOnlyListenable;
 
   @override
-  ValueListenable<bool> get enabledListenable => delegate.enabledListenable;
+  ValueListenable<bool> get enabledListenable => _delegate.enabledListenable;
 
   @override
-  void reset() => delegate.reset();
+  void reset() => _delegate.reset();
 
   @override
   Future<FormeFieldValidateSnapshot<T>> validate({bool quietly = false}) =>
-      delegate.validate(quietly: quietly);
+      _delegate.validate(quietly: quietly);
 
   @override
-  ValueListenable<T> get valueListenable => delegate.valueListenable;
+  ValueListenable<T> get valueListenable => _delegate.valueListenable;
 
   @override
-  BuildContext get context => delegate.context;
+  BuildContext get context => _delegate.context;
 
   @override
-  bool get enabled => delegate.enabled;
+  bool get enabled => _delegate.enabled;
 
   @override
-  set enabled(bool enabled) => delegate.enabled = enabled;
+  set enabled(bool enabled) => _delegate.enabled = enabled;
 
   @override
-  bool isValidValidationGen(int gen) => delegate.isValidValidationGen(gen);
+  bool get mounted => _delegate.mounted;
 }

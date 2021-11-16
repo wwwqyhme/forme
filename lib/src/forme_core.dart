@@ -785,15 +785,19 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       _asyncValidatorDebounce = Timer(
           widget.asyncValidatorDebounce ?? const Duration(milliseconds: 500),
           () {
+        bool isValid() {
+          return mounted && gen == _validateGen;
+        }
+
         FormeFieldValidation? validation;
-        widget.asyncValidator!(controller, value, gen).then((text) {
+        widget.asyncValidator!(controller, value, isValid).then((text) {
           validation = FormeFieldValidation(
               text,
               text == null
                   ? FormeValidationState.valid
                   : FormeValidationState.invalid);
         }).whenComplete(() {
-          if (mounted && gen == _validateGen) {
+          if (isValid()) {
             setState(() {
               _validation = validation ??
                   const FormeFieldValidation(null, FormeValidationState.fail);
@@ -832,8 +836,12 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     }
     final int gen = quietly ? _validateGen : ++_validateGen;
 
+    bool isValid() {
+      return mounted && gen == _validateGen;
+    }
+
     bool needNotify() {
-      return !quietly && gen == _validateGen && mounted;
+      return !quietly && isValid();
     }
 
     void notify(FormeFieldValidation validation) {
@@ -872,8 +880,9 @@ class FormeFieldState<T> extends State<FormeField<T>> {
         notify(
             const FormeFieldValidation(null, FormeValidationState.validating));
       }
+
       FormeFieldValidation? validation;
-      return widget.asyncValidator!(controller, value, gen).then((text) {
+      return widget.asyncValidator!(controller, value, isValid).then((text) {
         validation = FormeFieldValidation(
             text,
             text == null
@@ -1130,8 +1139,7 @@ class _FormeFieldController<T> implements FormeFieldController<T> {
   set enabled(bool enabled) => state.enabled = enabled;
 
   @override
-  bool isValidValidationGen(int gen) =>
-      state.mounted && state._validateGen == gen;
+  bool get mounted => state.mounted;
 }
 
 /// a focusnode created by FormeField itself rather than set by subclass ,
