@@ -1072,7 +1072,7 @@ class _FormeFieldControllerListenable<T>
       : delegate.value! as FormeFieldController<T>;
 }
 
-class _FormeFieldController<T> implements FormeFieldController<T> {
+class _FormeFieldController<T> extends FormeFieldController<T> {
   final FormeFieldState<T> state;
   @override
   final ValueListenable<FormeFieldValidation> validationListenable;

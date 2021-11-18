@@ -233,8 +233,8 @@ abstract class FormeFieldController<T> {
   bool get mounted;
 }
 
-class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
-  const FormeFieldControllerDelegate(this._delegate);
+class FormeFieldControllerDelegate<T> extends FormeFieldController<T> {
+  FormeFieldControllerDelegate(this._delegate);
   final FormeFieldController<T> _delegate;
 
   @override
