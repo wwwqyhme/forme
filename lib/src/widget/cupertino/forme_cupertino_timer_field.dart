@@ -24,6 +24,7 @@ class FormeCupertinoTimerField extends FormeField<Duration?> {
     bool readOnly = false,
     Key? key,
     Widget? confirmWidget,
+    Widget? cancelWidget,
     this.minuteInterval = 1,
     this.secondInterval = 1,
     this.mode = CupertinoTimerPickerMode.hms,
@@ -100,6 +101,7 @@ class FormeCupertinoTimerField extends FormeField<Duration?> {
     FormeFieldDecorator<Duration?>? decorator,
     bool registrable = true,
     bool enableIMEPersonalizedLearning = true,
+    double? height = 216,
   }) : super(
           registrable: registrable,
           enabled: enabled,
@@ -132,43 +134,47 @@ class FormeCupertinoTimerField extends FormeField<Duration?> {
               showCupertinoModalPopup<dynamic>(
                 context: state.context,
                 builder: (context) {
-                  return Container(
-                    color: CupertinoColors.systemBackground,
-                    child: Wrap(children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          CupertinoButton(
-                            onPressed: () {
-                              if (state.duration == null) {
-                                if (state.value == null) {
-                                  state.didChange(Duration.zero);
-                                }
-                              } else {
-                                state.didChange(state.duration);
-                              }
-                              state.duration = null;
-                              Navigator.of(context).pop();
-                            },
-                            child: confirmWidget ??
-                                const Icon(
-                                  CupertinoIcons.check_mark,
-                                ),
-                          ),
-                        ],
+                  return CupertinoActionSheet(
+                    actions: [
+                      SizedBox(
+                        height: height,
+                        child: CupertinoTimerPicker(
+                          minuteInterval: minuteInterval,
+                          secondInterval: secondInterval,
+                          backgroundColor: backgroundColor,
+                          alignment: alignment,
+                          initialTimerDuration: state.value ?? Duration.zero,
+                          mode: mode,
+                          onTimerDurationChanged: (Duration timer) {
+                            state.duration = timer;
+                          },
+                        ),
                       ),
-                      CupertinoTimerPicker(
-                        minuteInterval: minuteInterval,
-                        secondInterval: secondInterval,
-                        backgroundColor: backgroundColor,
-                        alignment: alignment,
-                        initialTimerDuration: state.value ?? Duration.zero,
-                        mode: mode,
-                        onTimerDurationChanged: (Duration timer) {
-                          state.duration = timer;
+                      CupertinoActionSheetAction(
+                        child: cancelWidget ??
+                            const Text('Cancel',
+                                style: TextStyle(
+                                  color: CupertinoColors.systemRed,
+                                )),
+                        onPressed: () {
+                          Navigator.of(context).pop();
                         },
                       ),
-                    ]),
+                      CupertinoActionSheetAction(
+                        child: confirmWidget ?? const Text('Done'),
+                        onPressed: () {
+                          if (state.duration == null) {
+                            if (state.value == null) {
+                              state.didChange(Duration.zero);
+                            }
+                          } else {
+                            state.didChange(state.duration);
+                          }
+                          state.duration = null;
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
                   );
                 },
                 barrierColor: barrierColor,
