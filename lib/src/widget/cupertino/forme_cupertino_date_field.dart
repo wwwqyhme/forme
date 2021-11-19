@@ -410,14 +410,6 @@ class _PickerSheetState extends State<_PickerSheet> {
   }
 
   @override
-  void didUpdateWidget(covariant _PickerSheet oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-      Navigator.of(context).pop();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return CupertinoActionSheet(
       actions: [
