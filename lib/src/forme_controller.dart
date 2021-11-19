@@ -13,6 +13,8 @@ abstract class FormeController {
   bool get readOnly;
 
   /// set form readOnly|editable
+  ///
+  /// you should **NOT** change read-only state on fields which  in `AutofillGroup`
   set readOnly(bool readOnly);
 
   /// find [FormeFieldController] by name

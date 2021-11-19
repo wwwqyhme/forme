@@ -41,6 +41,7 @@ class FormeCupertinoDateTimeField extends FormeField<DateTime?> {
     double height = 216,
     Widget? confirmWidget,
     Widget? backWidget,
+    Widget? cancelWidget,
     Key? key,
     FormeFieldDecorator<DateTime?>? decorator,
     int? maxLines = 1,
@@ -135,26 +136,24 @@ class FormeCupertinoDateTimeField extends FormeField<DateTime?> {
               beforeOpen?.call();
               showCupertinoModalPopup<dynamic>(
                 context: state.context,
-                builder: (context) => Container(
+                builder: (context) => _PickerSheet(
                   height: height,
-                  color: CupertinoColors.systemBackground,
-                  child: _PickerWidget(
-                    confirmWidget: confirmWidget,
-                    backgroundColor: backgroundColor,
-                    maximumDate: maximumDate,
-                    minimumDate: minimumDate,
-                    minimumYear: minimumYear,
-                    maximumYear: maximumYear,
-                    minuteInterval: minuteInterval,
-                    use24hFormat: use24hFormat,
-                    type: type,
-                    backWidget: backWidget,
-                    initialDateTime: state.initialDateTime,
-                    onChanged: (datetime) {
-                      Navigator.of(context).pop();
-                      state.didChange(datetime);
-                    },
-                  ),
+                  confirmWidget: confirmWidget,
+                  backWidget: backWidget,
+                  cancelWidget: cancelWidget,
+                  backgroundColor: backgroundColor,
+                  maximumDate: maximumDate,
+                  minimumDate: minimumDate,
+                  minimumYear: minimumYear,
+                  maximumYear: maximumYear,
+                  minuteInterval: minuteInterval,
+                  use24hFormat: use24hFormat,
+                  type: type,
+                  initialDateTime: state.initialDateTime,
+                  onChanged: (datetime) {
+                    Navigator.of(context).pop();
+                    state.didChange(datetime);
+                  },
                 ),
                 barrierColor: barrierColor,
                 filter: filter,
@@ -359,21 +358,23 @@ class _FormeCupertinoDateFieldState extends FormeFieldState<DateTime?> {
   }
 }
 
-class _PickerWidget extends StatefulWidget {
+class _PickerSheet extends StatefulWidget {
   final DateTime initialDateTime;
   final ValueChanged<DateTime> onChanged;
   final bool use24hFormat;
   final FormeDateTimeType type;
   final Widget? backWidget;
   final Widget? confirmWidget;
+  final Widget? cancelWidget;
   final Color? backgroundColor;
   final DateTime? maximumDate;
   final DateTime? minimumDate;
   final int minimumYear;
   final int? maximumYear;
   final int minuteInterval;
+  final double height;
 
-  const _PickerWidget({
+  const _PickerSheet({
     Key? key,
     required this.use24hFormat,
     required this.initialDateTime,
@@ -381,21 +382,21 @@ class _PickerWidget extends StatefulWidget {
     required this.type,
     this.backWidget,
     this.confirmWidget,
+    this.cancelWidget,
     this.backgroundColor,
     this.maximumDate,
     this.minimumDate,
     required this.minimumYear,
     this.maximumYear,
     required this.minuteInterval,
+    required this.height,
   }) : super(key: key);
-
   @override
-  State<StatefulWidget> createState() => _PickerState();
+  State<StatefulWidget> createState() => _PickerSheetState();
 }
 
-class _PickerState extends State<_PickerWidget> {
+class _PickerSheetState extends State<_PickerSheet> {
   int index = 0;
-
   late final DateTime initialDateTime;
 
   DateTime? selectedDateTime;
@@ -409,63 +410,23 @@ class _PickerState extends State<_PickerWidget> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            if (index == 1)
-              CupertinoButton(
-                onPressed: () {
-                  setState(() {
-                    index = 0;
-                  });
-                },
-                child: widget.backWidget ?? const Icon(CupertinoIcons.back),
-              ),
-            const Spacer(),
-            CupertinoButton(
-              onPressed: () {
-                if (index == 1 || widget.type == FormeDateTimeType.date) {
-                  DateTime selectedDateTime;
-                  if (!dateChanged && !timeChanged) {
-                    selectedDateTime = initialDateTime;
-                  } else {
-                    if (dateChanged && timeChanged) {
-                      selectedDateTime = this.selectedDateTime!;
-                    } else {
-                      if (dateChanged) {
-                        selectedDateTime = DateTime(
-                            this.selectedDateTime!.year,
-                            this.selectedDateTime!.month,
-                            this.selectedDateTime!.day,
-                            initialDateTime.hour,
-                            initialDateTime.minute);
-                      } else {
-                        selectedDateTime = this.selectedDateTime!;
-                      }
-                    }
-                  }
+  void didUpdateWidget(covariant _PickerSheet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      Navigator.of(context).pop();
+    });
+  }
 
-                  widget.onChanged(selectedDateTime);
-                  return;
-                }
-                if (widget.type == FormeDateTimeType.dateTime) {
-                  setState(() {
-                    index = 1;
-                  });
-                }
-              },
-              child:
-                  widget.confirmWidget ?? const Icon(CupertinoIcons.check_mark),
-            ),
-          ],
-        ),
-        Expanded(
-          child: IndexedStack(
-            index: index,
-            children: [
-              buildCupertinoDatePicker(CupertinoDatePickerMode.date,
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoActionSheet(
+      actions: [
+        IndexedStack(
+          index: index,
+          children: [
+            SizedBox(
+              height: widget.height,
+              child: buildCupertinoDatePicker(CupertinoDatePickerMode.date,
                   (DateTime newDate) {
                 dateChanged = true;
                 if (selectedDateTime == null) {
@@ -480,7 +441,10 @@ class _PickerState extends State<_PickerWidget> {
                       selectedDateTime!.minute);
                 }
               }),
-              buildCupertinoDatePicker(CupertinoDatePickerMode.time,
+            ),
+            SizedBox(
+              height: widget.height,
+              child: buildCupertinoDatePicker(CupertinoDatePickerMode.time,
                   (DateTime newDate) {
                 timeChanged = true;
                 selectedDateTime ??= DateTime(initialDateTime.year,
@@ -491,10 +455,61 @@ class _PickerState extends State<_PickerWidget> {
                     selectedDateTime!.day,
                     newDate.hour,
                     newDate.minute);
-              })
-            ],
-          ),
+              }),
+            ),
+          ],
         ),
+        CupertinoActionSheetAction(
+          child: widget.cancelWidget ??
+              const Text('Cancel',
+                  style: TextStyle(color: CupertinoColors.systemRed)),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        if (index == 1)
+          CupertinoActionSheetAction(
+            child: widget.backWidget ?? const Text('Back'),
+            onPressed: () {
+              setState(() {
+                index = 0;
+              });
+            },
+          ),
+        CupertinoActionSheetAction(
+          child: widget.confirmWidget ?? const Text('Done'),
+          onPressed: () {
+            if (index == 1 || widget.type == FormeDateTimeType.date) {
+              DateTime selectedDateTime;
+              if (!dateChanged && !timeChanged) {
+                selectedDateTime = initialDateTime;
+              } else {
+                if (dateChanged && timeChanged) {
+                  selectedDateTime = this.selectedDateTime!;
+                } else {
+                  if (dateChanged) {
+                    selectedDateTime = DateTime(
+                        this.selectedDateTime!.year,
+                        this.selectedDateTime!.month,
+                        this.selectedDateTime!.day,
+                        initialDateTime.hour,
+                        initialDateTime.minute);
+                  } else {
+                    selectedDateTime = this.selectedDateTime!;
+                  }
+                }
+              }
+
+              widget.onChanged(selectedDateTime);
+              return;
+            }
+            if (widget.type == FormeDateTimeType.dateTime) {
+              setState(() {
+                index = 1;
+              });
+            }
+          },
+        )
       ],
     );
   }
