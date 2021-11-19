@@ -16,6 +16,7 @@ if field is disabled:
 
 2. asyncValidator add a  isValid function param ,**API BREAK**
 3. remove `comparator` from `FormeField` , you can override `FormeFieldState`'s compareValue method do the same
+4. update dialog style of `FormeCupertinoDateTimeField` and `FormeCupertinoTimerField`
 
 ## 3.1.10
 
