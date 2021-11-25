@@ -1,3 +1,7 @@
+## 3.2.1
+
+1. bug fix
+
 ## 3.2.0
 
 1.  support `enabled` on `FormeField`
