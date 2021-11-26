@@ -118,7 +118,7 @@ class _FormDropdownButtonState<T extends Object> extends FormeFieldState<T?> {
 
   @override
   void updateFieldValueInDidUpdateWidget(FormeField<T?> oldWidget) {
-    if (widget.items.any((element) => element.value == value)) {
+    if (widget.items.every((element) => element.value != value)) {
       setValue(null);
     }
   }
