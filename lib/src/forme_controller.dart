@@ -97,6 +97,14 @@ abstract class FormeController {
   ///   ```
   ValueListenable<FormeFieldController<T>?> fieldListenable<T>(String name);
 
+  /// listen when fields initialed or disposed
+  ///
+  /// listenable value is a zero or single size map , key is field name , value is controller
+  ///
+  /// unlike [fieldListenable] , this listenable will listen every field
+  ValueListenable<Map<String, FormeFieldController<dynamic>?>>
+      get fieldsListenable;
+
   /// used to listen any form field's validation changes
   ///
   /// will also triggered when field registered to forme or unregistered

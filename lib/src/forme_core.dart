@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
@@ -99,6 +100,10 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   @override
   ValueListenable<FormeValidation> get validationListenable =>
       _currentController.validationListenable;
+
+  @override
+  ValueListenable<Map<String, FormeFieldController?>> get fieldsListenable =>
+      _currentController.fieldsListenable;
 }
 
 /// build your form !
@@ -145,6 +150,10 @@ class Forme extends StatefulWidget {
   /// will not continue if any field validation is not passed
   final bool autovalidateByOrder;
 
+  /// listen field registered|unregistered
+  final void Function(String name, FormeFieldController? field)?
+      onFieldsChanged;
+
   const Forme({
     FormeKey? key,
     this.readOnly = false,
@@ -157,6 +166,7 @@ class Forme extends StatefulWidget {
     this.onFocusChanged,
     AutovalidateMode? autovalidateMode,
     this.autovalidateByOrder = false,
+    this.onFieldsChanged,
   })  : autovalidateMode = autovalidateMode ?? AutovalidateMode.disabled,
         super(key: key);
 
@@ -171,6 +181,8 @@ class _FormeState extends State<Forme> {
   final List<FormeFieldState> states = [];
   late final _FormeController controller;
   final Map<String, ValueNotifier<FormeFieldController?>> fieldNotifiers = {};
+  late final ValueNotifier<Map<String, FormeFieldController?>> fieldsNotifier =
+      FormeMountedValueNotifier({}, this);
   late final ValueNotifier<FormeValidation> validationNotifier =
       FormeMountedValueNotifier(const FormeValidation({}), this);
 
@@ -216,6 +228,7 @@ class _FormeState extends State<Forme> {
 
   @override
   void dispose() {
+    fieldsNotifier.dispose();
     validationNotifier.dispose();
     fieldNotifiers.forEach((key, value) {
       value.dispose();
@@ -348,14 +361,22 @@ class _FormeState extends State<Forme> {
   void registerField(FormeFieldState state) {
     if (!states.contains(state)) {
       states.add(state);
-      fieldNotifiers[state.name]?.value = state.controller;
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        widget.onFieldsChanged?.call(state.name, state.controller);
+        fieldNotifiers[state.name]?.value = state.controller;
+        fieldsNotifier.value = {state.name: state.controller};
+      });
     }
     updateValidation();
   }
 
   void unregisterField(FormeFieldState state) {
     if (states.remove(state)) {
-      fieldNotifiers[state.name]?.value = null;
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        widget.onFieldsChanged?.call(state.name, null);
+        fieldNotifiers[state.name]?.value = null;
+        fieldsNotifier.value = {state.name: null};
+      });
     }
     updateValidation();
   }
@@ -917,8 +938,11 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
 class _FormeController extends FormeController {
   final _FormeState state;
+  @override
+  final ValueListenable<Map<String, FormeFieldController?>> fieldsListenable;
 
-  _FormeController(this.state);
+  _FormeController(this.state)
+      : fieldsListenable = FormeValueListenableDelegate(state.fieldsNotifier);
 
   @override
   Map<String, dynamic> get data {

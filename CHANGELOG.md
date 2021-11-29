@@ -1,3 +1,9 @@
+## 3.2.2
+
+1. `FormeController.fieldListenable` will triggered after frame completed
+2. `FormeController` add fieldsListenable , used to listen every field
+3. `Forme` add onFieldsChanged
+
 ## 3.2.1
 
 1. bug fix
