@@ -413,18 +413,23 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   FocusNode? _focusNode;
   bool? _readOnly;
   bool? _enabled;
+  T? _oldValue;
+  late FormeFieldValidation _validation;
+  Timer? _asyncValidatorDebounce;
+  bool _ignoreValidate = false;
+  bool _hasInteractedByUser = false;
+  int _validateGen = 0;
+  late T _value;
 
   _FormeState? _formeState;
 
   late final ValueNotifier<bool> _focusNotifier =
       FormeMountedValueNotifier(false, this);
-  late final ValueNotifier<bool> _readOnlyNotifier =
-      FormeMountedValueNotifier(false, this);
-  late final ValueNotifier<bool> _enabledNotifier =
-      FormeMountedValueNotifier(false, this);
-  late final FormeFieldController<T> controller;
+  late final ValueNotifier<bool> _readOnlyNotifier;
+  late final ValueNotifier<bool> _enabledNotifier;
   late final ValueNotifier<FormeFieldValidation> _validationNotifier;
   late final _ValueMountedNotifier<T> _valueNotifier;
+  late final FormeFieldController<T> controller;
 
   int get order =>
       widget.order ??
@@ -433,14 +438,6 @@ class FormeFieldState<T> extends State<FormeField<T>> {
           'can not get order of this field , if this field is not wrapped by Forme , you must specific an order on it'));
 
   String get name => widget.name;
-
-  T? _oldValue;
-  late FormeFieldValidation _validation;
-  Timer? _asyncValidatorDebounce;
-  bool _ignoreValidate = false;
-  bool _hasInteractedByUser = false;
-  int _validateGen = 0;
-  late T _value;
 
   T get value => _value;
   T? get oldValue => _oldValue;
@@ -651,8 +648,8 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   @protected
   @mustCallSuper
   void beforeInitiation() {
-    _readOnlyNotifier.value = readOnly;
-    _enabledNotifier.value = enabled;
+    _readOnlyNotifier = FormeMountedValueNotifier(readOnly, this);
+    _enabledNotifier = FormeMountedValueNotifier(enabled, this);
     _value = initialValue;
     _valueNotifier = _ValueMountedNotifier(initialValue, this);
     _validation = _initialValidationState;
