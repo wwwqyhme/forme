@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import '../forme.dart';
 
-/// form controller
+/// base form controller
 ///
 /// you can access a form controller by [FormeKey] or [FormeKey.of]
 abstract class FormeController {
@@ -50,6 +50,8 @@ abstract class FormeController {
   set data(Map<String, dynamic> data);
 
   /// reset form
+  ///
+  /// **only reset all value fields**
   void reset();
 
   /// save all form fields
@@ -129,13 +131,16 @@ abstract class FormeFieldController<T> {
 
   /// readOnly listenable
   ///
+  /// useful update children items when readOnly state changes,
+  ///  eg [FormeCupertinoSegmentedControl]
+  ///
   /// will trigger when [Forme] or field's readOnly state changed
   ValueListenable<bool> get readOnlyListenable;
 
   /// enabled listenable
   ///
   ///
-  /// will trigger when [Forme] or field's enabled state changed
+  /// will trigger when [Forme] or field's readOnly state changed
   ValueListenable<bool> get enabledListenable;
 
   /// get current value of field
@@ -206,6 +211,8 @@ abstract class FormeFieldController<T> {
 
   /// whether field's value changed after initialized
   ///
+  /// this method is relay on [FormeField.initialValue] and [Forme.initialValue]
+  ///
   /// value is compared by [FormeFieldState.compareValue]
   bool get isValueChanged;
 
@@ -221,7 +228,7 @@ abstract class FormeFieldController<T> {
   /// 3. field is readOnly
   /// 4. value will be ignored when get form data
   /// 5. value can still be changed via `FormeFieldController`
-  /// 6. validation state will always be `FormeValidationState.unnecessary`
+  /// 6. validation state will be set to `unnecessary` and will always be `FormeValidationState.unnecessary`
   /// 7. when get validation from `FormeController` , this field will be ignored
   set enabled(bool enabled);
 
