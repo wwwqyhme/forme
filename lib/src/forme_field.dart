@@ -93,6 +93,9 @@ class FormeField<T> extends StatefulWidget {
   final FormeFieldSetter<T>? onSaved;
 
   /// used to decorate a field
+  ///
+  ///  some fields doesn't support InputDecoration , so errorText won't be displayed though field is invalid,
+  ///  in these cases , it's recommend to use [FormeInputDecoratorBuilder] or [FormeCupertinoInputDecoratorBuilder] to decorate it
   final FormeFieldDecorator<T>? decorator;
 
   /// whether request focus when field value changed

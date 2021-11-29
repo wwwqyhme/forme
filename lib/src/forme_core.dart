@@ -397,10 +397,8 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   late final ValueNotifier<bool> _focusNotifier =
       FormeMountedValueNotifier(false, this);
-  late final ValueNotifier<bool> _readOnlyNotifier =
-      FormeMountedValueNotifier(false, this);
-  late final ValueNotifier<bool> _enabledNotifier =
-      FormeMountedValueNotifier(false, this);
+  late final ValueNotifier<bool> _readOnlyNotifier;
+  late final ValueNotifier<bool> _enabledNotifier;
   late final FormeFieldController<T> controller;
   late final ValueNotifier<FormeFieldValidation> _validationNotifier;
   late final _ValueMountedNotifier<T> _valueNotifier;
@@ -449,8 +447,6 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       widget.initialValue ??
       _formeState?.getInitialValue(name, widget.initialValue) as T;
 
-  AutovalidateMode get autovalidateMode => widget.autovalidateMode;
-
   /// override this method if default compare can not meet your needs
   bool compareValue(T a, T b) {
     if (a == b) {
@@ -467,13 +463,6 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     }
     return false;
   }
-
-  bool get needValidate =>
-      _hasAnyValidator &&
-      enabled &&
-      ((autovalidateMode == AutovalidateMode.always) ||
-          (autovalidateMode == AutovalidateMode.onUserInteraction &&
-              _hasInteractedByUser));
 
   /// get current widget's focus node
   ///
@@ -642,8 +631,8 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   @protected
   @mustCallSuper
   void beforeInitiation() {
-    _readOnlyNotifier.value = readOnly;
-    _enabledNotifier.value = enabled;
+    _readOnlyNotifier = FormeMountedValueNotifier(readOnly, this);
+    _enabledNotifier = FormeMountedValueNotifier(enabled, this);
     _value = initialValue;
     _valueNotifier = _ValueMountedNotifier(initialValue, this);
     _validation = _initialValidationState;
@@ -693,6 +682,12 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final bool needValidate = _hasAnyValidator &&
+        enabled &&
+        ((widget.autovalidateMode == AutovalidateMode.always) ||
+            (widget.autovalidateMode == AutovalidateMode.onUserInteraction &&
+                _hasInteractedByUser));
+
     if (_alwaysValidateOnNextBuild || needValidate) {
       _alwaysValidateOnNextBuild = false;
       _validate();

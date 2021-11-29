@@ -138,7 +138,7 @@ class _FormeChoiceChipState<T extends Object> extends FormeFieldState<T?> {
     if (value == null) {
       return;
     }
-    if (!widget.items.any((element) => element.data == value)) {
+    if (widget.items.every((element) => element.data != value)) {
       setValue(null);
     }
   }
