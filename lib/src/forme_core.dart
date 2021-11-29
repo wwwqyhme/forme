@@ -735,17 +735,21 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       }
     }
 
-    if (_ignoreValidate || !_hasAnyValidator) {
-      notifyOnValid();
-      return;
-    }
-    final int gen = ++_validateGen;
     void notifyValidation(FormeFieldValidation validation) {
       setState(() {
         _validation = validation;
       });
       _validationNotifier.value = _validation;
       notifyOnValid();
+    }
+
+    if (_ignoreValidate || !_hasAnyValidator) {
+      if (!_hasAnyValidator) {
+        notifyValidation(FormeFieldValidation.unnecessary);
+      } else {
+        notifyOnValid();
+      }
+      return;
     }
 
     if (_hasValidator) {
@@ -758,13 +762,12 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
     if (_hasAsyncValidator) {
       notifyValidation(FormeFieldValidation.validating);
-      _asyncValidate(gen, onCompleted: notifyOnValid);
+      _asyncValidate(onCompleted: notifyOnValid);
     }
   }
 
   /// this method should  be only called in [FormeFieldState.build]
   void _validate() {
-    final int gen = ++_validateGen;
     void notifyValidation(FormeFieldValidation validation) {
       _validation = validation;
       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
@@ -788,14 +791,14 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     }
     if (_hasAsyncValidator) {
       notifyValidation(FormeFieldValidation.validating);
-      _asyncValidate(gen);
+      _asyncValidate();
     }
   }
 
-  void _asyncValidate(
-    int gen, {
+  void _asyncValidate({
     VoidCallback? onCompleted,
   }) {
+    final int gen = ++_validateGen;
     _asyncValidatorDebounce?.cancel();
     _asyncValidatorDebounce = Timer(
         widget.asyncValidatorDebounce ?? const Duration(milliseconds: 500), () {
