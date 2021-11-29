@@ -8,6 +8,17 @@ class FormeFieldValidation {
 
   const FormeFieldValidation(this.error, this.state);
 
+  static FormeFieldValidation unnecessary =
+      const FormeFieldValidation(null, FormeValidationState.unnecessary);
+  static FormeFieldValidation valid =
+      const FormeFieldValidation(null, FormeValidationState.valid);
+  static FormeFieldValidation validating =
+      const FormeFieldValidation(null, FormeValidationState.validating);
+  static FormeFieldValidation waiting =
+      const FormeFieldValidation(null, FormeValidationState.waiting);
+  static FormeFieldValidation fail =
+      const FormeFieldValidation(null, FormeValidationState.fail);
+
   bool get isValid => state == FormeValidationState.valid;
 
   bool get isInvalid => state == FormeValidationState.invalid;
