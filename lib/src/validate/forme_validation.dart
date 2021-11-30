@@ -6,18 +6,22 @@ class FormeFieldValidation {
   final String? error;
   final FormeValidationState state;
 
-  const FormeFieldValidation(this.error, this.state);
+  const FormeFieldValidation._(this.error, this.state);
 
   static FormeFieldValidation unnecessary =
-      const FormeFieldValidation(null, FormeValidationState.unnecessary);
+      const FormeFieldValidation._(null, FormeValidationState.unnecessary);
   static FormeFieldValidation valid =
-      const FormeFieldValidation(null, FormeValidationState.valid);
+      const FormeFieldValidation._(null, FormeValidationState.valid);
   static FormeFieldValidation validating =
-      const FormeFieldValidation(null, FormeValidationState.validating);
+      const FormeFieldValidation._(null, FormeValidationState.validating);
   static FormeFieldValidation waiting =
-      const FormeFieldValidation(null, FormeValidationState.waiting);
+      const FormeFieldValidation._(null, FormeValidationState.waiting);
   static FormeFieldValidation fail =
-      const FormeFieldValidation(null, FormeValidationState.fail);
+      const FormeFieldValidation._(null, FormeValidationState.fail);
+
+  FormeFieldValidation.invalid(String errorText)
+      : error = errorText,
+        state = FormeValidationState.invalid;
 
   bool get isValid => state == FormeValidationState.valid;
 

@@ -827,7 +827,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     if (errorText == null) {
       return FormeFieldValidation.valid;
     }
-    return FormeFieldValidation(errorText, FormeValidationState.invalid);
+    return FormeFieldValidation.invalid(errorText);
   }
 
   /// this method is used to manually validate
