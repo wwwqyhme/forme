@@ -119,8 +119,8 @@ class _FormeCupertinoPickerState extends FormeFieldState<int> {
   }
 
   @override
-  void onValueChanged(int? value) {
-    scrollController.jumpToItem(value!);
+  void onValueChanged(int value) {
+    scrollController.jumpToItem(value);
   }
 
   void onScrollStatusChanged(bool scrolling) {

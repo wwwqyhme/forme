@@ -169,7 +169,7 @@ class _FormeRangeSliderState extends FormeFieldState<RangeValues> {
   RangeValues get value => notifier.value ?? super.value;
 
   @override
-  void onValueChanged(RangeValues? value) {
+  void onValueChanged(RangeValues value) {
     notifier.value = null;
   }
 

@@ -194,9 +194,9 @@ class _FormeCupertinoTextFieldState extends FormeFieldState<String> {
   }
 
   @override
-  void onValueChanged(String? value) {
+  void onValueChanged(String value) {
     if (textEditingController.text != value) {
-      textEditingController.text = value!;
+      textEditingController.text = value;
     }
   }
 

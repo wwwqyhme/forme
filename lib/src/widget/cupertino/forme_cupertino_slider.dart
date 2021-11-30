@@ -161,7 +161,7 @@ class _FormeCupertinoSliderState extends FormeFieldState<double> {
   }
 
   @override
-  void onValueChanged(double? value) {
+  void onValueChanged(double value) {
     notifier.value = null;
   }
 }
