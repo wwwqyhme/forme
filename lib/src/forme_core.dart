@@ -446,6 +446,37 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   bool get _hasAsyncValidator => widget.asyncValidator != null;
   bool get _hasAnyValidator => _hasValidator || _hasAsyncValidator;
 
+  bool get readOnly =>
+      (_formeState?.readOnly ?? false) ||
+      (_readOnly ?? widget.readOnly) ||
+      !(_enabled ?? widget.enabled);
+
+  set readOnly(bool readOnly) {
+    if (readOnly != this.readOnly) {
+      setState(() {
+        _readOnly = readOnly;
+      });
+      _readOnlyNotifier.value = this.readOnly;
+    }
+  }
+
+  set enabled(bool enabled) {
+    if (enabled != this.enabled) {
+      setState(() {
+        _enabled = enabled;
+        _validateGen++;
+        _validation = _initialValidationState;
+        _hasInteractedByUser = false;
+        _focusNode?.canRequestFocus = enabled;
+      });
+      _readOnlyNotifier.value = readOnly;
+      _validationNotifier.value = _validation;
+      _enabledNotifier.value = enabled;
+    }
+  }
+
+  bool get enabled => _enabled ?? widget.enabled;
+
   FormeFieldValidation get _initialValidationState =>
       _hasAnyValidator && enabled
           ? FormeFieldValidation.waiting
@@ -461,27 +492,6 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   T get initialValue =>
       widget.initialValue ??
       _formeState?.getInitialValue(name, widget.initialValue) as T;
-
-  FormeFieldValidation get validation {
-    return enabled ? _validation : FormeFieldValidation.unnecessary;
-  }
-
-  /// override this method if default compare can not meet your needs
-  bool compareValue(T a, T b) {
-    if (a == b) {
-      return true;
-    }
-    if (a is List && b is List) {
-      return listEquals<dynamic>(a, b);
-    }
-    if (a is Set && b is Set) {
-      return setEquals<dynamic>(a, b);
-    }
-    if (a is Map && b is Map) {
-      return mapEquals<dynamic, dynamic>(a, b);
-    }
-    return false;
-  }
 
   /// get current widget's focus node
   ///
@@ -517,6 +527,23 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   }
 
   bool get isValueChanged => !compareValue(initialValue, value);
+
+  /// override this method if default compare can not meet your needs
+  bool compareValue(T a, T b) {
+    if (a == b) {
+      return true;
+    }
+    if (a is List && b is List) {
+      return listEquals<dynamic>(a, b);
+    }
+    if (a is Set && b is Set) {
+      return setEquals<dynamic>(a, b);
+    }
+    if (a is Map && b is Map) {
+      return mapEquals<dynamic, dynamic>(a, b);
+    }
+    return false;
+  }
 
   @override
   void didChangeDependencies() {
@@ -609,8 +636,8 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     updateFieldValueInDidUpdateWidget(oldWidget);
     if (!compareValue(oldValue, _value)) {
       _oldValue = oldValue;
-      _valueNotifier.value = _value;
     }
+    _valueNotifier.value = _value;
   }
 
   /// when you want to update value in [didUpdateWidget] , you should override this method rather than override [didUpdateWidget]
@@ -629,10 +656,8 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       _value = initialValue;
     });
     _fieldChange();
-    if (!compareValue(oldValue, initialValue)) {
-      _valueNotifier.value = initialValue;
-    }
-    _validationNotifier.value = _initialValidationState;
+    _valueNotifier.value = initialValue;
+    _validationNotifier.value = _validation;
   }
 
   @protected
@@ -655,37 +680,6 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     _validation = _initialValidationState;
     _validationNotifier = FormeMountedValueNotifier(_validation, this);
   }
-
-  bool get readOnly =>
-      (_formeState?.readOnly ?? false) ||
-      (_readOnly ?? widget.readOnly) ||
-      !(_enabled ?? widget.enabled);
-
-  set readOnly(bool readOnly) {
-    if (readOnly != this.readOnly) {
-      setState(() {
-        _readOnly = readOnly;
-      });
-      _readOnlyNotifier.value = this.readOnly;
-    }
-  }
-
-  set enabled(bool enabled) {
-    if (enabled != this.enabled) {
-      setState(() {
-        _enabled = enabled;
-        _validateGen++;
-        _validation = _initialValidationState;
-        _hasInteractedByUser = false;
-        _focusNode?.canRequestFocus = enabled;
-      });
-      _readOnlyNotifier.value = readOnly;
-      _validationNotifier.value = _initialValidationState;
-      _enabledNotifier.value = this.enabled;
-    }
-  }
-
-  bool get enabled => _enabled ?? widget.enabled;
 
   void requestFocusOnUserInteraction() {
     if (_hasInteractedByUser && widget.requestFocusOnUserInteraction) {
@@ -721,7 +715,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       _validateGen++;
       _validation = _initialValidationState;
     });
-    _validationNotifier.value = _initialValidationState;
+    _validationNotifier.value = _validation;
   }
 
   /// this method should be only called in [_FormeState.build]
@@ -1125,7 +1119,7 @@ class _FormeFieldController<T> extends FormeFieldController<T> {
   T get value => state.value;
 
   @override
-  FormeFieldValidation get validation => state.validation;
+  FormeFieldValidation get validation => state._validation;
 
   @override
   void reset() => state.reset();
