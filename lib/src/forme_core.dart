@@ -528,23 +528,6 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   bool get isValueChanged => !compareValue(initialValue, value);
 
-  /// override this method if default compare can not meet your needs
-  bool compareValue(T a, T b) {
-    if (a == b) {
-      return true;
-    }
-    if (a is List && b is List) {
-      return listEquals<dynamic>(a, b);
-    }
-    if (a is Set && b is Set) {
-      return setEquals<dynamic>(a, b);
-    }
-    if (a is Map && b is Map) {
-      return mapEquals<dynamic, dynamic>(a, b);
-    }
-    return false;
-  }
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -562,23 +545,20 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     widget.onInitialed?.call(controller);
   }
 
+  /// called before  FormeFieldController created
+  ///
+  /// this method is called in didChangeDependencies and will only called once in state's lifecycle
+  ///
+  /// **init your resource in this method**
   @protected
-  FormeFieldController<T> createFormeFieldController() =>
-      _FormeFieldController(this);
-
-  @override
-  void dispose() {
-    _asyncValidatorDebounce?.cancel();
-    _validationNotifier.dispose();
-    _valueNotifier.dispose();
-    _focusNotifier.dispose();
-    _enabledNotifier.dispose();
-    _readOnlyNotifier.dispose();
-    if (_focusNode is _DisposeRequiredFocusNode) {
-      _focusNode?.dispose();
-    }
-    _formeState?.unregisterField(this);
-    super.dispose();
+  @mustCallSuper
+  void beforeInitiation() {
+    _readOnlyNotifier = FormeMountedValueNotifier(readOnly, this);
+    _enabledNotifier = FormeMountedValueNotifier(enabled, this);
+    _value = initialValue;
+    _valueNotifier = _ValueMountedNotifier(initialValue, this);
+    _validation = _initialValidationState;
+    _validationNotifier = FormeMountedValueNotifier(_validation, this);
   }
 
   /// called after  FormeFieldController created
@@ -604,6 +584,25 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       widget.onValidationChanged?.call(controller, _validationNotifier.value);
       _formeState?.fieldValidationChange(controller, _validationNotifier.value);
     });
+  }
+
+  @protected
+  FormeFieldController<T> createFormeFieldController() =>
+      _FormeFieldController(this);
+
+  @override
+  void dispose() {
+    _asyncValidatorDebounce?.cancel();
+    _validationNotifier.dispose();
+    _valueNotifier.dispose();
+    _focusNotifier.dispose();
+    _enabledNotifier.dispose();
+    _readOnlyNotifier.dispose();
+    if (_focusNode is _DisposeRequiredFocusNode) {
+      _focusNode?.dispose();
+    }
+    _formeState?.unregisterField(this);
+    super.dispose();
   }
 
   @mustCallSuper
@@ -665,28 +664,6 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     _value = value;
   }
 
-  /// called before  FormeFieldController created
-  ///
-  /// this method is called in didChangeDependencies and will only called once in state's lifecycle
-  ///
-  /// **init your resource in this method**
-  @protected
-  @mustCallSuper
-  void beforeInitiation() {
-    _readOnlyNotifier = FormeMountedValueNotifier(readOnly, this);
-    _enabledNotifier = FormeMountedValueNotifier(enabled, this);
-    _value = initialValue;
-    _valueNotifier = _ValueMountedNotifier(initialValue, this);
-    _validation = _initialValidationState;
-    _validationNotifier = FormeMountedValueNotifier(_validation, this);
-  }
-
-  void requestFocusOnUserInteraction() {
-    if (_hasInteractedByUser && widget.requestFocusOnUserInteraction) {
-      _focusNode?.requestFocus();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final bool needValidate = _hasAnyValidator &&
@@ -708,6 +685,45 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     }
 
     return FormeFieldScope(controller, child);
+  }
+
+  /// override this method if you want to listen value changed
+  @protected
+  void onValueChanged(T value) {}
+
+  /// override this method if you want to listen validation changed
+  @protected
+  void onValidationChanged(FormeFieldValidation validation) {}
+
+  /// override this method if you want to listen focus changed
+  @protected
+  void onFocusChanged(bool hasFocus) {}
+
+  void requestFocusOnUserInteraction() {
+    if (_hasInteractedByUser && widget.requestFocusOnUserInteraction) {
+      _focusNode?.requestFocus();
+    }
+  }
+
+  /// override this method if default compare can not meet your needs
+  bool compareValue(T a, T b) {
+    if (a == b) {
+      return true;
+    }
+    if (a is List && b is List) {
+      return listEquals<dynamic>(a, b);
+    }
+    if (a is Set && b is Set) {
+      return setEquals<dynamic>(a, b);
+    }
+    if (a is Map && b is Map) {
+      return mapEquals<dynamic, dynamic>(a, b);
+    }
+    return false;
+  }
+
+  void save() {
+    widget.onSaved?.call(controller, value);
   }
 
   void _clearError() {
@@ -899,22 +915,6 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
     throw Exception('should not go here');
   }
-
-  void save() {
-    widget.onSaved?.call(controller, value);
-  }
-
-  /// override this method if you want to listen value changed
-  @protected
-  void onValueChanged(T value) {}
-
-  /// override this method if you want to listen validation changed
-  @protected
-  void onValidationChanged(FormeFieldValidation validation) {}
-
-  /// override this method if you want to listen focus changed
-  @protected
-  void onFocusChanged(bool hasFocus) {}
 }
 
 class _FormeController extends FormeController {

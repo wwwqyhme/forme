@@ -3,7 +3,7 @@
 1. `FormeController.fieldListenable` will triggered after frame completed
 2. `FormeController` add fieldsListenable , used to listen every field
 3. `Forme` add onFieldsChanged
-4. `FormeFieldController` removed `readOnlyListenable` and `enabledListenable`
+4. bug fix: when `Forme`'s autovalidateMode is always  , reset form will validate twice
 
 ## 3.2.1
 
