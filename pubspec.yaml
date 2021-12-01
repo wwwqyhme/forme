@@ -1,6 +1,6 @@
 name: forme
 description: a powerful flutter form widget ,easy to use and extend. provide rich api to simplify form control and sync|async validation
-version: 3.2.2-beta.3
+version: 3.2.2-beta.4
 homepage: https://github.com/wwwqyhme/forme
 
 environment:
