@@ -4,6 +4,8 @@
 2. `FormeController` add fieldsListenable , used to listen every field
 3. `Forme` add onFieldsChanged
 4. bug fix: when `Forme`'s autovalidateMode is always  , reset form will validate twice
+5. `Forme` onValidationChanged renamed to onFieldValidationChanged
+6. `Forme` add onValidationChanged, used to listen FormeValidation changed
 
 ## 3.2.1
 

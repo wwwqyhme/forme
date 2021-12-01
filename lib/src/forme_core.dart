@@ -130,7 +130,7 @@ class Forme extends StatefulWidget {
   final Map<String, dynamic> initialValue;
 
   /// used to listen field's validation changed
-  final FormeFieldValidationChanged? onValidationChanged;
+  final FormeFieldValidationChanged? onFieldValidationChanged;
 
   final WillPopCallback? onWillPop;
 
@@ -154,12 +154,17 @@ class Forme extends StatefulWidget {
   final void Function(String name, FormeFieldController? field)?
       onFieldsChanged;
 
+  /// listen [FormeValidation] changed
+  final void Function(FormeController controller, FormeValidation validation)?
+      onValidationChanged;
+
   const Forme({
     FormeKey? key,
     this.readOnly = false,
     this.onValueChanged,
     required this.child,
     this.initialValue = const <String, dynamic>{},
+    this.onFieldValidationChanged,
     this.onValidationChanged,
     this.onWillPop,
     this.quietlyValidate = false,
@@ -339,15 +344,17 @@ class _FormeState extends State<Forme> {
   }
 
   void updateValidation() {
-    validationNotifier.value = FormeValidation(states
+    final FormeValidation validation = FormeValidation(states
         .asMap()
         .map((key, value) => MapEntry(value.name, value._validation)));
+    widget.onValidationChanged?.call(controller, validation);
+    validationNotifier.value = validation;
   }
 
   void fieldValidationChange(
       FormeFieldController controller, FormeFieldValidation validation) {
     updateValidation();
-    widget.onValidationChanged?.call(controller, validation);
+    widget.onFieldValidationChanged?.call(controller, validation);
   }
 
   void fieldFocusChange(FormeFieldController controller, bool hasFocus) {
@@ -438,7 +445,6 @@ class FormeFieldState<T> extends State<FormeField<T>> {
           'can not get order of this field , if this field is not wrapped by Forme , you must specific an order on it'));
 
   String get name => widget.name;
-
   T get value => _value;
   T? get oldValue => _oldValue;
 
@@ -607,15 +613,13 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   @mustCallSuper
   void didChange(T newValue) {
-    final T oldValue = _value;
-    if (!compareValue(oldValue, newValue)) {
+    if (!compareValue(_value, newValue)) {
       setState(() {
         _hasInteractedByUser = true;
         _value = newValue;
-        _oldValue = oldValue;
       });
-      _fieldChange();
       _valueNotifier.value = newValue;
+      _fieldChange();
     }
   }
 
@@ -631,11 +635,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       _formeState?.registerField(this);
     }
 
-    final T oldValue = _value;
     updateFieldValueInDidUpdateWidget(oldWidget);
-    if (!compareValue(oldValue, _value)) {
-      _oldValue = oldValue;
-    }
     _valueNotifier.value = _value;
   }
 
@@ -645,18 +645,16 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   @mustCallSuper
   void reset() {
-    final T oldValue = _value;
     setState(() {
       _validateGen++;
       _validation = _initialValidationState;
       _hasInteractedByUser = false;
       _ignoreValidate = false;
-      _oldValue = oldValue;
       _value = initialValue;
     });
-    _fieldChange();
     _valueNotifier.value = initialValue;
     _validationNotifier.value = _validation;
+    _fieldChange();
   }
 
   @protected
@@ -1168,6 +1166,7 @@ class _ValueMountedNotifier<T> extends ChangeNotifier
     if (state.compareValue(_value, newValue)) {
       return;
     }
+    state._oldValue = _value;
     _value = newValue;
     notifyListeners();
   }
