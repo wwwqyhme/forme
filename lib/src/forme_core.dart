@@ -203,7 +203,7 @@ class _FormeState extends State<Forme> {
         gen++;
         _readOnly = readOnly;
       });
-      for (final element in states) {
+      for (final FormeFieldState element in states) {
         element._readOnlyNotifier.value = element.readOnly;
       }
     }
@@ -238,7 +238,7 @@ class _FormeState extends State<Forme> {
   }
 
   void reset() {
-    for (final element in states) {
+    for (final FormeFieldState element in states) {
       element.reset();
     }
     if (widget.autovalidateMode == AutovalidateMode.always) {
@@ -273,7 +273,7 @@ class _FormeState extends State<Forme> {
       }
       _validateByOrder(valueFieldStates);
     } else {
-      for (final element in states) {
+      for (final FormeFieldState element in states) {
         if (element.enabled) {
           element._validate2();
         }
@@ -293,7 +293,7 @@ class _FormeState extends State<Forme> {
   }
 
   void save() {
-    for (final element in states) {
+    for (final FormeFieldState element in states) {
       element.save();
     }
   }
@@ -984,7 +984,7 @@ class _FormeController extends FormeController {
       return Future.delayed(Duration.zero, () => FormeValidateSnapshot([]));
     }
     if (clearError) {
-      for (final element in states) {
+      for (final FormeFieldState element in states) {
         element._clearError();
       }
     }
