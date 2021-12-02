@@ -416,13 +416,16 @@ class _FormeScope extends InheritedWidget {
 }
 
 class FormeFieldState<T> extends State<FormeField<T>> {
+  final Duration _defaultAsyncValidatorDebounce =
+      const Duration(milliseconds: 500);
+
   bool _init = false;
   FocusNode? _focusNode;
   bool? _readOnly;
   bool? _enabled;
   T? _oldValue;
   late FormeFieldValidation _validation;
-  Timer? _asyncValidatorDebounce;
+  Timer? _asyncValidatorTimer;
   bool _ignoreValidate = false;
   bool _hasInteractedByUser = false;
   int _validateGen = 0;
@@ -471,7 +474,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       setState(() {
         _enabled = enabled;
         _validateGen++;
-        _validation = _initialValidationState;
+        _validation = _initialValidation;
         _hasInteractedByUser = false;
         _focusNode?.canRequestFocus = enabled;
       });
@@ -483,10 +486,9 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   bool get enabled => _enabled ?? widget.enabled;
 
-  FormeFieldValidation get _initialValidationState =>
-      _hasAnyValidator && enabled
-          ? FormeFieldValidation.waiting
-          : FormeFieldValidation.unnecessary;
+  FormeFieldValidation get _initialValidation => _hasAnyValidator && enabled
+      ? FormeFieldValidation.waiting
+      : FormeFieldValidation.unnecessary;
 
   String? get errorText => !enabled ||
           (_formeState?.quietlyValidate ?? false) ||
@@ -551,7 +553,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     widget.onInitialed?.call(controller);
   }
 
-  /// called before  FormeFieldController created
+  /// called before [FormeFieldController] created
   ///
   /// this method is called in didChangeDependencies and will only called once in state's lifecycle
   ///
@@ -563,11 +565,11 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     _enabledNotifier = FormeMountedValueNotifier(enabled, this);
     _value = initialValue;
     _valueNotifier = _ValueMountedNotifier(initialValue, this);
-    _validation = _initialValidationState;
+    _validation = _initialValidation;
     _validationNotifier = FormeMountedValueNotifier(_validation, this);
   }
 
-  /// called after  FormeFieldController created
+  /// called after  [FormeFieldController] created
   ///
   /// this method is called in didChangeDependencies and will only called once in state's lifecycle
   @protected
@@ -592,13 +594,16 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     });
   }
 
+  /// create [FormeFieldController] , this method will only called once in field's lifecycle
+  ///
+  /// if you want to override this method, use [FormeFieldControllerDelegate] to wrap parent's controller
   @protected
   FormeFieldController<T> createFormeFieldController() =>
       _FormeFieldController(this);
 
   @override
   void dispose() {
-    _asyncValidatorDebounce?.cancel();
+    _asyncValidatorTimer?.cancel();
     _validationNotifier.dispose();
     _valueNotifier.dispose();
     _focusNotifier.dispose();
@@ -640,6 +645,8 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   }
 
   /// when you want to update value in [didUpdateWidget] , you should override this method rather than override [didUpdateWidget]
+  ///
+  /// use [setValue] rather than  [didChange]
   @protected
   void updateFieldValueInDidUpdateWidget(FormeField<T> oldWidget) {}
 
@@ -647,7 +654,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   void reset() {
     setState(() {
       _validateGen++;
-      _validation = _initialValidationState;
+      _validation = _initialValidation;
       _hasInteractedByUser = false;
       _ignoreValidate = false;
       _value = initialValue;
@@ -725,9 +732,12 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   }
 
   void _clearError() {
+    if (_validation == _initialValidation) {
+      return;
+    }
     setState(() {
       _validateGen++;
-      _validation = _initialValidationState;
+      _validation = _initialValidation;
     });
     _validationNotifier.value = _validation;
   }
@@ -804,9 +814,9 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     VoidCallback? onCompleted,
   }) {
     final int gen = ++_validateGen;
-    _asyncValidatorDebounce?.cancel();
-    _asyncValidatorDebounce = Timer(
-        widget.asyncValidatorDebounce ?? const Duration(milliseconds: 500), () {
+    _asyncValidatorTimer?.cancel();
+    _asyncValidatorTimer = Timer(
+        widget.asyncValidatorDebounce ?? _defaultAsyncValidatorDebounce, () {
       bool isValid() {
         return mounted && gen == _validateGen;
       }
@@ -892,9 +902,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     }
 
     if (_hasAsyncValidator) {
-      if (!quietly) {
-        notify(FormeFieldValidation.validating);
-      }
+      notify(FormeFieldValidation.validating);
 
       FormeFieldValidation? validation;
       return widget.asyncValidator!(controller, value, isValid).then((text) {
