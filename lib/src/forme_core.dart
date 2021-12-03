@@ -476,7 +476,9 @@ class FormeFieldState<T> extends State<FormeField<T>> {
         _validateGen++;
         _validation = _initialValidation;
         _hasInteractedByUser = false;
-        _focusNode?.canRequestFocus = enabled;
+        if (!enabled) {
+          _focusNode?.canRequestFocus = false;
+        }
       });
       _readOnlyNotifier.value = readOnly;
       _validationNotifier.value = _validation;
@@ -638,6 +640,33 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
     if (!oldWidget.registrable && widget.registrable) {
       _formeState?.registerField(this);
+    }
+
+    if (_enabledNotifier.value != enabled) {
+      _hasInteractedByUser = false;
+      if (!enabled) {
+        _focusNode?.canRequestFocus = false;
+      }
+      _validateGen++;
+      _validation = _initialValidation;
+      _validationNotifier.value = _validation;
+    }
+
+    _enabledNotifier.value = enabled;
+    _readOnlyNotifier.value = readOnly;
+
+    // has no validators
+    if (!_hasAnyValidator) {
+      _validateGen++;
+      _validation = FormeFieldValidation.unnecessary;
+      _validationNotifier.value = _validation;
+    } else {
+      //has validators and  enabled
+      if (enabled && _validation == FormeFieldValidation.unnecessary) {
+        _validateGen++;
+        _validation = FormeFieldValidation.waiting;
+        _validationNotifier.value = _validation;
+      }
     }
 
     updateFieldValueInDidUpdateWidget(oldWidget);
