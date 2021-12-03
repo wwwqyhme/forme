@@ -292,6 +292,10 @@ class _FormeState extends State<Forme> {
       return;
     }
     final FormeFieldState state = states[index];
+    //clear errors after this field
+    for (int i = index + 1; i < length; i++) {
+      states[i]._clearError();
+    }
     state._validate2(onValid: () {
       _validateByOrder(states, index: index + 1);
     });
