@@ -117,6 +117,25 @@ if you specific both `validator` and `asyncValidator` , `asyncValidator` will on
 you can specific a debounce on `FormeField` , **debounce will not worked when you manually call `validate` on `FormeFieldController`**
 
 
+### whether validation itself is valid
+
+in some cases,when an async validation is performing , another validation on same field is performed,in this case ,previous validation is invalid , so if you 
+want to update UI before return validation result in async validator , you need to validate it first,eg:
+
+``` Dart
+asyncValidator:(field,value,isValid){
+    return Future.delayed(const Duration(seconds:2),(){
+        if(isUnexceptedValue(value)) {
+            if(isValid()){
+                updateUI();
+            }
+            return 'invalid';
+        }
+        return null;
+    });    
+}
+```
+
 ## validates
 
 you can use `FormeValidates` to simplify your validators
