@@ -376,9 +376,9 @@ class _FormeState extends State<Forme> {
         widget.onFieldsChanged?.call(state.name, state.controller);
         fieldNotifiers[state.name]?.value = state.controller;
         fieldsNotifier.value = {state.name: state.controller};
+        updateValidation();
       });
     }
-    updateValidation();
   }
 
   void unregisterField(FormeFieldState state) {
@@ -387,9 +387,9 @@ class _FormeState extends State<Forme> {
         widget.onFieldsChanged?.call(state.name, null);
         fieldNotifiers[state.name]?.value = null;
         fieldsNotifier.value = {state.name: null};
+        updateValidation();
       });
     }
-    updateValidation();
   }
 
   bool get isValueChanged => states.any((element) => element.isValueChanged);
