@@ -5,23 +5,26 @@ import 'package:flutter/widgets.dart';
 class FormeFieldValidation {
   final String? error;
   final FormeValidationState state;
+  final Object? exception;
 
-  const FormeFieldValidation._(this.error, this.state);
+  const FormeFieldValidation._(this.error, this.state, this.exception);
 
-  static FormeFieldValidation unnecessary =
-      const FormeFieldValidation._(null, FormeValidationState.unnecessary);
+  static FormeFieldValidation unnecessary = const FormeFieldValidation._(
+      null, FormeValidationState.unnecessary, null);
   static FormeFieldValidation valid =
-      const FormeFieldValidation._(null, FormeValidationState.valid);
+      const FormeFieldValidation._(null, FormeValidationState.valid, null);
   static FormeFieldValidation validating =
-      const FormeFieldValidation._(null, FormeValidationState.validating);
+      const FormeFieldValidation._(null, FormeValidationState.validating, null);
   static FormeFieldValidation waiting =
-      const FormeFieldValidation._(null, FormeValidationState.waiting);
-  static FormeFieldValidation fail =
-      const FormeFieldValidation._(null, FormeValidationState.fail);
+      const FormeFieldValidation._(null, FormeValidationState.waiting, null);
 
-  FormeFieldValidation.invalid(String errorText)
-      : error = errorText,
+  FormeFieldValidation.invalid(this.error)
+      : exception = null,
         state = FormeValidationState.invalid;
+
+  FormeFieldValidation.fail(this.exception)
+      : error = null,
+        state = FormeValidationState.fail;
 
   bool get isValid => state == FormeValidationState.valid;
 
@@ -101,4 +104,7 @@ class FormeValidation {
   /// get all fields validations
   Map<String, FormeFieldValidation> get validations =>
       Map.unmodifiable(_validations);
+
+  /// get field's validation
+  FormeFieldValidation? getValidation(String name) => _validations[name];
 }
