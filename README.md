@@ -428,6 +428,22 @@ bool isChanged = field.isValueChanged
 bool mounted = field.mounted
 ```
 
+## focus node
+
+for simplify form control , Forme not support set focus node on field,
+FocusNode will  be auto created when needed.
+
+### custom focus node
+
+if you want to override default focusNode , you can extends `FormeFieldState` and use `set focusNode` method to do that,
+in this case , you must dispose focusNode by yourself
+
+
+## TextEditingController
+
+for simplify form control , set `TextEditingController` is not supported on some fields , eg : `FormeTextField`,`FormeNumberField`,`FormeDateTimeField` and etc...
+
+if you want to access underlying `TextEditingController`, you can try to convert `FormeFieldController` to `FormeTextFieldController` or other to do that 
 
 ## custom field
 
