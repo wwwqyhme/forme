@@ -697,6 +697,8 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     _fieldChange();
   }
 
+  set value(T value) => didChange(value);
+
   @protected
   void setValue(T value) {
     _value = value;
@@ -1182,7 +1184,7 @@ class _FormeFieldController<T> extends FormeFieldController<T> {
       state._performValidate(quietly: quietly);
 
   @override
-  set value(T value) => state.didChange(value);
+  set value(T value) => state.value = value;
 
   @override
   T? get oldValue => state.oldValue;
