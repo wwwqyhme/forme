@@ -1,3 +1,11 @@
+## 3.2.3+1
+
+1. support maxLength & counter on `FormeInputDecoratorBuilder`
+
+## 3.2.3
+
+1. bug fix
+
 ## 3.2.2
 
 1. `FormeController.fieldListenable` will triggered after frame completed

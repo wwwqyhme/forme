@@ -51,7 +51,11 @@ class FormeFilterChip<T extends Object> extends FormeField<List<T>> {
           decorator: decorator ??
               (decoration == null
                   ? null
-                  : FormeInputDecoratorBuilder(decoration: decoration)),
+                  : FormeInputDecoratorBuilder(
+                      decoration: decoration,
+                      maxLength: maxSelectedCount,
+                      counter: (value) => value.length,
+                    )),
           key: key,
           readOnly: readOnly,
           name: name,
