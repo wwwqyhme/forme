@@ -46,6 +46,11 @@ class FormeDropdownButton<T extends Object> extends FormeField<T?> {
     bool requestFocusOnUserInteraction = true,
     bool registrable = true,
     bool enabled = true,
+    Widget? underline,
+    double? menuMaxHeight,
+    bool? enableFeedback,
+    AlignmentGeometry? alignment,
+    BorderRadius? borderRadius,
   }) : super(
           enabled: enabled,
           registrable: registrable,
@@ -77,6 +82,8 @@ class FormeDropdownButton<T extends Object> extends FormeField<T?> {
           builder: (state) {
             final bool readOnly = state.readOnly;
             final DropdownButton<T> dropdownButton = DropdownButton<T>(
+              borderRadius: borderRadius,
+              underline: underline,
               focusNode: state.focusNode,
               autofocus: autofocus,
               selectedItemBuilder: selectedItemBuilder,
@@ -96,6 +103,9 @@ class FormeDropdownButton<T extends Object> extends FormeField<T?> {
               itemHeight: itemHeight,
               focusColor: focusColor,
               dropdownColor: dropdownColor,
+              menuMaxHeight: menuMaxHeight,
+              enableFeedback: enableFeedback,
+              alignment: alignment ?? AlignmentDirectional.centerStart,
               onChanged: readOnly
                   ? null
                   : (value) {

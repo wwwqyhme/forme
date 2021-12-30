@@ -1,8 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import '../../../forme.dart';
 
-import '../../forme_value_listenable.dart';
-
 class FormeCupertinoSlider extends FormeField<double> {
   final double min;
   final double max;
