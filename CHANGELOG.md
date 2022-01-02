@@ -1,3 +1,7 @@
+## 3.2.3+3
+
+1. `FormeDateTimeField` add `timePickerBuilder` , `alwaysUse24HourFormat` will not work if  `timePickerBuilder` is not null
+
 ## 3.2.3+2
 
 1. `FormeDropdownButton` update
