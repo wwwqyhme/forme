@@ -86,9 +86,12 @@ class FormeDateTimeField extends FormeField<DateTime?> {
     RouteSettings? timeRouteSettings,
     SelectableDayPredicate? selectableDayPredicate,
     TransitionBuilder? builder,
+
+    /// will not work if timePickerBuilder not null
     bool use24hFormat = false,
     FormeFieldDecorator<DateTime?>? decorator,
     bool registrable = true,
+    TransitionBuilder? timePickerBuilder,
   }) : super(
           enabled: enabled,
           registrable: registrable,
@@ -145,22 +148,25 @@ class FormeDateTimeField extends FormeField<DateTime?> {
                 if (date != null) {
                   if (type == FormeDateTimeType.dateTime) {
                     showTimePicker(
-                        initialEntryMode:
-                            initialEntryMode ?? TimePickerEntryMode.dial,
-                        cancelText: timeCancelText,
-                        confirmText: timeConfirmText,
-                        helpText: timeHelpText,
-                        routeSettings: timeRouteSettings,
-                        context: state.context,
-                        initialTime: timeOfDay ??
-                            TimeOfDay(hour: value.hour, minute: value.minute),
-                        builder: (context, child) {
-                          return MediaQuery(
-                            data: MediaQuery.of(context)
-                                .copyWith(alwaysUse24HourFormat: use24hFormat),
-                            child: child!,
-                          );
-                        }).then((value) {
+                            initialEntryMode:
+                                initialEntryMode ?? TimePickerEntryMode.dial,
+                            cancelText: timeCancelText,
+                            confirmText: timeConfirmText,
+                            helpText: timeHelpText,
+                            routeSettings: timeRouteSettings,
+                            context: state.context,
+                            initialTime: timeOfDay ??
+                                TimeOfDay(
+                                    hour: value.hour, minute: value.minute),
+                            builder: timePickerBuilder ??
+                                (context, child) {
+                                  return MediaQuery(
+                                    data: MediaQuery.of(context).copyWith(
+                                        alwaysUse24HourFormat: use24hFormat),
+                                    child: child!,
+                                  );
+                                })
+                        .then((value) {
                       if (value != null) {
                         final dateTime = DateTime(date.year, date.month,
                             date.day, value.hour, value.minute);
