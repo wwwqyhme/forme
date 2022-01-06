@@ -243,7 +243,7 @@ abstract class FormeFieldController<T> {
   bool get mounted;
 
   /// get generic type
-  Type get type => T.runtimeType;
+  Type get type => T;
 
   /// whether value can be nullable or not
   bool get isNullable => null is T;
