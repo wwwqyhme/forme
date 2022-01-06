@@ -1,3 +1,7 @@
+## 3.2.3+4
+
+1. `FormeFieldController` add `type` and `isNullable` getter
+
 ## 3.2.3+3
 
 1. `FormeDateTimeField` add `timePickerBuilder` , `alwaysUse24HourFormat` will not work if  `timePickerBuilder` is not null
