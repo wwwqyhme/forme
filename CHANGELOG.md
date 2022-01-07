@@ -1,3 +1,8 @@
+## 3.2.3+6
+
+1. `FormeDropdownButton` add `beforeValueChanged` , used to 
+    check whether value can be changed or not
+
 ## 3.2.3+4
 
 1. `FormeFieldController` add `type` and `isNullable` getter
