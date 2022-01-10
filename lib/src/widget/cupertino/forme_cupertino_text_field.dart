@@ -8,6 +8,14 @@ import '../../../forme.dart';
 import 'cupertinos.dart';
 
 class FormeCupertinoTextField extends FormeField<String> {
+  /// whether update value when text input is composing
+  ///
+  /// **on web this will not worked**
+  /// https://github.com/flutter/flutter/issues/65357
+  ///
+  ///
+  /// default is false
+  final bool updateValueWhenComposing;
   FormeCupertinoTextField({
     String? initialValue,
     required String name,
@@ -80,6 +88,7 @@ class FormeCupertinoTextField extends FormeField<String> {
     FormeFieldDecorator<String>? decorator,
     bool enableIMEPersonalizedLearning = true,
     bool registrable = true,
+    this.updateValueWhenComposing = false,
   }) : super(
             registrable: registrable,
             enabled: enabled,
@@ -107,9 +116,6 @@ class FormeCupertinoTextField extends FormeField<String> {
               final FocusNode focusNode = state.focusNode;
               final TextEditingController textEditingController =
                   state.textEditingController;
-              void onChanged(String v) {
-                state.didChange(v);
-              }
 
               return buildCupertinoTextField(
                 enabled: enabled,
@@ -147,7 +153,7 @@ class FormeCupertinoTextField extends FormeField<String> {
                 expands: expands,
                 maxLength: maxLength,
                 maxLengthEnforcement: maxLengthEnforcement,
-                onChanged: onChanged,
+                onChanged: state._didChange,
                 onEditingComplete: onEditingComplete,
                 onSubmitted: onSubmitted,
                 inputFormatters: inputFormatters,
@@ -180,6 +186,13 @@ class _FormeCupertinoTextFieldState extends FormeFieldState<String> {
 
   @override
   FormeCupertinoTextField get widget => super.widget as FormeCupertinoTextField;
+
+  void _didChange(String newValue) {
+    if (widget.updateValueWhenComposing ||
+        !textEditingController.value.isComposingRangeValid) {
+      didChange(newValue);
+    }
+  }
 
   @override
   void beforeInitiation() {

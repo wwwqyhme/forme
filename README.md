@@ -428,7 +428,20 @@ bool isChanged = field.isValueChanged
 bool mounted = field.mounted
 ```
 
-## focus node
+### get generic type
+
+``` Dart
+Type type = field.type;
+```
+
+### whether field value is nullable 
+
+``` Dart
+bool isNullable = field.isNullable;
+```
+
+
+## FocusNode
 
 for simplify form control , Forme not support set focus node on field,
 FocusNode will  be auto created when needed.

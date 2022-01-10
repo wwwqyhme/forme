@@ -8,6 +8,15 @@ import '../../../forme.dart';
 class FormeTextField extends FormeField<String> {
   final bool selectAllOnFocus;
 
+  /// whether update value when text input is composing
+  ///
+  /// **on web this will not worked**
+  /// https://github.com/flutter/flutter/issues/65357
+  ///
+  ///
+  /// default is false
+  final bool updateValueWhenComposing;
+
   FormeTextField({
     String? initialValue,
     required String name,
@@ -73,6 +82,7 @@ class FormeTextField extends FormeField<String> {
     bool enableIMEPersonalizedLearning = true,
     FormeFieldDecorator<String>? decorator,
     bool registrable = true,
+    this.updateValueWhenComposing = false,
   }) : super(
           enabled: enabled,
           registrable: registrable,
@@ -111,7 +121,7 @@ class FormeTextField extends FormeField<String> {
               onTap: onTap,
               onEditingComplete: onEditingComplete,
               onSubmitted: onSubmitted,
-              onChanged: state.didChange,
+              onChanged: state._didChange,
               onAppPrivateCommand: appPrivateCommandCallback,
               textInputAction: textInputAction,
               textCapitalization: textCapitalization,
@@ -167,6 +177,13 @@ class _FormeTextFieldState extends FormeFieldState<String> {
   FormeFieldController<String> createFormeFieldController() =>
       FormeTextFieldController._(
           super.createFormeFieldController(), textEditingController);
+
+  void _didChange(String newValue) {
+    if (widget.updateValueWhenComposing ||
+        !textEditingController.value.isComposingRangeValid) {
+      didChange(newValue);
+    }
+  }
 
   @override
   void onFocusChanged(bool hasFocus) {

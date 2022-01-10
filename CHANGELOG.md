@@ -1,3 +1,7 @@
+## 3.2.3+7
+
+1. `FormeCupertinoTextField`&`FormeTextField` add `updateValueWhenComposing`
+
 ## 3.2.3+6
 
 1. `FormeDropdownButton` add `beforeValueChanged` , used to 
