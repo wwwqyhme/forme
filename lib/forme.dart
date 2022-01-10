@@ -5,4 +5,3 @@ export 'src/forme_field.dart';
 export 'src/forme_listenable_builder.dart';
 export 'src/forme_value_listenable.dart';
 export 'src/validate/validates.dart';
-export 'src/widget/widgets.dart';

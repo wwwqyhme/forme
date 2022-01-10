@@ -1,3 +1,8 @@
+## 3.5.0
+**BREAKING CHANGES:**
+
+1. moved material widgets & cupertino widgets to a single package
+
 ## 3.2.3+7
 
 1. `FormeCupertinoTextField`&`FormeTextField` add `updateValueWhenComposing`
