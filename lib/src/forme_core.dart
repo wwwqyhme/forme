@@ -874,8 +874,8 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       final String? errorText =
           await widget.asyncValidator!(controller, value, isValid);
       validation = _createFormeFieldValidation(errorText);
-    } catch (e) {
-      validation = FormeFieldValidation.fail(e);
+    } catch (e, stackTrace) {
+      validation = FormeFieldValidation.fail(e, stackTrace);
     }
 
     if (isValid()) {
@@ -944,8 +944,8 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       final String? errorText =
           await widget.asyncValidator!(controller, value, isValid);
       validation = _createFormeFieldValidation(errorText);
-    } catch (e) {
-      validation = FormeFieldValidation.fail(e);
+    } catch (e, stackTrace) {
+      validation = FormeFieldValidation.fail(e, stackTrace);
     }
 
     notify(validation);

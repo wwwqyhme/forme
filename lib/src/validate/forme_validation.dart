@@ -6,23 +6,26 @@ class FormeFieldValidation {
   final String? error;
   final FormeValidationState state;
   final Object? exception;
+  final StackTrace? stackTrace;
 
-  const FormeFieldValidation._(this.error, this.state, this.exception);
+  const FormeFieldValidation._(
+      this.error, this.state, this.exception, this.stackTrace);
 
   static FormeFieldValidation unnecessary = const FormeFieldValidation._(
-      null, FormeValidationState.unnecessary, null);
-  static FormeFieldValidation valid =
-      const FormeFieldValidation._(null, FormeValidationState.valid, null);
-  static FormeFieldValidation validating =
-      const FormeFieldValidation._(null, FormeValidationState.validating, null);
-  static FormeFieldValidation waiting =
-      const FormeFieldValidation._(null, FormeValidationState.waiting, null);
+      null, FormeValidationState.unnecessary, null, null);
+  static FormeFieldValidation valid = const FormeFieldValidation._(
+      null, FormeValidationState.valid, null, null);
+  static FormeFieldValidation validating = const FormeFieldValidation._(
+      null, FormeValidationState.validating, null, null);
+  static FormeFieldValidation waiting = const FormeFieldValidation._(
+      null, FormeValidationState.waiting, null, null);
 
   FormeFieldValidation.invalid(this.error)
       : exception = null,
-        state = FormeValidationState.invalid;
+        state = FormeValidationState.invalid,
+        stackTrace = null;
 
-  FormeFieldValidation.fail(this.exception)
+  FormeFieldValidation.fail(this.exception, this.stackTrace)
       : error = null,
         state = FormeValidationState.fail;
 
