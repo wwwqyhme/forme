@@ -15,6 +15,7 @@ mixin FormeAsyncOperationHelper<E> {
   final Object _defaultKey = Object();
   final Map<Object, int> _genMap = {};
 
+  /// perform an async operation
   @protected
   Future perform(Future<E> future, [Object? key]) async {
     final Object _key = key ?? _defaultKey;
@@ -30,6 +31,25 @@ mixin FormeAsyncOperationHelper<E> {
     if (_compareGen(gen, _key)) {
       onAsyncStateChanged(FormeAsyncOperationState.success, key);
       onSuccess(result, key);
+    }
+  }
+
+  /// cancel async opertion
+  @protected
+  @mustCallSuper
+  void cancelAsyncOperation([Object? key]) {
+    final Object _key = key ?? _defaultKey;
+    final int? gen = _genMap[_key];
+    if (gen != null) {
+      _genMap[_key] = gen + 1;
+    }
+  }
+
+  @protected
+  @mustCallSuper
+  void cancelAllAsyncOperations() {
+    for (final Object key in _genMap.keys) {
+      _genMap[key] = _genMap[key]! + 1;
     }
   }
 
