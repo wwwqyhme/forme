@@ -1,3 +1,7 @@
+## 3.5.1
+
+1. add `FormeAsyncOperationHelper` to simplify async operation
+
 ## 3.5.0
 **BREAKING CHANGES:**
 
