@@ -25,7 +25,9 @@ mixin FormeAsyncOperationHelper<E> {
     try {
       result = await future;
     } catch (e, stackTrace) {
-      onError(e, stackTrace);
+      if (_compareGen(gen, _key)) {
+        onError(e, stackTrace);
+      }
       return;
     }
     if (_compareGen(gen, _key)) {
