@@ -1,3 +1,7 @@
+## 3.5.1+2
+
+1. if value changed in `didUpdateWidget` , `ValueListenable` will be notified when frame completed
+
 ## 3.5.1
 
 1. add `FormeAsyncOperationHelper` to simplify async operation

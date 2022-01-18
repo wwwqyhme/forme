@@ -675,7 +675,9 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     }
 
     updateFieldValueInDidUpdateWidget(oldWidget);
-    _valueNotifier.value = _value;
+    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      _valueNotifier.value = _value;
+    });
   }
 
   /// when you want to update value in [didUpdateWidget] , you should override this method rather than override [didUpdateWidget]
