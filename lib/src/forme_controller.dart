@@ -246,6 +246,9 @@ abstract class FormeFieldController<T> {
 
   /// whether value can be nullable or not
   bool get isNullable => null is T;
+
+  /// mark this field needs rebuild
+  void markNeedsBuild();
 }
 
 class FormeFieldControllerDelegate<T> extends FormeFieldController<T> {
@@ -316,4 +319,7 @@ class FormeFieldControllerDelegate<T> extends FormeFieldController<T> {
 
   @override
   bool get mounted => _delegate.mounted;
+
+  @override
+  void markNeedsBuild() => _delegate.markNeedsBuild();
 }

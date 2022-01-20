@@ -1,5 +1,10 @@
 ## 3.5.1+2
 
+1. add `markNeedsRebuild` method on `FormeFieldController`
+
+
+## 3.5.1+2
+
 1. if value changed in `didUpdateWidget` , `ValueListenable` will be notified when frame completed
 
 ## 3.5.1

@@ -954,6 +954,10 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     return FormeFieldValidateSnapshot(value, validation, order, controller,
         !compareValue(value, this.value), !compareValue(value, initialValue));
   }
+
+  void _markNeedsBuild() {
+    setState(() {});
+  }
 }
 
 class _FormeController extends FormeController {
@@ -1114,7 +1118,7 @@ class _FormeFieldControllerListenable<T>
 }
 
 class _FormeFieldController<T> extends FormeFieldController<T> {
-  final FormeFieldState<T> state;
+  final FormeFieldState<T> _state;
   @override
   final ValueListenable<FormeFieldValidation> validationListenable;
   @override
@@ -1126,64 +1130,68 @@ class _FormeFieldController<T> extends FormeFieldController<T> {
   @override
   final ValueListenable<bool> enabledListenable;
 
-  _FormeFieldController(this.state)
-      : focusListenable = FormeValueListenableDelegate(state._focusNotifier),
+  _FormeFieldController(this._state)
+      : focusListenable = FormeValueListenableDelegate(_state._focusNotifier),
         readOnlyListenable =
-            FormeValueListenableDelegate(state._readOnlyNotifier),
+            FormeValueListenableDelegate(_state._readOnlyNotifier),
         enabledListenable =
-            FormeValueListenableDelegate(state._enabledNotifier),
+            FormeValueListenableDelegate(_state._enabledNotifier),
         validationListenable =
-            FormeValueListenableDelegate(state._validationNotifier),
-        valueListenable = FormeValueListenableDelegate<T>(state._valueNotifier);
+            FormeValueListenableDelegate(_state._validationNotifier),
+        valueListenable =
+            FormeValueListenableDelegate<T>(_state._valueNotifier);
 
   @override
-  bool get readOnly => state.readOnly;
+  bool get readOnly => _state.readOnly;
 
   @override
-  FormeController? get formeController => Forme.of(state.context);
+  FormeController? get formeController => Forme.of(_state.context);
 
   @override
-  FocusNode? get focusNode => state._focusNode;
+  FocusNode? get focusNode => _state._focusNode;
 
   @override
-  String get name => state.name;
+  String get name => _state.name;
 
   @override
-  set readOnly(bool readOnly) => state.readOnly = readOnly;
+  set readOnly(bool readOnly) => _state.readOnly = readOnly;
 
   @override
-  T get value => state.value;
+  T get value => _state.value;
 
   @override
-  FormeFieldValidation get validation => state._validation;
+  FormeFieldValidation get validation => _state._validation;
 
   @override
-  void reset() => state.reset();
+  void reset() => _state.reset();
 
   @override
   Future<FormeFieldValidateSnapshot<T>> validate({bool quietly = false}) =>
-      state._performValidate(quietly: quietly);
+      _state._performValidate(quietly: quietly);
 
   @override
-  set value(T value) => state.value = value;
+  set value(T value) => _state.value = value;
 
   @override
-  T? get oldValue => state.oldValue;
+  T? get oldValue => _state.oldValue;
 
   @override
-  bool get isValueChanged => state.isValueChanged;
+  bool get isValueChanged => _state.isValueChanged;
 
   @override
-  BuildContext get context => state.context;
+  BuildContext get context => _state.context;
 
   @override
-  bool get enabled => state.enabled;
+  bool get enabled => _state.enabled;
 
   @override
-  set enabled(bool enabled) => state.enabled = enabled;
+  set enabled(bool enabled) => _state.enabled = enabled;
 
   @override
-  bool get mounted => state.mounted;
+  bool get mounted => _state.mounted;
+
+  @override
+  void markNeedsBuild() => _state._markNeedsBuild();
 }
 
 /// a focusnode created by FormeField itself rather than set by subclass ,
