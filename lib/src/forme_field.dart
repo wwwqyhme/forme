@@ -54,6 +54,11 @@ class FormeField<T> extends StatefulWidget {
   final FormeValueChanged<T>? onValueChanged;
   final FormeFocusChanged<T>? onFocusChanged;
 
+  final void Function(FormeFieldController<T> field, bool readOnly)?
+      onReadonlyChanged;
+  final void Function(FormeFieldController<T> field, bool enable)?
+      onEnableChanged;
+
   /// used to listen field's validation changes
   final FormeFieldValidationChanged<T>? onValidationChanged;
 
@@ -124,6 +129,8 @@ class FormeField<T> extends StatefulWidget {
     this.onInitialed,
     this.decorator,
     this.requestFocusOnUserInteraction = true,
+    this.onEnableChanged,
+    this.onReadonlyChanged,
   })  : autovalidateMode = autovalidateMode ?? AutovalidateMode.disabled,
         super(key: key);
 

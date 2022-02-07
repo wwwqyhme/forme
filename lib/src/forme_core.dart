@@ -599,6 +599,16 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       widget.onValidationChanged?.call(controller, _validationNotifier.value);
       _formeState?.fieldValidationChange(controller, _validationNotifier.value);
     });
+
+    _readOnlyNotifier.addListener(() {
+      onReadonlyChanged(_readOnlyNotifier.value);
+      widget.onReadonlyChanged?.call(controller, _readOnlyNotifier.value);
+    });
+
+    _enabledNotifier.addListener(() {
+      onEnableChanged(_enabledNotifier.value);
+      widget.onEnableChanged?.call(controller, _enabledNotifier.value);
+    });
   }
 
   /// create [FormeFieldController] , this method will only called once in field's lifecycle
@@ -741,6 +751,14 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   /// override this method if you want to listen focus changed
   @protected
   void onFocusChanged(bool hasFocus) {}
+
+  /// override this method if you want to listen readonly-state change
+  @protected
+  void onReadonlyChanged(bool readOnly) {}
+
+  /// override this method if you want to listen enable-state change
+  @protected
+  void onEnableChanged(bool enable) {}
 
   void requestFocusOnUserInteraction() {
     if (_hasInteractedByUser && widget.requestFocusOnUserInteraction) {

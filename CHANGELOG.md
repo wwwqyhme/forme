@@ -1,6 +1,7 @@
 ## 3.5.1+2
 
 1. add `markNeedsRebuild` method on `FormeFieldController`
+2. add `onReadonlyChanged` `onEnableChanged` on `FormeFieldState`
 
 
 ## 3.5.1+2
