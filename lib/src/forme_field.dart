@@ -21,6 +21,29 @@ typedef FormeFocusChanged<T> = void Function(
 typedef FormeFieldInitialed<T> = void Function(FormeFieldController<T> field);
 typedef FormeFieldBuilder<T> = Widget Function(FormeFieldState<T> state);
 
+@immutable
+class FormeFieldType extends Type {
+  final Type fieldType;
+  final String name;
+
+  FormeFieldType._(this.fieldType, this.name);
+
+  @override
+  int get hashCode => Object.hash(fieldType, name);
+
+  @override
+  bool operator ==(Object other) {
+    return other is FormeFieldType &&
+        other.fieldType == fieldType &&
+        other.name == name;
+  }
+
+  @override
+  String toString() {
+    return '$fieldType[$name]';
+  }
+}
+
 class FormeField<T> extends StatefulWidget {
   final String name;
   final bool readOnly;
@@ -107,6 +130,11 @@ class FormeField<T> extends StatefulWidget {
   ///
   /// useful when you want to create a field relies on another FormeField
   final bool registrable;
+
+  Type get fieldType => super.runtimeType;
+
+  @override
+  FormeFieldType get runtimeType => FormeFieldType._(fieldType, name);
 
   const FormeField({
     Key? key,

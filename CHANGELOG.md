@@ -1,3 +1,7 @@
+## 3.5.2
+
+1. `FormeField`'s runtimeType will return `FormeFieldType` , if `FormeField` has same original runtimeType and different name , they will be recognised as different field
+
 ## 3.5.1+4
 
 1. add `markNeedsRebuild` method on `FormeFieldController`
