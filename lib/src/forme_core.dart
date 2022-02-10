@@ -175,7 +175,7 @@ class Forme extends StatefulWidget {
         super(key: key);
 
   @override
-  _FormeState createState() => _FormeState();
+  State<Forme> createState() => _FormeState();
 
   static FormeController? of(BuildContext context) =>
       _FormeScope.of(context)?.controller;
