@@ -78,6 +78,7 @@ class FormeValidates {
       if (_getLength(v) == 0) {
         return errorText;
       }
+      return null;
     };
   }
 
@@ -200,6 +201,8 @@ class FormeValidates {
       if (port != null && uri.port != port) {
         return errorText;
       }
+
+      return null;
     };
   }
 

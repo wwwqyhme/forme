@@ -11,6 +11,7 @@ class FormeValidateSnapshot {
     if (iterable.isNotEmpty) {
       return iterable.first;
     }
+    return null;
   }
 
   /// all field is valid

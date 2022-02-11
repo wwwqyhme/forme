@@ -1098,6 +1098,7 @@ class _FormeController extends FormeController {
         return state.controller as T;
       }
     }
+    return null;
   }
 
   @override
