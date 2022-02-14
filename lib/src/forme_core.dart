@@ -424,7 +424,6 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   final Duration _defaultAsyncValidatorDebounce =
       const Duration(milliseconds: 500);
 
-  bool _init = false;
   FocusNode? _focusNode;
   bool? _readOnly;
   bool? _enabled;
@@ -444,7 +443,10 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   late final ValueNotifier<bool> _enabledNotifier;
   late final ValueNotifier<FormeFieldValidation> _validationNotifier;
   late final _ValueMountedNotifier<T> _valueNotifier;
-  late final FormeFieldController<T> controller;
+  FormeFieldController<T>? _controller;
+
+  FormeFieldController<T> get controller =>
+      _controller ??= createFormeFieldController();
 
   int get order =>
       widget.order ??
@@ -543,45 +545,22 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   bool get isValueChanged => !compareValue(initialValue, value);
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _formeState = _FormeScope.of(context);
-    if (_init) {
-      return;
-    }
-    _init = true;
-    beforeInitiation();
-    controller = createFormeFieldController();
+  void _register() {
     if (widget.registrable) {
       _formeState?.registerField(this);
     }
-    afterInitiation();
-    widget.onInitialed?.call(controller);
   }
 
-  /// called before [FormeFieldController] created
-  ///
-  /// this method is called in didChangeDependencies and will only called once in state's lifecycle
-  ///
-  /// **init your resource in this method**
-  @protected
+  @override
   @mustCallSuper
-  void beforeInitiation() {
+  void initState() {
+    super.initState();
     _readOnlyNotifier = FormeMountedValueNotifier(readOnly, this);
     _enabledNotifier = FormeMountedValueNotifier(enabled, this);
     _value = initialValue;
     _valueNotifier = _ValueMountedNotifier(initialValue, this);
     _validation = _initialValidation;
     _validationNotifier = FormeMountedValueNotifier(_validation, this);
-  }
-
-  /// called after  [FormeFieldController] created
-  ///
-  /// this method is called in didChangeDependencies and will only called once in state's lifecycle
-  @protected
-  @mustCallSuper
-  void afterInitiation() {
     _focusNotifier.addListener(() {
       onFocusChanged(focusNode.hasFocus);
       widget.onFocusChanged?.call(controller, focusNode.hasFocus);
@@ -609,6 +588,19 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       onEnableChanged(_enabledNotifier.value);
       widget.onEnableChanged?.call(controller, _enabledNotifier.value);
     });
+
+    if (widget.onInitialed != null) {
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        widget.onInitialed?.call(controller);
+      });
+    }
+  }
+
+  @override
+  @mustCallSuper
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _formeState = _FormeScope.of(context);
   }
 
   /// create [FormeFieldController] , this method will only called once in field's lifecycle
@@ -617,6 +609,12 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   @protected
   FormeFieldController<T> createFormeFieldController() =>
       _FormeFieldController(this);
+
+  @override
+  void deactivate() {
+    _formeState?.unregisterField(this);
+    super.deactivate();
+  }
 
   @override
   void dispose() {
@@ -629,7 +627,6 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     if (_focusNode is _DisposeRequiredFocusNode) {
       _focusNode?.dispose();
     }
-    _formeState?.unregisterField(this);
     super.dispose();
   }
 
@@ -737,6 +734,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       );
     }
 
+    _register();
     return FormeFieldScope(controller, child);
   }
 
