@@ -1,7 +1,7 @@
 ## 3.6.0
 **BREAKING CHANGES:**
 1. remove `beforeInitiation` & `afterInitiation` from `FormeFieldState` , use `initState` instead
-2. remove `updateFieldValueInDidUpdateWidget` , use `didUpdateValue` to tell user to whether field value needs update or not
+2. remove `updateFieldValueInDidUpdateWidget` , use `didUpdateValue` to tell user to whether field value needs update or not after didUpdateWidget
 3. add `FormeFieldValueUpdater` on `FormeField` , used to update value when `didUpdateValue` return true
 
 ## 3.5.2

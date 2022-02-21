@@ -601,8 +601,10 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   bool _inited = false;
 
+  /// if you want to init some resources relies on [initialValue] or [readOnly] or [enabled]
+  ///
+  /// use [initModel] instead
   @override
-  @mustCallSuper
   void initState() {
     super.initState();
 
@@ -683,6 +685,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
               ? FormeFieldValidation.waiting
               : FormeFieldValidation.unnecessary,
           value: initialValue);
+      initModel();
     } else {
       final _Model<T> old = _model;
       _model = _model.copyWith(
@@ -691,6 +694,13 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       _onModelChanged(old, _model, true);
     }
   }
+
+  /// this method will be called only once in state's lifecircle
+  ///
+  /// ok to get initialValue | readOnly | enabld in this method rather than [initState]
+  @protected
+  @mustCallSuper
+  void initModel() {}
 
   /// create [FormeFieldController] , this method will only called once in field's lifecycle
   ///
@@ -807,7 +817,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       });
     }
     if (!compareValue(oldModel.value, newModel.value)) {
-      _oldValue = newModel.value;
+      _oldValue = oldModel.value;
       _ignoreValidate = false;
       _perform(() {
         widget.onValueChanged?.call(controller, newModel.value);
