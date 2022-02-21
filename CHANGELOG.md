@@ -1,3 +1,9 @@
+## 3.6.0
+**BREAKING CHANGES:**
+1. remove `beforeInitiation` & `afterInitiation` from `FormeFieldState` , use `initState` instead
+2. remove `updateFieldValueInDidUpdateWidget` , use `didUpdateValue` to tell user to whether field value needs update or not
+3. add `FormeFieldValueUpdater` on `FormeField` , used to update value when `didUpdateValue` return true
+
 ## 3.5.2
 
 1. `FormeField`'s runtimeType will return `FormeFieldType` , if `FormeField` has same original runtimeType and different name , they will be recognised as different field
