@@ -1,30 +1,35 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
 
 class FormeMountedValueNotifier<T> extends ValueNotifier<T> {
-  final State state;
+  bool _disposed = false;
 
-  FormeMountedValueNotifier(T value, this.state) : super(value);
+  FormeMountedValueNotifier(T value) : super(value);
 
   @override
   set value(T newValue) {
-    if (state.mounted) {
+    if (!_disposed) {
       super.value = newValue;
     }
   }
 
   @override
   void addListener(VoidCallback listener) {
-    if (state.mounted) {
+    if (!_disposed) {
       super.addListener(listener);
     }
   }
 
   @override
   void removeListener(VoidCallback listener) {
-    if (state.mounted) {
+    if (!_disposed) {
       super.removeListener(listener);
     }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _disposed = true;
   }
 }
 

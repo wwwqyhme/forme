@@ -14,7 +14,9 @@ abstract class FormeController {
 
   /// set form readOnly|editable
   ///
-  /// you should **NOT** change read-only state on fields which  in `AutofillGroup`
+  /// if field 'A' has been set read-only manually ,
+  /// form then set read-only to false ,
+  /// field 'A' still is read-only
   set readOnly(bool readOnly);
 
   /// find [FormeFieldController] by name
@@ -61,11 +63,6 @@ abstract class FormeController {
 
   /// whether validate is quietly
   bool get quietlyValidate;
-
-  /// set validate quietly
-  ///
-  /// **call this method (if Forme's quietlyValidate is false) if you want to display error by a custom way**
-  set quietlyValidate(bool quietlyValidate);
 
   /// whether form' value changed after initialized
   ///
@@ -231,12 +228,11 @@ abstract class FormeFieldController<T> {
   /// if field is disabled
   ///
   /// 1. field will lose focus and can not be focused
-  /// 2. field's validators are ignored (manually validation will  be also ignored)
+  /// 2. field's validation will be always [FormeFieldValidation.unnecessary]
   /// 3. field is readOnly
   /// 4. value will be ignored when get form data
-  /// 5. value can still be changed via `FormeFieldController`
-  /// 6. validation state will be set to `unnecessary` and will always be `FormeValidationState.unnecessary`
-  /// 7. when get validation from `FormeController` , this field will be ignored
+  /// 5. value can still be changed via [FormeFieldController]
+  /// 6. when get validation from [FormeController] , this field will be ignored
   set enabled(bool enabled);
 
   bool get mounted;

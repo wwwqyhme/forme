@@ -68,19 +68,17 @@ class FormeField<T> extends StatefulWidget {
   /// **if not specified  , will use the order registered to [Forme]**
   final int? order;
 
-  /// quietlyValidate
-  ///
-  /// final value is [Forme.quietlyValidate] || [FormeField.quietlyValidate]
-  final bool quietlyValidate;
-  final Duration? asyncValidatorDebounce;
-  final AutovalidateMode autovalidateMode;
+  /// used to decorate a field
+  final FormeFieldDecorator<T>? decorator;
+
+  /// whether request focus when field value changed
+  final bool requestFocusOnUserInteraction;
   final FormeValueChanged<T>? onValueChanged;
   final FormeFocusChanged<T>? onFocusChanged;
-
   final void Function(FormeFieldController<T> field, bool readOnly)?
       onReadonlyChanged;
   final void Function(FormeFieldController<T> field, bool enable)?
-      onEnableChanged;
+      onEnabledChanged;
 
   /// used to listen field's validation changes
   final FormeFieldValidationChanged<T>? onValidationChanged;
@@ -92,6 +90,16 @@ class FormeField<T> extends StatefulWidget {
   ///
   /// **try to get another field's controller in this method will cause an error**
   final FormeFieldInitialed<T>? onInitialed;
+
+  final FormeFieldSetter<T>? onSaved;
+
+  /// quietlyValidate
+  ///
+  /// final value is [Forme.quietlyValidate] || [FormeField.quietlyValidate]
+  ///
+  /// false means default error text will not be displayed when validation not passed
+  final bool quietlyValidate;
+  final Duration? asyncValidatorDebounce;
 
   final FormeValidator<T>? validator;
 
@@ -118,17 +126,12 @@ class FormeField<T> extends StatefulWidget {
   /// if `isValid()` is false, it means widget is unmounted or another async validation is performed
   /// or reset is called
   final FormeAsyncValidator<T>? asyncValidator;
-  final FormeFieldSetter<T>? onSaved;
 
-  /// used to decorate a field
-  final FormeFieldDecorator<T>? decorator;
+  final AutovalidateMode autovalidateMode;
 
-  /// whether request focus when field value changed
-  final bool requestFocusOnUserInteraction;
-
-  /// whether this field can be registered to `Forme`
+  /// whether is registrable
   ///
-  /// useful when you want to create a field relies on another FormeField
+  /// if false ,[Forme] will not hold this field state , listeners will not be triggered
   final bool registrable;
 
   Type get fieldType => super.runtimeType;
@@ -138,27 +141,27 @@ class FormeField<T> extends StatefulWidget {
 
   const FormeField({
     Key? key,
+    this.validator,
     required this.name,
     this.readOnly = false,
-    required this.registrable,
     required this.builder,
     this.enabled = true,
     required this.initialValue,
-    this.asyncValidatorDebounce,
     AutovalidateMode? autovalidateMode,
-    this.onValueChanged,
-    this.onValidationChanged,
-    this.validator,
-    this.asyncValidator,
     this.order,
-    this.onSaved,
-    this.quietlyValidate = false,
-    this.onFocusChanged,
-    this.onInitialed,
     this.decorator,
     this.requestFocusOnUserInteraction = true,
-    this.onEnableChanged,
+    this.onValueChanged,
+    this.onFocusChanged,
     this.onReadonlyChanged,
+    this.onEnabledChanged,
+    this.onValidationChanged,
+    this.onInitialed,
+    this.onSaved,
+    this.quietlyValidate = false,
+    this.asyncValidatorDebounce,
+    this.asyncValidator,
+    this.registrable = true,
   })  : autovalidateMode = autovalidateMode ?? AutovalidateMode.disabled,
         super(key: key);
 
