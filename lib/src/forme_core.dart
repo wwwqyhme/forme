@@ -633,7 +633,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     if (widget.valueUpdater != null) {
       final bool needUpdateValue = didUpdateValue(oldWidget);
       if (needUpdateValue) {
-        T newValue = widget.valueUpdater!(value);
+        T newValue = widget.valueUpdater!(oldWidget, widget, value);
         _model = _model.copyWith(
           value: _Optional(newValue),
         );

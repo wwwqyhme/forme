@@ -20,6 +20,8 @@ typedef FormeFocusChanged<T> = void Function(
     FormeFieldController<T> field, bool hasFocus);
 typedef FormeFieldInitialed<T> = void Function(FormeFieldController<T> field);
 typedef FormeFieldBuilder<T> = Widget Function(FormeFieldState<T> state);
+typedef FormeFieldValueUpdater<T> = T Function(
+    FormeField<T> oldWidget, FormeField<T> widget, T oldValue);
 
 @immutable
 class FormeFieldType extends Type {
@@ -140,7 +142,7 @@ class FormeField<T> extends StatefulWidget {
   /// Dropdown will be crashsed. use [valueUpdater] to avoid this
   ///
   /// [onValueChanged] will be triggered if new value not equals with old value
-  final T Function(T currentValue)? valueUpdater;
+  final FormeFieldValueUpdater<T>? valueUpdater;
 
   Type get fieldType => super.runtimeType;
 
