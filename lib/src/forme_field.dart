@@ -134,6 +134,14 @@ class FormeField<T> extends StatefulWidget {
   /// if false ,[Forme] will not hold this field state , listeners will not be triggered
   final bool registrable;
 
+  /// this method is used to update value when didUpdateWidget called
+  /// eg: Dropdown's value is ['2'] , children values are ['1','2','3']
+  /// after widget updated , children values are ['1','3','4'] , in this case
+  /// Dropdown will be crashsed. use [valueUpdater] to avoid this
+  ///
+  /// [onValueChanged] will be triggered if new value not equals with old value
+  final T Function(T currentValue)? valueUpdater;
+
   Type get fieldType => super.runtimeType;
 
   @override
@@ -162,6 +170,7 @@ class FormeField<T> extends StatefulWidget {
     this.asyncValidatorDebounce,
     this.asyncValidator,
     this.registrable = true,
+    this.valueUpdater,
   })  : autovalidateMode = autovalidateMode ?? AutovalidateMode.disabled,
         super(key: key);
 

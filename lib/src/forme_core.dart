@@ -451,9 +451,9 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   ValueListenable<FormeFieldValidation> get _validationListenable =>
       _validationNotifier ??= FormeMountedValueNotifier(_model.validation);
   ValueListenable<bool> get _readOnlyListenable =>
-      _readOnlyNotifier ??= FormeMountedValueNotifier(readOnly);
+      _readOnlyNotifier ??= FormeMountedValueNotifier(_model.readOnly);
   ValueListenable<bool> get _enabledListenable =>
-      _enabledNotifier ??= FormeMountedValueNotifier(enabled);
+      _enabledNotifier ??= FormeMountedValueNotifier(_model.enabled);
 
   FocusNode? _focusNode;
   Timer? _asyncValidatorTimer;
@@ -630,11 +630,33 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       validation: _Optional(_validation),
     );
 
+    if (widget.valueUpdater != null) {
+      final bool needUpdateValue = didUpdateValue(oldWidget);
+      if (needUpdateValue) {
+        T newValue = widget.valueUpdater!(value);
+        _model = _model.copyWith(
+          value: _Optional(newValue),
+        );
+      }
+    }
+
     if (old.validation != _model.validation) {
       _validateGen++;
     }
 
     _onModelChanged(old, _model, true);
+  }
+
+  /// this method is used to determine whether  value  need update or not after widget updated
+  /// eg: Dropdown value is '2',children values are ['1','2','3'] , after widget updated,
+  /// children values are ['1','3','4'] . in this case Dropdown will be crashed due to value '2' is no longer in children values,
+  ///
+  /// override this method to tell user : **you should update this field's value, otherwise something unexpected will happen**
+  ///
+  /// if true , [widget.valueUpdater] will be called to get a new value
+  @protected
+  bool didUpdateValue(covariant FormeField<T> oldWidget) {
+    return false;
   }
 
   @override
