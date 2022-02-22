@@ -582,13 +582,17 @@ class FormeFieldState<T> extends State<FormeField<T>> {
       _focusNode!.dispose();
     }
     _focusNode = focusNode;
-    _focusNode!.canRequestFocus = enabled;
-    _focusNode!.addListener(() {
-      widget.onFocusChanged?.call(controller, focusNode.hasFocus);
-      _formeState?.fieldFocusChange(this, focusNode.hasFocus);
-      _focusNotifier?.value = focusNode.hasFocus;
-      onFocusChanged(focusNode.hasFocus);
-    });
+    if (!enabled) {
+      _focusNode!.canRequestFocus = false;
+    }
+    _focusNode!.addListener(_onFocusChangedListener);
+  }
+
+  void _onFocusChangedListener() {
+    widget.onFocusChanged?.call(controller, focusNode.hasFocus);
+    _formeState?.fieldFocusChange(this, focusNode.hasFocus);
+    _focusNotifier?.value = focusNode.hasFocus;
+    onFocusChanged(focusNode.hasFocus);
   }
 
   bool get isValueChanged => !compareValue(initialValue, value);
@@ -728,6 +732,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     _readOnlyNotifier?.dispose();
     _enabledNotifier?.dispose();
     _asyncValidatorTimer?.cancel();
+    _focusNode?.removeListener(_onFocusChangedListener);
     if (_focusNode is _DisposeRequiredFocusNode) {
       _focusNode?.dispose();
     }
