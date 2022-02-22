@@ -676,15 +676,7 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
     if (!_inited) {
       _inited = true;
-      _model = _Model<T>(
-          enabled: widget.enabled,
-          readOnly: widget.readOnly ||
-              (_formeState?._readOnly ?? false) ||
-              !widget.enabled,
-          validation: _hasAnyValidator && widget.enabled
-              ? FormeFieldValidation.waiting
-              : FormeFieldValidation.unnecessary,
-          value: initialValue);
+
       initModel();
     } else {
       final _Model<T> old = _model;
@@ -695,12 +687,25 @@ class FormeFieldState<T> extends State<FormeField<T>> {
     }
   }
 
-  /// this method will be called only once in state's lifecircle
+  /// this method will be called only once in state's lifecircle,immediately  called after [initState]
   ///
-  /// ok to get initialValue | readOnly | enabld in this method rather than [initState]
+  /// recommend to init your resources in this method rather than [initState]
+  ///
+  /// Implementations of this method should start with a call to the inherited
+  /// method
   @protected
   @mustCallSuper
-  void initModel() {}
+  void initModel() {
+    _model = _Model<T>(
+        enabled: widget.enabled,
+        readOnly: widget.readOnly ||
+            (_formeState?._readOnly ?? false) ||
+            !widget.enabled,
+        validation: _hasAnyValidator && widget.enabled
+            ? FormeFieldValidation.waiting
+            : FormeFieldValidation.unnecessary,
+        value: initialValue);
+  }
 
   /// create [FormeFieldController] , this method will only called once in field's lifecycle
   ///
