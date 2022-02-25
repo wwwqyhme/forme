@@ -434,7 +434,7 @@ class _FormeScope extends InheritedWidget {
   }
 }
 
-class FormeFieldState<T> extends State<FormeField<T>> {
+class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   final Duration _defaultAsyncValidatorDebounce =
       const Duration(milliseconds: 500);
 
@@ -554,8 +554,8 @@ class FormeFieldState<T> extends State<FormeField<T>> {
 
   /// get initialValue
   T get initialValue =>
-      widget.initialValue ??
-      _formeState?.getInitialValue(name, widget.initialValue) as T;
+      _formeState?.getInitialValue(name, widget.initialValue) as T ??
+      widget.initialValue;
 
   /// get current widget's focus node
   ///
@@ -1228,7 +1228,7 @@ class _FormeFieldControllerListenable<T>
       : delegate.value! as FormeFieldController<T>;
 }
 
-class _FormeFieldController<T> extends FormeFieldController<T> {
+class _FormeFieldController<T extends Object?> extends FormeFieldController<T> {
   final FormeFieldState<T> _state;
 
   @override

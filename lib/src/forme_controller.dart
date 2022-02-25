@@ -108,7 +108,7 @@ abstract class FormeController {
   ValueListenable<FormeValidation> get validationListenable;
 }
 
-abstract class FormeFieldController<T> {
+abstract class FormeFieldController<T extends Object?> {
   /// get forme controller
   FormeController? get formeController;
 

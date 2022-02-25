@@ -19,8 +19,9 @@ typedef FormeFieldSetter<T> = void Function(
 typedef FormeFocusChanged<T> = void Function(
     FormeFieldController<T> field, bool hasFocus);
 typedef FormeFieldInitialed<T> = void Function(FormeFieldController<T> field);
-typedef FormeFieldBuilder<T> = Widget Function(FormeFieldState<T> state);
-typedef FormeFieldValueUpdater<T> = T Function(
+typedef FormeFieldBuilder<T extends Object?> = Widget Function(
+    FormeFieldState<T> state);
+typedef FormeFieldValueUpdater<T extends Object?> = T Function(
     FormeField<T> oldWidget, FormeField<T> widget, T oldValue);
 
 @immutable
@@ -46,7 +47,7 @@ class FormeFieldType extends Type {
   }
 }
 
-class FormeField<T> extends StatefulWidget {
+class FormeField<T extends Object?> extends StatefulWidget {
   final String name;
   final bool readOnly;
   final FormeFieldBuilder<T> builder;
@@ -75,10 +76,24 @@ class FormeField<T> extends StatefulWidget {
 
   /// whether request focus when field value changed
   final bool requestFocusOnUserInteraction;
+
+  /// triggered whenever field value changed.
+  ///
+  /// it's save to request a new frame here
+  ///
+  /// use [FormeFieldController.oldValue] to get previous value
   final FormeValueChanged<T>? onValueChanged;
   final FormeFocusChanged<T>? onFocusChanged;
+
+  /// triggered whenever field read-only state changed
+  ///
+  /// it's save to request a new frame here
   final void Function(FormeFieldController<T> field, bool readOnly)?
       onReadonlyChanged;
+
+  /// triggered whenever field enabled state changed
+  ///
+  /// it's save to request a new frame here
   final void Function(FormeFieldController<T> field, bool enable)?
       onEnabledChanged;
 
