@@ -20,10 +20,10 @@ abstract class FormeController {
   set readOnly(bool readOnly);
 
   /// find [FormeFieldController] by name
-  T field<T extends FormeFieldController<dynamic>>(String name);
+  T field<T extends FormeFieldController<Object?>>(String name);
 
   /// get form data
-  Map<String, dynamic> get data;
+  Map<String, Object?> get data;
 
   /// get validation of Form
   FormeValidation get validation;
@@ -49,7 +49,7 @@ abstract class FormeController {
   });
 
   /// set forme data
-  set data(Map<String, dynamic> data);
+  set data(Map<String, Object?> data);
 
   /// reset form
   ///
@@ -99,8 +99,7 @@ abstract class FormeController {
   /// listenable value is a zero or single size map , key is field name , value is controller
   ///
   /// unlike [fieldListenable] , this listenable will listen every field
-  ValueListenable<Map<String, FormeFieldController<dynamic>?>>
-      get fieldsListenable;
+  ValueListenable<Map<String, FormeFieldController?>> get fieldsListenable;
 
   /// used to listen any form field's validation changes
   ///
