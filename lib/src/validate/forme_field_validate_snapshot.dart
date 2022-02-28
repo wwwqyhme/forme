@@ -46,7 +46,7 @@ class FormeValidateSnapshot {
 /// used to hold  validate result and validated value
 ///
 /// since value may be changed during async validation
-class FormeFieldValidateSnapshot<T> {
+class FormeFieldValidateSnapshot<T extends Object?> {
   /// validated value , may not equals the field's value
   final T value;
 

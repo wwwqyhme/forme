@@ -35,7 +35,7 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   }
 
   @override
-  Map<String, dynamic> get data => _currentController.data;
+  Map<String, Object?> get data => _currentController.data;
 
   @override
   bool get readOnly => _currentController.readOnly;
@@ -44,7 +44,7 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   FormeValidation get validation => _currentController.validation;
 
   @override
-  T field<T extends FormeFieldController<dynamic>>(String name) =>
+  T field<T extends FormeFieldController<Object?>>(String name) =>
       _currentController.field<T>(name);
 
   @override
@@ -71,7 +71,7 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   void save() => _currentController.save();
 
   @override
-  set data(Map<String, dynamic> data) => _currentController.data = data;
+  set data(Map<String, Object?> data) => _currentController.data = data;
 
   @override
   set readOnly(bool readOnly) => _currentController.readOnly = readOnly;
@@ -123,7 +123,7 @@ class Forme extends StatefulWidget {
   /// map initial value
   ///
   /// **this property can be overwritten by field's initialValue**
-  final Map<String, dynamic> initialValue;
+  final Map<String, Object?> initialValue;
 
   /// used to listen field's validation changed
   final FormeFieldValidationChanged? onFieldValidationChanged;
@@ -164,7 +164,7 @@ class Forme extends StatefulWidget {
     this.readOnly = false,
     this.onValueChanged,
     required this.child,
-    this.initialValue = const <String, dynamic>{},
+    this.initialValue = const <String, Object?>{},
     this.onFieldValidationChanged,
     this.onValidationChanged,
     this.onWillPop,
@@ -194,7 +194,7 @@ class _FormeState extends State<Forme> {
   final ValueNotifier<FormeValidation> validationNotifier =
       FormeMountedValueNotifier(const FormeValidation({}));
 
-  Map<String, dynamic> get initialValue => widget.initialValue;
+  Map<String, Object?> get initialValue => widget.initialValue;
 
   AutovalidateMode get autovalidateMode => widget.autovalidateMode;
 
@@ -314,7 +314,7 @@ class _FormeState extends State<Forme> {
     );
   }
 
-  dynamic getInitialValue(String name, dynamic value) {
+  Object? getInitialValue(String name, Object? value) {
     if (widget.initialValue.containsKey(name)) {
       return widget.initialValue[name];
     }
@@ -363,7 +363,7 @@ class _FormeState extends State<Forme> {
     widget.onFocusChanged?.call(state.controller, hasFocus);
   }
 
-  void fieldValueChange(FormeFieldState state, dynamic value) {
+  void fieldValueChange(FormeFieldState state, Object? value) {
     if (!states.contains(state)) {
       return;
     }
@@ -1083,14 +1083,14 @@ class _FormeController extends FormeController {
       : fieldsListenable = FormeValueListenableDelegate(state.fieldsNotifier);
 
   @override
-  Map<String, dynamic> get data {
-    final Map<String, dynamic> map = <String, dynamic>{};
+  Map<String, Object?> get data {
+    final Map<String, Object?> map = <String, Object?>{};
     for (final FormeFieldState element in state.states) {
       if (!element.enabled) {
         continue;
       }
       final String name = element.name;
-      final dynamic value = element.value;
+      final Object? value = element.value;
       map[name] = value;
     }
     return map;
@@ -1110,7 +1110,7 @@ class _FormeController extends FormeController {
       .map((key, value) => MapEntry(value.name, value._model.validation)));
 
   @override
-  T field<T extends FormeFieldController<dynamic>>(String name) {
+  T field<T extends FormeFieldController<Object?>>(String name) {
     final T? field = findFormeFieldController(name);
     if (field == null) {
       throw Exception('no field can be found by name :$name');
@@ -1148,7 +1148,7 @@ class _FormeController extends FormeController {
     if (validateByOrder) {
       return _validateByOrder(states, quietly);
     }
-    final List<FormeFieldValidateSnapshot<dynamic>> value = await Future.wait(
+    final List<FormeFieldValidateSnapshot<Object?>> value = await Future.wait(
         states.map((state) => state._performValidate(quietly: quietly)),
         eagerError: true);
     value.sort((a, b) => a.order.compareTo(b.order));
@@ -1176,14 +1176,14 @@ class _FormeController extends FormeController {
   void save() => state.save();
 
   @override
-  set data(Map<String, dynamic> data) => data.forEach((key, dynamic value) {
+  set data(Map<String, Object?> data) => data.forEach((key, Object? value) {
         field(key).value = value;
       });
 
   @override
   set readOnly(bool readOnly) => state.readOnly = readOnly;
 
-  T? findFormeFieldController<T extends FormeFieldController<dynamic>>(
+  T? findFormeFieldController<T extends FormeFieldController<Object?>>(
       String name) {
     for (final FormeFieldState state in state.states) {
       if (state.name == name) {
