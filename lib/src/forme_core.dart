@@ -112,10 +112,10 @@ class Forme extends StatefulWidget {
   /// listen form value changed
   ///
   /// this listener will be always triggered when field value changed
-  final FormeValueChanged? onValueChanged;
+  final FormeValueChanged<Object?>? onValueChanged;
 
   /// listen form focus changed
-  final FormeFocusChanged? onFocusChanged;
+  final FormeFocusChanged<Object?>? onFocusChanged;
 
   /// form content
   final Widget child;
@@ -126,7 +126,7 @@ class Forme extends StatefulWidget {
   final Map<String, Object?> initialValue;
 
   /// used to listen field's validation changed
-  final FormeFieldValidationChanged? onFieldValidationChanged;
+  final FormeFieldValidationChanged<Object?>? onFieldValidationChanged;
 
   final WillPopCallback? onWillPop;
 
@@ -154,9 +154,9 @@ class Forme extends StatefulWidget {
   final void Function(FormeController field, FormeValidation validation)?
       onValidationChanged;
 
-  final void Function(FormeFieldController field, bool readOnly)?
+  final void Function(FormeFieldController<Object?> field, bool readOnly)?
       onReadonlyChanged;
-  final void Function(FormeFieldController field, bool enable)?
+  final void Function(FormeFieldController<Object?> field, bool enable)?
       onEnabledChanged;
 
   const Forme({
