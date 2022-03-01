@@ -41,6 +41,11 @@ class FormeValidateSnapshot {
   /// **unlike [FormeController.isValueChanged] , this method is compare snapshot value and initialValue**
   bool get isValueChanged =>
       _snapshots.any((element) => element.isValueChanged);
+
+  FormeValidation get validation {
+    return FormeValidation(_snapshots.asMap().map(
+        (key, value) => MapEntry(value.controller.name, value.validation)));
+  }
 }
 
 /// used to hold  validate result and validated value
@@ -53,7 +58,6 @@ class FormeFieldValidateSnapshot<T extends Object?> {
   /// validation , may not equals the field's current validation  if performed another validate during async validation
   final FormeFieldValidation validation;
 
-  final int order;
   final FormeFieldController<T> controller;
   final bool isValueChangedDuringValidation;
 
@@ -65,7 +69,6 @@ class FormeFieldValidateSnapshot<T extends Object?> {
   FormeFieldValidateSnapshot(
     this.value,
     this.validation,
-    this.order,
     this.controller,
     this.isValueChangedDuringValidation,
     this.isValueChanged,
