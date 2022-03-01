@@ -84,10 +84,14 @@ class FormeValidation {
   bool get isEmpty => _validations.isEmpty;
 
   /// form has no fields or  all fields is valid or no validator or no fields in form
-  bool get isValidOrUnnecessaryOrEmpty =>
-      isEmpty ||
-      _validations.values
-          .every((element) => element.isValid || element.isUnnecessary);
+  bool get isValidOrUnnecessaryOrEmpty => isEmpty || isUnnecessary || isValid;
+
+  /// all fields are valid
+  bool get isValid => _validations.values.every((element) => element.isValid);
+
+  /// any fields is waiting for validate
+  bool get isWaiting =>
+      _validations.values.every((element) => element.isWaiting);
 
   /// any field is invalid
   bool get isInvalid =>
@@ -103,6 +107,12 @@ class FormeValidation {
   bool get isFail =>
       _validations.values.isNotEmpty &&
       _validations.values.any((element) => element.isFail);
+
+  /// all fields are no need to validate
+  bool get isUnnecessary {
+    return _validations.values
+        .every((element) => element.isValid || element.isUnnecessary);
+  }
 
   /// get all fields validations
   Map<String, FormeFieldValidation> get validations =>

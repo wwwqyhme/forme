@@ -28,9 +28,9 @@ class FormeValidateSnapshot {
   /// form data may be changed during async validation**
   ///
   /// use [isValueChangedDuringValidation] to check whether form data changed during async validation
-  Map<String, dynamic> get value =>
-      _snapshots.asMap().map<String, dynamic>((key, value) =>
-          MapEntry<String, dynamic>(value.controller.name, value.value));
+  Map<String, Object?> get value =>
+      _snapshots.asMap().map<String, Object?>((key, value) =>
+          MapEntry<String, Object?>(value.controller.name, value.value));
 
   /// whether form' value changed during validation
   bool get isValueChangedDuringValidation =>
