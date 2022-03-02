@@ -589,10 +589,11 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   }
 
   void _onFocusChangedListener() {
-    widget.onFocusChanged?.call(controller, focusNode.hasFocus);
-    _formeState?.fieldFocusChange(this, focusNode.hasFocus);
-    _focusNotifier?.value = focusNode.hasFocus;
-    onFocusChanged(focusNode.hasFocus);
+    final _Model<T> old = _model;
+    _model = _model.copyWith(
+      hasFocus: _Optional(_focusNode?.hasFocus ?? false),
+    );
+    _onModelChanged(old, _model);
   }
 
   bool get isValueChanged => !compareValue(initialValue, value);
@@ -701,14 +702,16 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   @mustCallSuper
   void initModel() {
     _model = _Model<T>(
-        enabled: widget.enabled,
-        readOnly: widget.readOnly ||
-            (_formeState?._readOnly ?? false) ||
-            !widget.enabled,
-        validation: _hasAnyValidator && widget.enabled
-            ? FormeFieldValidation.waiting
-            : FormeFieldValidation.unnecessary,
-        value: initialValue);
+      enabled: widget.enabled,
+      readOnly: widget.readOnly ||
+          (_formeState?._readOnly ?? false) ||
+          !widget.enabled,
+      validation: _hasAnyValidator && widget.enabled
+          ? FormeFieldValidation.waiting
+          : FormeFieldValidation.unnecessary,
+      value: initialValue,
+      hasFocus: _focusNode?.hasFocus ?? false,
+    );
   }
 
   /// create [FormeFieldController] , this method will only called once in field's lifecycle
@@ -835,6 +838,13 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
         _valueNotifier?.value = newModel.value;
         onValueChanged(newModel.value);
       });
+    }
+
+    if (oldModel.hasFocus != newModel.hasFocus) {
+      widget.onFocusChanged?.call(controller, newModel.hasFocus);
+      _formeState?.fieldFocusChange(this, newModel.hasFocus);
+      _focusNotifier?.value = newModel.hasFocus;
+      onFocusChanged(newModel.hasFocus);
     }
   }
 
@@ -1307,12 +1317,14 @@ class _Model<T> {
   final bool readOnly;
   final FormeFieldValidation validation;
   final T value;
+  final bool hasFocus;
 
   _Model({
     required this.enabled,
     required this.readOnly,
     required this.validation,
     required this.value,
+    required this.hasFocus,
   });
 
   _Model<T> copyWith({
@@ -1320,12 +1332,14 @@ class _Model<T> {
     _Optional<bool>? readOnly,
     _Optional<FormeFieldValidation>? validation,
     _Optional<T>? value,
+    _Optional<bool>? hasFocus,
   }) {
     return _Model<T>(
       enabled: enabled == null ? this.enabled : enabled.value,
       readOnly: readOnly == null ? this.readOnly : readOnly.value,
       validation: validation == null ? this.validation : validation.value,
       value: value == null ? this.value : value.value,
+      hasFocus: hasFocus == null ? this.hasFocus : hasFocus.value,
     );
   }
 }
