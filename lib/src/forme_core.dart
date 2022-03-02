@@ -186,8 +186,6 @@ class _FormeState extends State<Forme> {
 
   AutovalidateMode get autovalidateMode => widget.autovalidateMode;
 
-  bool? _readOnly;
-
   int gen = 0;
 
   bool get quietlyValidate => widget.quietlyValidate;
@@ -234,30 +232,34 @@ class _FormeState extends State<Forme> {
     return controllers.isEmpty ? null : controllers.first;
   }
 
-  void _validateForm() {
+  Future<FormeValidation> _validateForm() async {
     if (widget.autovalidateByOrder) {
       final List<FormeFieldState> valueFieldStates = states
           .where((element) => element._hasAnyValidator && element.enabled)
           .toList()
         ..sort((a, b) => a.order.compareTo(b.order));
       if (valueFieldStates.isEmpty) {
-        return;
+        return const FormeValidation({});
       }
-      _validateByOrder(valueFieldStates);
+      return _validateByOrder(valueFieldStates);
     } else {
-      for (final FormeFieldState element in states) {
-        if (element.enabled) {
-          element._validate2();
-        }
-      }
+      final Map<String, FormeFieldValidation> validations = {};
+      await Future.wait(states
+          .where((element) => element.enabled)
+          .map((e) => e._validate2().then((value) {
+                validations[e.name] = value;
+                return value;
+              })));
+      return FormeValidation(validations);
     }
   }
 
-  Future<void> _validateByOrder(List<FormeFieldState> states,
-      {int index = 0}) async {
+  Future<FormeValidation> _validateByOrder(List<FormeFieldState> states,
+      {int index = 0,
+      Map<String, FormeFieldValidation> collector = const {}}) async {
     final int length = states.length;
     if (index >= length) {
-      return;
+      return FormeValidation(collector);
     }
     final FormeFieldState state = states[index];
     //clear errors after this field
@@ -267,9 +269,12 @@ class _FormeState extends State<Forme> {
       }
     }
     final FormeFieldValidation validation = await state._validate2();
+    collector[state.name] = validation;
     if (validation.isUnnecessary || validation.isValid) {
-      _validateByOrder(states, index: index + 1);
+      return await _validateByOrder(states,
+          index: index + 1, collector: collector);
     }
+    return FormeValidation(collector);
   }
 
   void save() {
@@ -679,9 +684,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   void initModel() {
     _model = _Model<T>(
       enabled: widget.enabled,
-      readOnly: widget.readOnly ||
-          (_formeState?._readOnly ?? false) ||
-          !widget.enabled,
+      readOnly: widget.readOnly || !widget.enabled,
       validation: _hasAnyValidator && widget.enabled
           ? FormeFieldValidation.waiting
           : FormeFieldValidation.unnecessary,
