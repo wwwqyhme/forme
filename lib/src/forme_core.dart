@@ -276,7 +276,8 @@ class _FormeState extends State<Forme> {
     }
   }
 
-  void _validateByOrder(List<FormeFieldState> states, {int index = 0}) {
+  Future<void> _validateByOrder(List<FormeFieldState> states,
+      {int index = 0}) async {
     final int length = states.length;
     if (index >= length) {
       return;
@@ -288,9 +289,10 @@ class _FormeState extends State<Forme> {
         states[i]._clearError();
       }
     }
-    state._validate2(onValid: () {
+    final FormeFieldValidation validation = await state._validate2();
+    if (validation.isUnnecessary || validation.isValid) {
       _validateByOrder(states, index: index + 1);
-    });
+    }
   }
 
   void save() {
@@ -905,29 +907,19 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   }
 
   /// this method should be only called in [_FormeState.build]
-  void _validate2({VoidCallback? onValid}) {
-    void notifyOnValid() {
-      if (_model.validation.isUnnecessary || _model.validation.isValid) {
-        onValid?.call();
-      }
-    }
-
+  Future<FormeFieldValidation> _validate2() async {
     void notifyValidation(FormeFieldValidation validation) {
       if (validation != _model.validation) {
         setState(() {
           _model = _model.copyWith(validation: _Optional(validation));
         });
       }
-      notifyOnValid();
     }
 
     if (_ignoreValidate || !_hasAnyValidator) {
       if (!_hasAnyValidator) {
         notifyValidation(FormeFieldValidation.unnecessary);
-      } else {
-        notifyOnValid();
       }
-      return;
     }
 
     final int gen = ++_validateGen;
@@ -935,14 +927,14 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       final String? errorText = widget.validator!(controller, value);
       if (errorText != null || !_hasAsyncValidator) {
         notifyValidation(_createFormeFieldValidation(errorText));
-        return;
       }
     }
 
     if (_hasAsyncValidator) {
       notifyValidation(FormeFieldValidation.validating);
-      _asyncValidate(gen, onCompleted: notifyOnValid);
+      await _performAsyncValidate(gen);
     }
+    return _model.validation;
   }
 
   /// this method should  be only called in [FormeFieldState.build]
@@ -982,16 +974,17 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     VoidCallback? onCompleted,
   }) {
     _asyncValidatorTimer?.cancel();
-    _asyncValidatorTimer = Timer(
-        widget.asyncValidatorDebounce ?? _defaultAsyncValidatorDebounce, () {
-      _performAsyncValidate(gen, onCompleted: onCompleted);
+    _asyncValidatorTimer =
+        Timer(widget.asyncValidatorDebounce ?? _defaultAsyncValidatorDebounce,
+            () async {
+      final bool isValid = await _performAsyncValidate(gen);
+      if (isValid) {
+        onCompleted?.call();
+      }
     });
   }
 
-  Future _performAsyncValidate(
-    int gen, {
-    VoidCallback? onCompleted,
-  }) async {
+  Future<bool> _performAsyncValidate(int gen) async {
     bool isValid() {
       return mounted && gen == _validateGen;
     }
@@ -1011,8 +1004,9 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
         _ignoreValidate = true;
         _model = _model.copyWith(validation: _Optional(validation));
       });
-      onCompleted?.call();
+      return true;
     }
+    return false;
   }
 
   void _fieldChange() {
@@ -1031,8 +1025,8 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       {bool quietly = false}) async {
     final T value = this.value;
     if (!_hasAnyValidator || !enabled) {
-      return FormeFieldValidateSnapshot(value, FormeFieldValidation.unnecessary,
-          order, controller, false, false);
+      return FormeFieldValidateSnapshot(
+          value, FormeFieldValidation.unnecessary, controller, false, false);
     }
     final int gen = quietly ? _validateGen : ++_validateGen;
 
@@ -1059,7 +1053,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
             _createFormeFieldValidation(errorText);
         notify(validation);
         return FormeFieldValidateSnapshot(
-            value, validation, order, controller, false, false);
+            value, validation, controller, false, false);
       }
     }
 
@@ -1075,7 +1069,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
 
     notify(validation);
-    return FormeFieldValidateSnapshot(value, validation, order, controller,
+    return FormeFieldValidateSnapshot(value, validation, controller,
         !compareValue(value, this.value), !compareValue(value, initialValue));
   }
 
@@ -1161,7 +1155,6 @@ class _FormeController extends FormeController {
     final List<FormeFieldValidateSnapshot<Object?>> value = await Future.wait(
         states.map((state) => state._performValidate(quietly: quietly)),
         eagerError: true);
-    value.sort((a, b) => a.order.compareTo(b.order));
     return FormeValidateSnapshot(value);
   }
 
