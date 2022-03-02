@@ -35,10 +35,7 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   }
 
   @override
-  Map<String, Object?> get data => _currentController.data;
-
-  @override
-  bool get readOnly => _currentController.readOnly;
+  Map<String, Object?> get value => _currentController.value;
 
   @override
   FormeValidation get validation => _currentController.validation;
@@ -71,10 +68,7 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   void save() => _currentController.save();
 
   @override
-  set data(Map<String, Object?> data) => _currentController.data = data;
-
-  @override
-  set readOnly(bool readOnly) => _currentController.readOnly = readOnly;
+  set value(Map<String, Object?> data) => _currentController.value = data;
 
   static FormeController? of(BuildContext context) {
     return _FormeScope.of(context)?.controller;
@@ -104,11 +98,6 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
 
 /// build your form !
 class Forme extends StatefulWidget {
-  /// whether form should be readOnly;
-  ///
-  /// default false
-  final bool readOnly;
-
   /// listen form value changed
   ///
   /// this listener will be always triggered when field value changed
@@ -161,7 +150,6 @@ class Forme extends StatefulWidget {
 
   const Forme({
     FormeKey? key,
-    this.readOnly = false,
     this.onValueChanged,
     required this.child,
     this.initialValue = const <String, Object?>{},
@@ -201,17 +189,6 @@ class _FormeState extends State<Forme> {
   bool? _readOnly;
 
   int gen = 0;
-
-  bool get readOnly => _readOnly ?? widget.readOnly;
-
-  set readOnly(bool readOnly) {
-    if (_readOnly != readOnly) {
-      setState(() {
-        gen++;
-        _readOnly = readOnly;
-      });
-    }
-  }
 
   bool get quietlyValidate => widget.quietlyValidate;
 
@@ -493,10 +470,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   bool? _readOnly;
   bool? _enabled;
 
-  bool get _isReadOnly =>
-      (_readOnly ?? widget.readOnly) ||
-      !_isEnabled ||
-      (_formeState?.readOnly ?? false);
+  bool get _isReadOnly => (_readOnly ?? widget.readOnly) || !_isEnabled;
   bool get _isEnabled => _enabled ?? widget.enabled;
   FormeFieldValidation get _validation {
     if (!_isEnabled || !_hasAnyValidator) {
@@ -1087,7 +1061,7 @@ class _FormeController extends FormeController {
       : fieldsListenable = FormeValueListenableDelegate(state.fieldsNotifier);
 
   @override
-  Map<String, Object?> get data {
+  Map<String, Object?> get value {
     final Map<String, Object?> map = <String, Object?>{};
     for (final FormeFieldState element in state.states) {
       if (!element.enabled) {
@@ -1102,9 +1076,6 @@ class _FormeController extends FormeController {
 
   @override
   bool get quietlyValidate => state.quietlyValidate;
-
-  @override
-  bool get readOnly => state.readOnly;
 
   @override
   FormeValidation get validation => FormeValidation(state.states
@@ -1179,12 +1150,9 @@ class _FormeController extends FormeController {
   void save() => state.save();
 
   @override
-  set data(Map<String, Object?> data) => data.forEach((key, Object? value) {
+  set value(Map<String, Object?> data) => data.forEach((key, Object? value) {
         field(key).value = value;
       });
-
-  @override
-  set readOnly(bool readOnly) => state.readOnly = readOnly;
 
   T? findFormeFieldController<T extends FormeFieldController<Object?>>(
       String name) {

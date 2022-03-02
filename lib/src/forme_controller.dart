@@ -9,21 +9,8 @@ abstract class FormeController {
   /// whether form has a name field
   bool hasField(String name);
 
-  /// whether form is readonly
-  bool get readOnly;
-
-  /// set form readOnly|editable
-  ///
-  /// if field 'A' has been set read-only manually ,
-  /// form then set read-only to false ,
-  /// field 'A' still is read-only
-  set readOnly(bool readOnly);
-
   /// find [FormeFieldController] by name
   T field<T extends FormeFieldController<Object?>>(String name);
-
-  /// get form data
-  Map<String, Object?> get data;
 
   /// get validation of Form
   FormeValidation get validation;
@@ -48,8 +35,11 @@ abstract class FormeController {
     bool validateByOrder = false,
   });
 
-  /// set forme data
-  set data(Map<String, Object?> data);
+  /// get form data
+  Map<String, Object?> get value;
+
+  /// set forme value
+  set value(Map<String, Object?> value);
 
   /// reset form
   ///

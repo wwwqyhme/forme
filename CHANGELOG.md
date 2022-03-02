@@ -5,6 +5,8 @@
 3. add `FormeFieldValueUpdater` on `FormeField` , used to update value when `didUpdateValue` return true
 4. initialValue on `Forme` has higher priority than `FormeField`'s initialValue
 5. `FormeField`'s generic type is `T extends Object?`  now
+6. `FormeController`'s data renamed to value
+7. remove readOnly getter & setter from `FormeController`
 
 ## 3.5.2
 
