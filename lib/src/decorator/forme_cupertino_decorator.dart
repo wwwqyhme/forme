@@ -53,7 +53,7 @@ class FormeCupertinoInputDecorator<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Widget child = wrapper == null ? this.child : wrapper!(this.child);
-    if (FormeKey.of(context)?.quietlyValidate ?? false) {
+    if (Forme.of(context)?.quietlyValidate ?? false) {
       return CupertinoFormRow(
         helper: helper,
         padding: padding,

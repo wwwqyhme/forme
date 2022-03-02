@@ -73,7 +73,7 @@ class FormeInputDecorator<T> extends StatelessWidget {
     final InputDecoration _decoration = decoration ?? const InputDecoration();
 
     if (emptyChecker == null && (counter == null || maxLength == null)) {
-      if (FormeKey.of(context)?.quietlyValidate ?? false) {
+      if (Forme.of(context)?.quietlyValidate ?? false) {
         return ValueListenableBuilder2<bool, bool>(
           controller.focusListenable,
           controller.enabledListenable,
@@ -103,7 +103,7 @@ class FormeInputDecorator<T> extends StatelessWidget {
         },
       );
     } else {
-      if (FormeKey.of(context)?.quietlyValidate ?? false) {
+      if (Forme.of(context)?.quietlyValidate ?? false) {
         return ValueListenableBuilder3<bool, T, bool>(
             controller.focusListenable,
             controller.valueListenable,
