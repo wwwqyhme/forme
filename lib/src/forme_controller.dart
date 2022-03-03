@@ -5,7 +5,12 @@ import '../forme.dart';
 /// base form controller
 ///
 /// you can access a form controller by [FormeKey] or [FormeKey.of]
-abstract class FormeController {
+abstract class FormeController
+    extends FormeFieldController<Map<String, Object?>> {
+  FormeController(
+    FormeFieldStatus<Map<String, Object?>> status,
+  ) : super(status);
+
   /// whether form has a name field
   bool hasField(String name);
 
@@ -13,7 +18,7 @@ abstract class FormeController {
   T field<T extends FormeFieldController<Object?>>(String name);
 
   /// get validation of Form
-  FormeValidation get validation;
+  FormeValidation get formValidation;
 
   /// perform a validate
   ///
@@ -28,23 +33,12 @@ abstract class FormeController {
   /// **this method is depends on [Future.wait] and eagerError is true**
   ///
   /// if [names] is not empty , will only validate these fields
-  Future<FormeValidateSnapshot> validate({
+  Future<FormeValidateSnapshot> validateForm({
     bool quietly = false,
     Set<String> names,
     bool clearError = false,
     bool validateByOrder = false,
   });
-
-  /// get form data
-  Map<String, Object?> get value;
-
-  /// set forme value
-  set value(Map<String, Object?> value);
-
-  /// reset form
-  ///
-  /// **only reset all value fields**
-  void reset();
 
   /// save all form fields
   ///
@@ -53,13 +47,6 @@ abstract class FormeController {
 
   /// whether validate is quietly
   bool get quietlyValidate;
-
-  /// whether form' value changed after initialized
-  ///
-  /// this method is relay on [FormeField.initialValue] and [Forme.initialValue]
-  ///
-  /// value is compared by [FormeFieldState.compareValue]
-  bool get isValueChanged;
 
   /// get all registered controllers
   List<FormeFieldController> get controllers;
@@ -73,7 +60,7 @@ abstract class FormeController {
   ///     Builder((context){
   ///       FormeKey.of(context).valueField('username') //will cause an error
   ///     });
-  ///     ValueListenable<FormeFieldController?>(
+  ///     ValueNotifier<FormeFieldController?>(
   ///       listenable:FormeKey.of(context).fieldListenable('username'),
   ///       builder:(context,field,child) {
   ///         if(field != null) // ok
@@ -94,10 +81,15 @@ abstract class FormeController {
   /// used to listen any form field's validation changes
   ///
   /// will also triggered when field registered to forme or unregistered
-  ValueListenable<FormeValidation> get validationListenable;
+  ValueListenable<FormeValidation> get formValidationListenable;
 }
 
 abstract class FormeFieldController<T extends Object?> {
+  final ValueNotifier<FormeFieldStatus<T>> statusNotifier;
+
+  FormeFieldController(FormeFieldStatus<T> status)
+      : statusNotifier = _FormeFieldStatusNotifier(status);
+
   /// get forme controller
   FormeController? get formeController;
 
@@ -105,7 +97,7 @@ abstract class FormeFieldController<T extends Object?> {
   String get name;
 
   /// whether field is readOnly;
-  bool get readOnly;
+  bool get readOnly => statusNotifier.value.readOnly;
 
   /// set readOnly
   set readOnly(bool readOnly);
@@ -120,24 +112,8 @@ abstract class FormeFieldController<T extends Object?> {
   /// get context
   BuildContext get context;
 
-  /// focus listenable
-  ValueListenable<bool> get focusListenable;
-
-  /// readOnly listenable
-  ///
-  /// useful update children items when readOnly state changes
-  ///
-  /// will trigger when [Forme] or field's readOnly state changed
-  ValueListenable<bool> get readOnlyListenable;
-
-  /// enabled listenable
-  ///
-  ///
-  /// will trigger when [Forme] or field's readOnly state changed
-  ValueListenable<bool> get enabledListenable;
-
   /// get current value of field
-  T get value;
+  T get value => statusNotifier.value.value;
 
   /// set field value
   set value(T value);
@@ -165,14 +141,62 @@ abstract class FormeFieldController<T extends Object?> {
   /// **you can still get error text even though [Forme.quietlyValidate] is true**
   ///
   /// **value notifier is always be trigger before errorNotifier , so  when you want to get error in onValueChanged , you should call this method in [WidgetsBinding.instance.addPostFrameCallback]**
-  FormeFieldValidation get validation;
+  FormeFieldValidation get validation => statusNotifier.value.validation;
 
-  /// get validation listenable
+  /// get old field value
   ///
-  /// it's useful when you want to display error by your custom way!
+  /// **after field's value changed , you can use this method to get old value**
+  T? get oldValue => (statusNotifier as _FormeFieldStatusNotifier<T>).oldValue;
+
+  /// whether field's value changed after initialized
   ///
-  /// this notifier is used for [ValueListenableBuilder]
-  ValueListenable<FormeFieldValidation> get validationListenable;
+  /// this method is relay on [FormeField.initialValue] and [Forme.initialValue]
+  ///
+  /// value is compared by [FormeFieldState.compareValue]
+  bool get isValueChanged;
+
+  /// whether field is enabled
+  bool get enabled => statusNotifier.value.enabled;
+
+  /// enable|disable field
+  ///
+  /// if field is disabled
+  ///
+  /// 1. field will lose focus and can not be focused
+  /// 2. field's validation will be always [FormeFieldValidation.unnecessary]
+  /// 3. field is readOnly
+  /// 4. value will be ignored when get form data
+  /// 5. value can still be changed via [FormeFieldController]
+  /// 6. when get validation from [FormeController] , this field will be ignored
+  set enabled(bool enabled);
+
+  /// get generic type
+  Type get type => T;
+
+  /// whether value can be nullable or not
+  bool get isNullable => null is T;
+
+  /// mark this field needs rebuild
+  void markNeedsBuild();
+
+  /// focus listenable
+  ValueListenable<bool> get focusListenable =>
+      (statusNotifier as _FormeFieldStatusNotifier<T>).focusListenable;
+
+  /// readOnly listenable
+  ///
+  /// useful update children items when readOnly state changes
+  ///
+  /// will trigger when [Forme] or field's readOnly state changed
+  ValueListenable<bool> get readOnlyListenable =>
+      (statusNotifier as _FormeFieldStatusNotifier<T>).readOnlyListenable;
+
+  /// enabled listenable
+  ///
+  ///
+  /// will trigger when [Forme] or field's readOnly state changed
+  ValueListenable<bool> get enabledListenable =>
+      (statusNotifier as _FormeFieldStatusNotifier<T>).enabledListenable;
 
   /// get value listenable
   ///
@@ -195,72 +219,35 @@ abstract class FormeFieldController<T extends Object?> {
   /// ```
   ///
   /// this notifier is used for [ValueListenableBuilder]
-  ValueListenable<T> get valueListenable;
+  ValueListenable<T> get valueListenable =>
+      (statusNotifier as _FormeFieldStatusNotifier<T>).valueListenable;
 
-  /// get old field value
+  /// get validation listenable
   ///
-  /// **after field's value changed , you can use this method to get old value**
-  T? get oldValue;
-
-  /// whether field's value changed after initialized
+  /// it's useful when you want to display error by your custom way!
   ///
-  /// this method is relay on [FormeField.initialValue] and [Forme.initialValue]
-  ///
-  /// value is compared by [FormeFieldState.compareValue]
-  bool get isValueChanged;
+  /// this notifier is used for [ValueListenableBuilder]
+  ValueListenable<FormeFieldValidation> get validationListenable =>
+      (statusNotifier as _FormeFieldStatusNotifier<T>).validationListenable;
 
-  /// whether field is enabled
-  bool get enabled;
-
-  /// enable|disable field
-  ///
-  /// if field is disabled
-  ///
-  /// 1. field will lose focus and can not be focused
-  /// 2. field's validation will be always [FormeFieldValidation.unnecessary]
-  /// 3. field is readOnly
-  /// 4. value will be ignored when get form data
-  /// 5. value can still be changed via [FormeFieldController]
-  /// 6. when get validation from [FormeController] , this field will be ignored
-  set enabled(bool enabled);
-
-  bool get mounted;
-
-  /// get generic type
-  Type get type => T;
-
-  /// whether value can be nullable or not
-  bool get isNullable => null is T;
-
-  /// mark this field needs rebuild
-  void markNeedsBuild();
+  /// dispose fields
+  void dispose() {
+    statusNotifier.dispose();
+  }
 }
 
-class FormeFieldControllerDelegate<T> extends FormeFieldController<T> {
+class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
   FormeFieldControllerDelegate(this._delegate);
   final FormeFieldController<T> _delegate;
 
   @override
-  bool get readOnly => _delegate.readOnly;
-
-  @override
   set readOnly(bool readOnly) => _delegate.readOnly = readOnly;
-
-  @override
-  T get value => _delegate.value;
 
   @override
   set value(T value) => _delegate.value = value;
 
   @override
   FormeFieldValidation get validation => _delegate.validation;
-
-  @override
-  ValueListenable<FormeFieldValidation> get validationListenable =>
-      _delegate.validationListenable;
-
-  @override
-  ValueListenable<bool> get focusListenable => _delegate.focusListenable;
 
   @override
   FocusNode? get focusNode => _delegate.focusNode;
@@ -278,12 +265,6 @@ class FormeFieldControllerDelegate<T> extends FormeFieldController<T> {
   T? get oldValue => _delegate.oldValue;
 
   @override
-  ValueListenable<bool> get readOnlyListenable => _delegate.readOnlyListenable;
-
-  @override
-  ValueListenable<bool> get enabledListenable => _delegate.enabledListenable;
-
-  @override
   void reset() => _delegate.reset();
 
   @override
@@ -291,20 +272,92 @@ class FormeFieldControllerDelegate<T> extends FormeFieldController<T> {
       _delegate.validate(quietly: quietly);
 
   @override
-  ValueListenable<T> get valueListenable => _delegate.valueListenable;
-
-  @override
   BuildContext get context => _delegate.context;
-
-  @override
-  bool get enabled => _delegate.enabled;
 
   @override
   set enabled(bool enabled) => _delegate.enabled = enabled;
 
   @override
-  bool get mounted => _delegate.mounted;
+  void markNeedsBuild() => _delegate.markNeedsBuild();
 
   @override
-  void markNeedsBuild() => _delegate.markNeedsBuild();
+  void dispose() => _delegate.dispose();
+
+  @override
+  bool get enabled => _delegate.enabled;
+
+  @override
+  ValueListenable<bool> get enabledListenable => _delegate.enabledListenable;
+
+  @override
+  ValueListenable<bool> get focusListenable => _delegate.focusListenable;
+
+  @override
+  bool get isNullable => _delegate.isNullable;
+
+  @override
+  bool get readOnly => _delegate.readOnly;
+
+  @override
+  ValueListenable<bool> get readOnlyListenable => _delegate.readOnlyListenable;
+
+  @override
+  ValueNotifier<FormeFieldStatus<T>> get statusNotifier =>
+      _delegate.statusNotifier;
+
+  @override
+  Type get type => _delegate.type;
+
+  @override
+  ValueListenable<FormeFieldValidation> get validationListenable =>
+      _delegate.validationListenable;
+
+  @override
+  T get value => _delegate.value;
+
+  @override
+  ValueListenable<T> get valueListenable => _delegate.valueListenable;
+}
+
+class _FormeFieldStatusNotifier<T extends Object?>
+    extends FormeMountedValueNotifier<FormeFieldStatus<T>> {
+  T? oldValue;
+  final ValueNotifier<bool> focusListenable;
+  final ValueNotifier<bool> readOnlyListenable;
+  final ValueNotifier<bool> enabledListenable;
+  final ValueNotifier<T> valueListenable;
+  final ValueNotifier<FormeFieldValidation> validationListenable;
+  _FormeFieldStatusNotifier(
+    FormeFieldStatus<T> value,
+  )   : focusListenable = FormeMountedValueNotifier(value.hasFocus),
+        readOnlyListenable = FormeMountedValueNotifier(value.readOnly),
+        enabledListenable = FormeMountedValueNotifier(value.enabled),
+        valueListenable = FormeMountedValueNotifier(value.value),
+        validationListenable = FormeMountedValueNotifier(value.validation),
+        super(value);
+
+  @override
+  set value(FormeFieldStatus<T> newValue) {
+    super.value = newValue;
+    if (!disposed) {
+      readOnlyListenable.value = newValue.readOnly;
+      focusListenable.value = newValue.hasFocus;
+      enabledListenable.value = newValue.enabled;
+      if (valueListenable.value != newValue.value) {
+        oldValue = valueListenable.value;
+        valueListenable.value = newValue.value;
+      }
+      validationListenable.value = newValue.validation;
+    }
+  }
+
+  @override
+  void dispose() {
+    focusListenable.dispose();
+    readOnlyListenable.dispose();
+    enabledListenable.dispose();
+    valueListenable.dispose();
+    validationListenable.dispose();
+    super.dispose();
+  }
 }

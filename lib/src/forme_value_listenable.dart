@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 class FormeMountedValueNotifier<T> extends ValueNotifier<T> {
   bool _disposed = false;
 
+  bool get disposed => _disposed;
+
   FormeMountedValueNotifier(T value) : super(value);
 
   @override
