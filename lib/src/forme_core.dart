@@ -94,6 +94,9 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   @override
   ValueListenable<Map<String, FormeFieldController?>> get fieldsListenable =>
       _currentController.fieldsListenable;
+
+  @override
+  void dispose() => _currentController.dispose();
 }
 
 /// build your form !
@@ -218,18 +221,24 @@ class _FormeState extends State<Forme> {
     }
   }
 
-  ValueNotifier<FormeFieldController?> fieldListenable(String name) {
-    return fieldNotifiers[name] ??
-        fieldNotifiers.putIfAbsent(
-            name, () => FormeMountedValueNotifier(getFieldController(name)));
+  ValueNotifier<FormeFieldController<T>?> fieldListenable<T extends Object?>(
+      String name) {
+    return (fieldNotifiers[name] ??
+            fieldNotifiers.putIfAbsent(
+                name,
+                () => FormeMountedValueNotifier<FormeFieldController<T>?>(
+                    getFieldController<T>(name))))
+        as ValueNotifier<FormeFieldController<T>?>;
   }
 
-  FormeFieldController? getFieldController(String name) {
+  FormeFieldController<T>? getFieldController<T extends Object?>(String name) {
     final List<FormeFieldController> controllers = states
         .where((element) => element.name == name)
         .map((e) => e.controller)
         .toList();
-    return controllers.isEmpty ? null : controllers.first;
+    return controllers.isEmpty
+        ? null
+        : controllers.first as FormeFieldController<T>;
   }
 
   Future<FormeValidation> _validateForm() async {
@@ -246,7 +255,7 @@ class _FormeState extends State<Forme> {
       final Map<String, FormeFieldValidation> validations = {};
       await Future.wait(states
           .where((element) => element.enabled)
-          .map((e) => e._validate2().then((value) {
+          .map((e) => e._validateByForm().then((value) {
                 validations[e.name] = value;
                 return value;
               })));
@@ -264,11 +273,11 @@ class _FormeState extends State<Forme> {
     final FormeFieldState state = states[index];
     //clear errors after this field
     for (int i = index + 1; i < length; i++) {
-      if (!states[i]._model.validation.isValid) {
+      if (!states[i]._status.validation.isValid) {
         states[i]._clearError();
       }
     }
-    final FormeFieldValidation validation = await state._validate2();
+    final FormeFieldValidation validation = await state._validateByForm();
     collector[state.name] = validation;
     if (validation.isUnnecessary || validation.isValid) {
       return await _validateByOrder(states,
@@ -326,7 +335,7 @@ class _FormeState extends State<Forme> {
   void updateValidation() {
     final FormeValidation validation = FormeValidation(states
         .asMap()
-        .map((key, value) => MapEntry(value.name, value._model.validation)));
+        .map((key, value) => MapEntry(value.name, value._status.validation)));
     widget.onValidationChanged?.call(controller, validation);
     validationNotifier.value = validation;
   }
@@ -422,39 +431,19 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   final Duration _defaultAsyncValidatorDebounce =
       const Duration(milliseconds: 500);
 
-  ValueNotifier<T>? _valueNotifier;
-  ValueNotifier<bool>? _focusNotifier;
-  ValueNotifier<FormeFieldValidation>? _validationNotifier;
-  ValueNotifier<bool>? _readOnlyNotifier;
-  ValueNotifier<bool>? _enabledNotifier;
-
-  ValueListenable<T> get _valueListenable => FormeValueListenableDelegate(
-      _valueNotifier ??= FormeMountedValueNotifier(_model.value));
-  ValueListenable<bool> get _focusListenable => _focusNotifier ??=
-      FormeMountedValueNotifier(_focusNode?.hasFocus ?? false);
-  ValueListenable<FormeFieldValidation> get _validationListenable =>
-      _validationNotifier ??= FormeMountedValueNotifier(_model.validation);
-  ValueListenable<bool> get _readOnlyListenable =>
-      _readOnlyNotifier ??= FormeMountedValueNotifier(_model.readOnly);
-  ValueListenable<bool> get _enabledListenable =>
-      _enabledNotifier ??= FormeMountedValueNotifier(_model.enabled);
-
   FocusNode? _focusNode;
   Timer? _asyncValidatorTimer;
   bool _ignoreValidate = false;
   bool _hasInteractedByUser = false;
   int _validateGen = 0;
 
-  late _Model<T> _model;
-  T? _oldValue;
+  late FormeFieldStatus<T> _status;
   _FormeState? _formeState;
 
   FormeFieldController<T>? _controller;
 
   FormeFieldController<T> get controller =>
       _controller ??= createFormeFieldController();
-
-  T? get oldValue => _oldValue;
 
   int get order =>
       widget.order ??
@@ -463,14 +452,14 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
           'can not get order of this field , if this field is not wrapped by Forme , you must specific an order on it'));
 
   String get name => widget.name;
-  T get value => _model.value;
+  T get value => _status.value;
 
   bool get _hasValidator => widget.validator != null;
   bool get _hasAsyncValidator => widget.asyncValidator != null;
   bool get _hasAnyValidator => _hasValidator || _hasAsyncValidator;
 
-  bool get readOnly => _model.readOnly;
-  bool get enabled => _model.enabled;
+  bool get readOnly => _status.readOnly;
+  bool get enabled => _status.enabled;
 
   bool? _readOnly;
   bool? _enabled;
@@ -482,18 +471,18 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       return FormeFieldValidation.unnecessary;
     }
     if (_hasAnyValidator &&
-        _model.validation == FormeFieldValidation.unnecessary) {
+        _status.validation == FormeFieldValidation.unnecessary) {
       return FormeFieldValidation.waiting;
     }
-    return _model.validation;
+    return _status.validation;
   }
 
   /// set field readonly or not
   set readOnly(bool readOnly) {
     _readOnly = readOnly;
-    if (_isReadOnly != _model.readOnly) {
+    if (_isReadOnly != _status.readOnly) {
       setState(() {
-        _model = _model.copyWith(readOnly: _Optional(_isReadOnly));
+        _status = _status._copyWith(readOnly: _Optional(_isReadOnly));
       });
     }
   }
@@ -515,7 +504,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       if (!_isEnabled) {
         _hasInteractedByUser = false;
       }
-      _model = _model.copyWith(
+      _status = _status._copyWith(
         enabled: _Optional(_isEnabled),
         readOnly: _Optional(_isReadOnly),
         validation: _Optional(_validation),
@@ -531,7 +520,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
           (_formeState?.quietlyValidate ?? false) ||
           widget.quietlyValidate
       ? null
-      : _model.validation.error;
+      : _status.validation.error;
 
   /// get initialValue
   T get initialValue =>
@@ -570,11 +559,11 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   }
 
   void _onFocusChangedListener() {
-    final _Model<T> old = _model;
-    _model = _model.copyWith(
+    final FormeFieldStatus<T> old = _status;
+    _status = _status._copyWith(
       hasFocus: _Optional(_focusNode?.hasFocus ?? false),
     );
-    _onModelChanged(old, _model);
+    _onModelChanged(old, _status);
   }
 
   bool get isValueChanged => !compareValue(initialValue, value);
@@ -611,8 +600,8 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       _formeState?.unregisterField(this);
     }
 
-    final _Model<T> old = _model;
-    _model = _model.copyWith(
+    final FormeFieldStatus<T> old = _status;
+    _status = _status._copyWith(
       readOnly: _Optional(_isReadOnly),
       enabled: _Optional(_isEnabled),
       validation: _Optional(_validation),
@@ -622,17 +611,17 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       final bool needUpdateValue = didUpdateValue(oldWidget);
       if (needUpdateValue) {
         T newValue = widget.valueUpdater!(oldWidget, widget, value);
-        _model = _model.copyWith(
+        _status = _status._copyWith(
           value: _Optional(newValue),
         );
       }
     }
 
-    if (old.validation != _model.validation) {
+    if (old.validation != _status.validation) {
       _validateGen++;
     }
 
-    _onModelChanged(old, _model, true);
+    _onModelChanged(old, _status, true);
   }
 
   /// this method is used to determine whether  value  need update or not after widget updated
@@ -649,9 +638,9 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
   @override
   void setState(VoidCallback fn) {
-    final _Model<T> old = _model;
+    final FormeFieldStatus<T> old = _status;
     super.setState(fn);
-    _onModelChanged(old, _model);
+    _onModelChanged(old, _status);
   }
 
   @override
@@ -665,11 +654,11 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
       initModel();
     } else {
-      final _Model<T> old = _model;
-      _model = _model.copyWith(
+      final FormeFieldStatus<T> old = _status;
+      _status = _status._copyWith(
         readOnly: _Optional(_isReadOnly),
       );
-      _onModelChanged(old, _model, true);
+      _onModelChanged(old, _status, true);
     }
   }
 
@@ -682,7 +671,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   @protected
   @mustCallSuper
   void initModel() {
-    _model = _Model<T>(
+    _status = FormeFieldStatus<T>._(
       enabled: widget.enabled,
       readOnly: widget.readOnly || !widget.enabled,
       validation: _hasAnyValidator && widget.enabled
@@ -698,7 +687,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   /// if you want to override this method, use [FormeFieldControllerDelegate] to wrap parent's controller
   @protected
   FormeFieldController<T> createFormeFieldController() =>
-      _FormeFieldController(this);
+      _FormeFieldController(_status, this);
 
   @override
   void deactivate() {
@@ -708,11 +697,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
   @override
   void dispose() {
-    _valueNotifier?.dispose();
-    _focusNotifier?.dispose();
-    _validationNotifier?.dispose();
-    _readOnlyNotifier?.dispose();
-    _enabledNotifier?.dispose();
+    _controller?.dispose();
     _asyncValidatorTimer?.cancel();
     _focusNode?.removeListener(_onFocusChangedListener);
     if (_focusNode is _DisposeRequiredFocusNode) {
@@ -723,10 +708,10 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
   @mustCallSuper
   void didChange(T newValue) {
-    if (!compareValue(_model.value, newValue)) {
+    if (!compareValue(_status.value, newValue)) {
       setState(() {
         _hasInteractedByUser = true;
-        _model = _model.copyWith(value: _Optional(newValue));
+        _status = _status._copyWith(value: _Optional(newValue));
       });
       _fieldChange();
     }
@@ -738,7 +723,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       _validateGen++;
       _hasInteractedByUser = false;
       _ignoreValidate = false;
-      _model = _model.copyWith(
+      _status = _status._copyWith(
           validation: _Optional(_initialValidation),
           value: _Optional(initialValue));
     });
@@ -755,7 +740,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
             (widget.autovalidateMode == AutovalidateMode.onUserInteraction &&
                 _hasInteractedByUser));
     if (needValidate) {
-      _validate();
+      _validateByField();
     }
 
     Widget child = widget.builder(this);
@@ -771,7 +756,8 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     return FormeFieldScope(controller, child);
   }
 
-  void _onModelChanged(_Model<T> oldModel, _Model<T> newModel,
+  void _onModelChanged(
+      FormeFieldStatus<T> oldStatus, FormeFieldStatus<T> newStatus,
       [bool onlyAfterFrameCompleted = false]) {
     void _perform(VoidCallback fn) {
       if (onlyAfterFrameCompleted) {
@@ -783,47 +769,46 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       }
     }
 
-    if (oldModel.enabled != newModel.enabled) {
-      _focusNode?.canRequestFocus = newModel.enabled;
+    if (oldStatus.enabled != newStatus.enabled) {
+      _focusNode?.canRequestFocus = newStatus.enabled;
       _perform(() {
-        widget.onEnabledChanged?.call(controller, newModel.enabled);
-        _formeState?.fieldEnabledChange(this, newModel.enabled);
-        _enabledNotifier?.value = newModel.enabled;
-        onEnabledChanged(newModel.enabled);
+        widget.onEnabledChanged?.call(controller, newStatus.enabled);
+        _formeState?.fieldEnabledChange(this, newStatus.enabled);
+        _controller?.statusNotifier.value = newStatus;
+        onEnabledChanged(newStatus.enabled);
       });
     }
-    if (oldModel.readOnly != newModel.readOnly) {
+    if (oldStatus.readOnly != newStatus.readOnly) {
       _perform(() {
-        widget.onReadonlyChanged?.call(controller, newModel.readOnly);
-        _formeState?.fieldReadonlyChange(this, newModel.readOnly);
-        _readOnlyNotifier?.value = newModel.readOnly;
-        onReadonlyChanged(newModel.readOnly);
+        widget.onReadonlyChanged?.call(controller, newStatus.readOnly);
+        _formeState?.fieldReadonlyChange(this, newStatus.readOnly);
+        _controller?.statusNotifier.value = newStatus;
+        onReadonlyChanged(newStatus.readOnly);
       });
     }
-    if (oldModel.validation != newModel.validation) {
+    if (oldStatus.validation != newStatus.validation) {
       _perform(() {
-        widget.onValidationChanged?.call(controller, newModel.validation);
-        _formeState?.fieldValidationChange(this, newModel.validation);
-        _validationNotifier?.value = newModel.validation;
-        onValidationChanged(newModel.validation);
+        widget.onValidationChanged?.call(controller, newStatus.validation);
+        _formeState?.fieldValidationChange(this, newStatus.validation);
+        _controller?.statusNotifier.value = newStatus;
+        onValidationChanged(newStatus.validation);
       });
     }
-    if (!compareValue(oldModel.value, newModel.value)) {
-      _oldValue = oldModel.value;
+    if (!compareValue(oldStatus.value, newStatus.value)) {
       _ignoreValidate = false;
       _perform(() {
-        widget.onValueChanged?.call(controller, newModel.value);
-        _formeState?.fieldValueChange(this, newModel.value);
-        _valueNotifier?.value = newModel.value;
-        onValueChanged(newModel.value);
+        widget.onValueChanged?.call(controller, newStatus.value);
+        _formeState?.fieldValueChange(this, newStatus.value);
+        _controller?.statusNotifier.value = newStatus;
+        onValueChanged(newStatus.value);
       });
     }
 
-    if (oldModel.hasFocus != newModel.hasFocus) {
-      widget.onFocusChanged?.call(controller, newModel.hasFocus);
-      _formeState?.fieldFocusChange(this, newModel.hasFocus);
-      _focusNotifier?.value = newModel.hasFocus;
-      onFocusChanged(newModel.hasFocus);
+    if (oldStatus.hasFocus != newStatus.hasFocus) {
+      widget.onFocusChanged?.call(controller, newStatus.hasFocus);
+      _formeState?.fieldFocusChange(this, newStatus.hasFocus);
+      _controller?.statusNotifier.value = newStatus;
+      onFocusChanged(newStatus.hasFocus);
     }
   }
 
@@ -875,20 +860,20 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   }
 
   void _clearError() {
-    if (_model.validation != _initialValidation) {
+    if (_status.validation != _initialValidation) {
       setState(() {
         _validateGen++;
-        _model = _model.copyWith(validation: _Optional(_initialValidation));
+        _status = _status._copyWith(validation: _Optional(_initialValidation));
       });
     }
   }
 
   /// this method should be only called in [_FormeState.build]
-  Future<FormeFieldValidation> _validate2() async {
+  Future<FormeFieldValidation> _validateByForm() async {
     void notifyValidation(FormeFieldValidation validation) {
-      if (validation != _model.validation) {
+      if (validation != _status.validation) {
         setState(() {
-          _model = _model.copyWith(validation: _Optional(validation));
+          _status = _status._copyWith(validation: _Optional(validation));
         });
       }
     }
@@ -911,16 +896,16 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       notifyValidation(FormeFieldValidation.validating);
       await _performAsyncValidate(gen);
     }
-    return _model.validation;
+    return _status.validation;
   }
 
   /// this method should  be only called in [FormeFieldState.build]
-  void _validate() {
+  void _validateByField() {
     void notifyValidation(FormeFieldValidation validation) {
-      if (_model.validation != validation) {
-        final _Model<T> oldModel = _model;
-        _model = _model.copyWith(validation: _Optional(validation));
-        _onModelChanged(oldModel, _model, true);
+      if (_status.validation != validation) {
+        final FormeFieldStatus<T> oldStatus = _status;
+        _status = _status._copyWith(validation: _Optional(validation));
+        _onModelChanged(oldStatus, _status, true);
       }
     }
 
@@ -979,7 +964,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     if (isValid()) {
       setState(() {
         _ignoreValidate = true;
-        _model = _model.copyWith(validation: _Optional(validation));
+        _status = _status._copyWith(validation: _Optional(validation));
       });
       return true;
     }
@@ -998,7 +983,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   }
 
   /// this method is used to manually validate
-  Future<FormeFieldValidateSnapshot<T>> _performValidate(
+  Future<FormeFieldValidateSnapshot<T>> _validateManually(
       {bool quietly = false}) async {
     final T value = this.value;
     if (!_hasAnyValidator || !enabled) {
@@ -1016,9 +1001,9 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
 
     void notify(FormeFieldValidation validation) {
-      if (needNotify() && _model.validation != validation) {
+      if (needNotify() && _status.validation != validation) {
         setState(() {
-          _model = _model.copyWith(validation: _Optional(validation));
+          _status = _status._copyWith(validation: _Optional(validation));
         });
       }
     }
@@ -1056,12 +1041,19 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 }
 
 class _FormeController extends FormeController {
-  final _FormeState state;
+  _FormeState? _state;
   @override
   final ValueListenable<Map<String, FormeFieldController?>> fieldsListenable;
+  @override
+  final ValueListenable<FormeValidation> validationListenable;
+  _FormeController(this._state)
+      : fieldsListenable = FormeValueListenableDelegate(_state!.fieldsNotifier),
+        validationListenable =
+            FormeValueListenableDelegate(_state.validationNotifier);
 
-  _FormeController(this.state)
-      : fieldsListenable = FormeValueListenableDelegate(state.fieldsNotifier);
+  _FormeState get state =>
+      _state ??
+      (throw Exception('controller is disposed , should not used anymore'));
 
   @override
   Map<String, Object?> get value {
@@ -1085,7 +1077,7 @@ class _FormeController extends FormeController {
       .where((element) => element.enabled)
       .toList()
       .asMap()
-      .map((key, value) => MapEntry(value.name, value._model.validation)));
+      .map((key, value) => MapEntry(value.name, value._status.validation)));
 
   @override
   T field<T extends FormeFieldController<Object?>>(String name) {
@@ -1127,7 +1119,7 @@ class _FormeController extends FormeController {
       return _validateByOrder(states, quietly);
     }
     final List<FormeFieldValidateSnapshot<Object?>> value = await Future.wait(
-        states.map((state) => state._performValidate(quietly: quietly)),
+        states.map((state) => state._validateManually(quietly: quietly)),
         eagerError: true);
     return FormeValidateSnapshot(value);
   }
@@ -1138,7 +1130,7 @@ class _FormeController extends FormeController {
     final int length = controllers.length;
     final List<FormeFieldValidateSnapshot> copyList = List.of(list);
     final FormeFieldValidateSnapshot snapshot =
-        await states[index]._performValidate(quietly: quietly);
+        await states[index]._validateManually(quietly: quietly);
     copyList.add(snapshot);
     if (!snapshot.isValid || index == length - 1) {
       return FormeValidateSnapshot(copyList);
@@ -1176,51 +1168,25 @@ class _FormeController extends FormeController {
 
   @override
   ValueListenable<FormeFieldController<T>?> fieldListenable<T>(String name) =>
-      _FormeFieldControllerListenable<T>(state.fieldListenable(name));
+      FormeValueListenableDelegate<FormeFieldController<T>?>(
+          state.fieldListenable<T>(name));
 
   @override
-  ValueListenable<FormeValidation> get validationListenable =>
-      FormeValueListenableDelegate(state.validationNotifier);
-}
-
-class _FormeFieldControllerListenable<T>
-    extends ValueListenable<FormeFieldController<T>?> {
-  final ValueNotifier<FormeFieldController?> delegate;
-
-  const _FormeFieldControllerListenable(this.delegate);
-
-  @override
-  void addListener(VoidCallback listener) => delegate.addListener(listener);
-
-  @override
-  void removeListener(VoidCallback listener) =>
-      delegate.removeListener(listener);
-
-  @override
-  FormeFieldController<T>? get value => delegate.value == null
-      ? null
-      : delegate.value! as FormeFieldController<T>;
+  void dispose() {
+    _state = null;
+  }
 }
 
 class _FormeFieldController<T extends Object?> extends FormeFieldController<T> {
-  final FormeFieldState<T> _state;
+  FormeFieldState<T>? _fieldState;
 
-  @override
-  ValueListenable<FormeFieldValidation> get validationListenable =>
-      _state._validationListenable;
-  @override
-  ValueListenable<T> get valueListenable => _state._valueListenable;
-  @override
-  ValueListenable<bool> get focusListenable => _state._focusListenable;
-  @override
-  ValueListenable<bool> get readOnlyListenable => _state._readOnlyListenable;
-  @override
-  ValueListenable<bool> get enabledListenable => _state._enabledListenable;
+  _FormeFieldController(FormeFieldStatus<T> status, FormeFieldState<T> state)
+      : _fieldState = state,
+        super(status);
 
-  _FormeFieldController(this._state);
-
-  @override
-  bool get readOnly => _state.readOnly;
+  FormeFieldState<T> get _state =>
+      _fieldState ??
+      (throw Exception('controller is disposed , should not used anymore'));
 
   @override
   FormeController? get formeController => Forme.of(_state.context);
@@ -1235,23 +1201,14 @@ class _FormeFieldController<T extends Object?> extends FormeFieldController<T> {
   set readOnly(bool readOnly) => _state.readOnly = readOnly;
 
   @override
-  T get value => _state.value;
-
-  @override
-  FormeFieldValidation get validation => _state._model.validation;
-
-  @override
   void reset() => _state.reset();
 
   @override
   Future<FormeFieldValidateSnapshot<T>> validate({bool quietly = false}) =>
-      _state._performValidate(quietly: quietly);
+      _state._validateManually(quietly: quietly);
 
   @override
   set value(T value) => _state.value = value;
-
-  @override
-  T? get oldValue => _state.oldValue;
 
   @override
   bool get isValueChanged => _state.isValueChanged;
@@ -1260,30 +1217,30 @@ class _FormeFieldController<T extends Object?> extends FormeFieldController<T> {
   BuildContext get context => _state.context;
 
   @override
-  bool get enabled => _state.enabled;
-
-  @override
   set enabled(bool enabled) => _state.enabled = enabled;
 
   @override
-  bool get mounted => _state.mounted;
+  void markNeedsBuild() => _state._markNeedsBuild();
 
   @override
-  void markNeedsBuild() => _state._markNeedsBuild();
+  void dispose() {
+    _fieldState = null;
+    super.dispose();
+  }
 }
 
 /// a focusnode created by FormeField itself rather than set by subclass ,
 /// so it's our responsibility to dispose it
 class _DisposeRequiredFocusNode extends FocusNode {}
 
-class _Model<T> {
+class FormeFieldStatus<T extends Object?> {
   final bool enabled;
   final bool readOnly;
   final FormeFieldValidation validation;
   final T value;
   final bool hasFocus;
 
-  _Model({
+  FormeFieldStatus._({
     required this.enabled,
     required this.readOnly,
     required this.validation,
@@ -1291,14 +1248,14 @@ class _Model<T> {
     required this.hasFocus,
   });
 
-  _Model<T> copyWith({
+  FormeFieldStatus<T> _copyWith({
     _Optional<bool>? enabled,
     _Optional<bool>? readOnly,
     _Optional<FormeFieldValidation>? validation,
     _Optional<T>? value,
     _Optional<bool>? hasFocus,
   }) {
-    return _Model<T>(
+    return FormeFieldStatus<T>._(
       enabled: enabled == null ? this.enabled : enabled.value,
       readOnly: readOnly == null ? this.readOnly : readOnly.value,
       validation: validation == null ? this.validation : validation.value,

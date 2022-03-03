@@ -7,6 +7,7 @@
 5. `FormeField`'s generic type is `T extends Object?`  now
 6. `FormeController`'s data renamed to value
 7. remove readOnly getter & setter from `FormeController`
+8. remove `mounted` from `FormeFieldController` , use `isDisposed` instead
 
 ## 3.5.2
 

@@ -5,12 +5,7 @@ import '../forme.dart';
 /// base form controller
 ///
 /// you can access a form controller by [FormeKey] or [FormeKey.of]
-abstract class FormeController
-    extends FormeFieldController<Map<String, Object?>> {
-  FormeController(
-    FormeFieldStatus<Map<String, Object?>> status,
-  ) : super(status);
-
+abstract class FormeController {
   /// whether form has a name field
   bool hasField(String name);
 
@@ -18,7 +13,7 @@ abstract class FormeController
   T field<T extends FormeFieldController<Object?>>(String name);
 
   /// get validation of Form
-  FormeValidation get formValidation;
+  FormeValidation get validation;
 
   /// perform a validate
   ///
@@ -33,7 +28,7 @@ abstract class FormeController
   /// **this method is depends on [Future.wait] and eagerError is true**
   ///
   /// if [names] is not empty , will only validate these fields
-  Future<FormeValidateSnapshot> validateForm({
+  Future<FormeValidateSnapshot> validate({
     bool quietly = false,
     Set<String> names,
     bool clearError = false,
@@ -51,6 +46,24 @@ abstract class FormeController
   /// get all registered controllers
   List<FormeFieldController> get controllers;
 
+  /// get form data
+  Map<String, Object?> get value;
+
+  /// set forme value
+  set value(Map<String, Object?> value);
+
+  /// whether form' value changed after initialized
+  ///
+  /// this method is relay on [FormeField.initialValue] and [Forme.initialValue]
+  ///
+  /// value is compared by [FormeFieldState.compareValue]
+  bool get isValueChanged;
+
+  /// reset form
+  ///
+  /// **only reset all value fields**
+  void reset();
+
   /// listen when field initialed or disposed
   ///
   /// if [FormeFieldController] is null , means field is not initialed or has been disposed, otherwise means field is initialed
@@ -60,7 +73,7 @@ abstract class FormeController
   ///     Builder((context){
   ///       FormeKey.of(context).valueField('username') //will cause an error
   ///     });
-  ///     ValueNotifier<FormeFieldController?>(
+  ///     ValueListenableBuilder<FormeFieldController?>(
   ///       listenable:FormeKey.of(context).fieldListenable('username'),
   ///       builder:(context,field,child) {
   ///         if(field != null) // ok
@@ -81,7 +94,12 @@ abstract class FormeController
   /// used to listen any form field's validation changes
   ///
   /// will also triggered when field registered to forme or unregistered
-  ValueListenable<FormeValidation> get formValidationListenable;
+  ValueListenable<FormeValidation> get validationListenable;
+
+  /// dispose controller
+  ///
+  /// **DO NOT** call this method by yourself , it will be auto disposed when form is disposed
+  void dispose();
 }
 
 abstract class FormeFieldController<T extends Object?> {
@@ -89,6 +107,10 @@ abstract class FormeFieldController<T extends Object?> {
 
   FormeFieldController(FormeFieldStatus<T> status)
       : statusNotifier = _FormeFieldStatusNotifier(status);
+
+  /// whether controller is disposed or not
+  /// if controller is disposed , you should break reference to this controller to avoid memory leak
+  bool get isDisposed => (statusNotifier as _FormeFieldStatusNotifier).disposed;
 
   /// get forme controller
   FormeController? get formeController;
@@ -230,7 +252,9 @@ abstract class FormeFieldController<T extends Object?> {
   ValueListenable<FormeFieldValidation> get validationListenable =>
       (statusNotifier as _FormeFieldStatusNotifier<T>).validationListenable;
 
-  /// dispose fields
+  /// dispose controller
+  ///
+  /// **DO NOT** call this method by yourself , it will be auto disposed when field is disposed
   void dispose() {
     statusNotifier.dispose();
   }
@@ -317,6 +341,9 @@ class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
 
   @override
   ValueListenable<T> get valueListenable => _delegate.valueListenable;
+
+  @override
+  bool get isDisposed => _delegate.isDisposed;
 }
 
 class _FormeFieldStatusNotifier<T extends Object?>
