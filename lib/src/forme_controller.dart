@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import '../forme.dart';
@@ -55,8 +57,6 @@ abstract class FormeController {
   /// whether form' value changed after initialized
   ///
   /// this method is relay on [FormeField.initialValue] and [Forme.initialValue]
-  ///
-  /// value is compared by [FormeFieldState.compareValue]
   bool get isValueChanged;
 
   /// reset form
@@ -103,17 +103,23 @@ abstract class FormeController {
 }
 
 abstract class FormeFieldController<T extends Object?> {
+  /// [statusNotifier] used to listen field's status
+  ///
+  /// [FormeFieldState] will notify it when status changed
   final ValueNotifier<FormeFieldStatus<T>> statusNotifier;
 
   FormeFieldController(FormeFieldStatus<T> status)
       : statusNotifier = _FormeFieldStatusNotifier(status);
 
   /// whether controller is disposed or not
+  ///
   /// if controller is disposed , you should break reference to this controller to avoid memory leak
   bool get isDisposed => (statusNotifier as _FormeFieldStatusNotifier).disposed;
 
   /// get forme controller
-  FormeController? get formeController;
+  ///
+  /// null if field is not wrapped by [Forme]
+  FormeController? get formeController => Forme.of(context);
 
   ///get field's name
   String get name;
@@ -161,8 +167,6 @@ abstract class FormeFieldController<T extends Object?> {
   /// 6. [FormeFieldValidation.state] is `unnecessary` means field has no validators
   ///
   /// **you can still get error text even though [Forme.quietlyValidate] is true**
-  ///
-  /// **value notifier is always be trigger before errorNotifier , so  when you want to get error in onValueChanged , you should call this method in [WidgetsBinding.instance.addPostFrameCallback]**
   FormeFieldValidation get validation => statusNotifier.value.validation;
 
   /// get old field value
@@ -173,8 +177,6 @@ abstract class FormeFieldController<T extends Object?> {
   /// whether field's value changed after initialized
   ///
   /// this method is relay on [FormeField.initialValue] and [Forme.initialValue]
-  ///
-  /// value is compared by [FormeFieldState.compareValue]
   bool get isValueChanged;
 
   /// whether field is enabled
@@ -202,23 +204,23 @@ abstract class FormeFieldController<T extends Object?> {
   void markNeedsBuild();
 
   /// focus listenable
-  ValueListenable<bool> get focusListenable =>
-      (statusNotifier as _FormeFieldStatusNotifier<T>).focusListenable;
+  ValueListenable<bool> get focusListenable => FormeValueListenableDelegate(
+      (statusNotifier as _FormeFieldStatusNotifier<T>).focusListenable);
 
   /// readOnly listenable
   ///
   /// useful update children items when readOnly state changes
   ///
   /// will trigger when [Forme] or field's readOnly state changed
-  ValueListenable<bool> get readOnlyListenable =>
-      (statusNotifier as _FormeFieldStatusNotifier<T>).readOnlyListenable;
+  ValueListenable<bool> get readOnlyListenable => FormeValueListenableDelegate(
+      (statusNotifier as _FormeFieldStatusNotifier<T>).readOnlyListenable);
 
   /// enabled listenable
   ///
   ///
   /// will trigger when [Forme] or field's readOnly state changed
-  ValueListenable<bool> get enabledListenable =>
-      (statusNotifier as _FormeFieldStatusNotifier<T>).enabledListenable;
+  ValueListenable<bool> get enabledListenable => FormeValueListenableDelegate(
+      (statusNotifier as _FormeFieldStatusNotifier<T>).enabledListenable);
 
   /// get value listenable
   ///
@@ -241,8 +243,8 @@ abstract class FormeFieldController<T extends Object?> {
   /// ```
   ///
   /// this notifier is used for [ValueListenableBuilder]
-  ValueListenable<T> get valueListenable =>
-      (statusNotifier as _FormeFieldStatusNotifier<T>).valueListenable;
+  ValueListenable<T> get valueListenable => FormeValueListenableDelegate(
+      (statusNotifier as _FormeFieldStatusNotifier<T>).valueListenable);
 
   /// get validation listenable
   ///
@@ -250,7 +252,9 @@ abstract class FormeFieldController<T extends Object?> {
   ///
   /// this notifier is used for [ValueListenableBuilder]
   ValueListenable<FormeFieldValidation> get validationListenable =>
-      (statusNotifier as _FormeFieldStatusNotifier<T>).validationListenable;
+      FormeValueListenableDelegate(
+          (statusNotifier as _FormeFieldStatusNotifier<T>)
+              .validationListenable);
 
   /// dispose controller
   ///

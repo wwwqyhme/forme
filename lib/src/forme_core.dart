@@ -566,7 +566,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     _onModelChanged(old, _status);
   }
 
-  bool get isValueChanged => !compareValue(initialValue, value);
+  bool get isValueChanged => initialValue != value;
 
   void _register() {
     if (widget.registrable) {
@@ -708,7 +708,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
   @mustCallSuper
   void didChange(T newValue) {
-    if (!compareValue(_status.value, newValue)) {
+    if (_status.value != newValue) {
       setState(() {
         _hasInteractedByUser = true;
         _status = _status._copyWith(value: _Optional(newValue));
@@ -794,7 +794,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
         onValidationChanged(newStatus.validation);
       });
     }
-    if (!compareValue(oldStatus.value, newStatus.value)) {
+    if (oldStatus.value != newStatus.value) {
       _ignoreValidate = false;
       _perform(() {
         widget.onValueChanged?.call(controller, newStatus.value);
@@ -836,23 +836,6 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     if (_hasInteractedByUser && widget.requestFocusOnUserInteraction) {
       _focusNode?.requestFocus();
     }
-  }
-
-  /// override this method if default compare can not meet your needs
-  bool compareValue(T a, T b) {
-    if (a == b) {
-      return true;
-    }
-    if (a is List && b is List) {
-      return listEquals<dynamic>(a, b);
-    }
-    if (a is Set && b is Set) {
-      return setEquals<dynamic>(a, b);
-    }
-    if (a is Map && b is Map) {
-      return mapEquals<dynamic, dynamic>(a, b);
-    }
-    return false;
   }
 
   void save() {
@@ -1032,7 +1015,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
     notify(validation);
     return FormeFieldValidateSnapshot(value, validation, controller,
-        !compareValue(value, this.value), !compareValue(value, initialValue));
+        value != this.value, value != initialValue);
   }
 
   void _markNeedsBuild() {
@@ -1187,9 +1170,6 @@ class _FormeFieldController<T extends Object?> extends FormeFieldController<T> {
   FormeFieldState<T> get _state =>
       _fieldState ??
       (throw Exception('controller is disposed , should not used anymore'));
-
-  @override
-  FormeController? get formeController => Forme.of(_state.context);
 
   @override
   FocusNode? get focusNode => _state._focusNode;
