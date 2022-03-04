@@ -55,13 +55,9 @@ abstract class FormeController {
   set value(Map<String, Object?> value);
 
   /// whether form' value changed after initialized
-  ///
-  /// this method is relay on [FormeField.initialValue] and [Forme.initialValue]
   bool get isValueChanged;
 
   /// reset form
-  ///
-  /// **only reset all value fields**
   void reset();
 
   /// listen when field initialed or disposed
@@ -95,11 +91,6 @@ abstract class FormeController {
   ///
   /// will also triggered when field registered to forme or unregistered
   ValueListenable<FormeValidation> get validationListenable;
-
-  /// dispose controller
-  ///
-  /// **DO NOT** call this method by yourself , it will be auto disposed when form is disposed
-  void dispose();
 }
 
 abstract class FormeFieldController<T extends Object?> {
@@ -177,8 +168,6 @@ abstract class FormeFieldController<T extends Object?> {
   T? get oldValue;
 
   /// whether field's value changed after initialized
-  ///
-  /// this method is relay on [FormeField.initialValue] and [Forme.initialValue]
   bool get isValueChanged;
 
   /// whether field is enabled
@@ -257,7 +246,7 @@ class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
     _delegate.statusNotifier.addListener(() {
       final FormeFieldStatus<T> status = _delegate.statusNotifier.value;
       if (status.disposed) {
-        disposed();
+        dispose();
       }
     });
   }
@@ -342,5 +331,5 @@ class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
   bool get isDisposed => _delegate.isDisposed;
 
   @protected
-  void disposed() {}
+  void dispose() {}
 }

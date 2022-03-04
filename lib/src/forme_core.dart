@@ -94,9 +94,6 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   @override
   ValueListenable<Map<String, FormeFieldController?>> get fieldsListenable =>
       _currentController.fieldsListenable;
-
-  @override
-  void dispose() => _currentController.dispose();
 }
 
 /// build your form !
@@ -201,6 +198,7 @@ class _FormeState extends State<Forme> {
 
   @override
   void dispose() {
+    controller._state = null;
     fieldsNotifier.dispose();
     validationNotifier.dispose();
     fieldNotifiers.forEach((key, value) {
@@ -1140,11 +1138,6 @@ class _FormeController extends FormeController {
   ValueListenable<FormeFieldController<T>?> fieldListenable<T>(String name) =>
       FormeValueListenableDelegate<FormeFieldController<T>?>(
           state.fieldListenable<T>(name));
-
-  @override
-  void dispose() {
-    _state = null;
-  }
 }
 
 class _FormeFieldController<T extends Object?> extends FormeFieldController<T> {
