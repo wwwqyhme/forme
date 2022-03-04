@@ -2,13 +2,13 @@
 **BREAKING CHANGES:**
 1. remove `beforeInitiation` & `afterInitiation` from `FormeFieldState` , use `initModel` instead
 2. remove `updateFieldValueInDidUpdateWidget`
-3. add `FormeFieldValueUpdater` on `FormeField` , used to update value when `didUpdateValue` return true
+3. add `FormeFieldValueUpdater` on `FormeField` , used to update value when `didUpdateWidget` called
 4. initialValue on `Forme` has higher priority than `FormeField`'s initialValue
 5. `FormeField`'s generic type is `T extends Object?`  now
 6. `FormeController`'s data renamed to value
 7. remove readOnly getter & setter from `FormeController`
 8. remove `mounted` from `FormeFieldController` , use `isDisposed` instead
-9. when `FormeFieldController` or `FormeController ` is referenced  by others , `FormeFieldState`&`_FormeState` can recycled after disposed
+9. when `FormeFieldController` or `FormeController ` is referenced  by others , `FormeFieldState`&`_FormeState` can be recycled after disposed
 10. remove `compareValue` from `FormeFieldState`
 
 ## 3.5.2
