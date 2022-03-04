@@ -239,6 +239,18 @@ abstract class FormeFieldController<T extends Object?> {
   ///
   /// this notifier is used for [ValueListenableBuilder]
   ValueListenable<FormeFieldValidation> get validationListenable;
+
+  /// clear validation error
+  ///
+  /// [validation] will be [FormeFieldValidation.unnecessary]
+  /// or [FormeFieldValidation.waiting] after cleared
+  void clearError();
+
+  /// get order of field , typically used for [Forme.autovalidateByOrder]
+  ///
+  /// null if field is not wrapped by [Forme]
+  /// and not specific an order on [FormeField]
+  int? get order;
 }
 
 class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
@@ -329,6 +341,12 @@ class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
 
   @override
   bool get isDisposed => _delegate.isDisposed;
+
+  @override
+  void clearError() => _delegate.clearError();
+
+  @override
+  int? get order => _delegate.order;
 
   @protected
   void dispose() {}

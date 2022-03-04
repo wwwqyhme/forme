@@ -244,11 +244,11 @@ class _FormeState extends State<Forme> {
       final List<FormeFieldState> valueFieldStates = states
           .where((element) => element._hasAnyValidator && element.enabled)
           .toList()
-        ..sort((a, b) => a.order.compareTo(b.order));
+        ..sort((a, b) => a.order!.compareTo(b.order!));
       if (valueFieldStates.isEmpty) {
         return const FormeValidation({});
       }
-      return _validateByOrder(valueFieldStates);
+      return _validateByOrder(valueFieldStates, collector: {});
     } else {
       final Map<String, FormeFieldValidation> validations = {};
       await Future.wait(states
@@ -263,18 +263,12 @@ class _FormeState extends State<Forme> {
 
   Future<FormeValidation> _validateByOrder(List<FormeFieldState> states,
       {int index = 0,
-      Map<String, FormeFieldValidation> collector = const {}}) async {
+      required Map<String, FormeFieldValidation> collector}) async {
     final int length = states.length;
     if (index >= length) {
       return FormeValidation(collector);
     }
     final FormeFieldState state = states[index];
-    //clear errors after this field
-    for (int i = index + 1; i < length; i++) {
-      if (!states[i]._status.validation.isValid) {
-        states[i]._clearError();
-      }
-    }
     final FormeFieldValidation validation = await state._validateByForm();
     collector[state.name] = validation;
     if (validation.isUnnecessary || validation.isValid) {
@@ -443,11 +437,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   FormeFieldController<T> get controller =>
       _controller ??= createFormeFieldController();
 
-  int get order =>
-      widget.order ??
-      _formeState?.getOrder(this) ??
-      (throw Exception(
-          'can not get order of this field , if this field is not wrapped by Forme , you must specific an order on it'));
+  int? get order => widget.order ?? _formeState?.getOrder(this);
 
   String get name => widget.name;
   T get value => _status.value;
@@ -757,42 +747,42 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     if (oldStatus.enabled != newStatus.enabled) {
       _focusNode?.canRequestFocus = newStatus.enabled;
       _perform(() {
+        _controller?.statusNotifier.value = newStatus;
         widget.onEnabledChanged?.call(controller, newStatus.enabled);
         _formeState?.fieldEnabledChange(this, newStatus.enabled);
-        _controller?.statusNotifier.value = newStatus;
         onEnabledChanged(newStatus.enabled);
       });
     }
     if (oldStatus.readOnly != newStatus.readOnly) {
       _perform(() {
+        _controller?.statusNotifier.value = newStatus;
         widget.onReadonlyChanged?.call(controller, newStatus.readOnly);
         _formeState?.fieldReadonlyChange(this, newStatus.readOnly);
-        _controller?.statusNotifier.value = newStatus;
         onReadonlyChanged(newStatus.readOnly);
       });
     }
     if (oldStatus.validation != newStatus.validation) {
       _perform(() {
+        _controller?.statusNotifier.value = newStatus;
         widget.onValidationChanged?.call(controller, newStatus.validation);
         _formeState?.fieldValidationChange(this, newStatus.validation);
-        _controller?.statusNotifier.value = newStatus;
         onValidationChanged(newStatus.validation);
       });
     }
     if (oldStatus.value != newStatus.value) {
       _ignoreValidate = false;
       _perform(() {
+        _controller?.statusNotifier.value = newStatus;
         widget.onValueChanged?.call(controller, newStatus.value);
         _formeState?.fieldValueChange(this, newStatus.value);
-        _controller?.statusNotifier.value = newStatus;
         onValueChanged(newStatus.value);
       });
     }
 
     if (oldStatus.hasFocus != newStatus.hasFocus) {
+      _controller?.statusNotifier.value = newStatus;
       widget.onFocusChanged?.call(controller, newStatus.hasFocus);
       _formeState?.fieldFocusChange(this, newStatus.hasFocus);
-      _controller?.statusNotifier.value = newStatus;
       onFocusChanged(newStatus.hasFocus);
     }
   }
@@ -830,6 +820,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   void _clearError() {
     if (_status.validation != _initialValidation) {
       setState(() {
+        _ignoreValidate = false;
         _validateGen++;
         _status = _status._copyWith(validation: _Optional(_initialValidation));
       });
@@ -839,7 +830,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   /// this method should be only called in [_FormeState.build]
   Future<FormeFieldValidation> _validateByForm() async {
     void notifyValidation(FormeFieldValidation validation) {
-      if (validation != _status.validation) {
+      if (mounted && validation != _status.validation) {
         setState(() {
           _status = _status._copyWith(validation: _Optional(validation));
         });
@@ -850,6 +841,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       if (!_hasAnyValidator) {
         notifyValidation(FormeFieldValidation.unnecessary);
       }
+      return _status.validation;
     }
 
     final int gen = ++_validateGen;
@@ -857,6 +849,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       final String? errorText = widget.validator!(controller, value);
       if (errorText != null || !_hasAsyncValidator) {
         notifyValidation(_createFormeFieldValidation(errorText));
+        return _status.validation;
       }
     }
 
@@ -870,7 +863,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   /// this method should  be only called in [FormeFieldState.build]
   void _validateByField() {
     void notifyValidation(FormeFieldValidation validation) {
-      if (_status.validation != validation) {
+      if (mounted && _status.validation != validation) {
         final FormeFieldStatus<T> oldStatus = _status;
         _status = _status._copyWith(validation: _Optional(validation));
         _onModelChanged(oldStatus, _status, true);
@@ -1073,7 +1066,7 @@ class _FormeController extends FormeController {
                 element.enabled &&
                 (names.isEmpty || names.contains(element.name)))
             .toList()
-          ..sort((a, b) => a.order.compareTo(b.order)))
+          ..sort((a, b) => a.order!.compareTo(b.order!)))
         .toList();
     if (states.isEmpty) {
       return FormeValidateSnapshot([]);
@@ -1215,6 +1208,12 @@ class _FormeFieldController<T extends Object?> extends FormeFieldController<T> {
 
   @override
   BuildContext get context => _state.context;
+
+  @override
+  void clearError() => _state._clearError();
+
+  @override
+  int? get order => _state.order;
 }
 
 /// a focusnode created by FormeField itself rather than set by subclass ,
