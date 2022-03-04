@@ -103,26 +103,28 @@ abstract class FormeController {
 }
 
 abstract class FormeFieldController<T extends Object?> {
-  /// [statusNotifier] used to listen field's status
+  /// used to listen field's status
   ///
-  /// [FormeFieldState] will notify it when status changed
-  final ValueNotifier<FormeFieldStatus<T>> statusNotifier;
+  /// if [FormeFieldStatus.disposed] is true ,means field is disposed ,
+  /// you should release resources on this controller to avoid preventing
+  /// recycle [FormeFieldState]
+  ///
+  /// this notifier can  also be listened by [ValueListenableBuilder],
+  /// but [valueListenable] and others are better choice because of less build
+  ValueNotifier<FormeFieldStatus<T>> get statusNotifier;
 
-  FormeFieldController(FormeFieldStatus<T> status)
-      : statusNotifier = _FormeFieldStatusNotifier(status);
+  /// name of field
+  String get name;
 
   /// whether controller is disposed or not
   ///
   /// if controller is disposed , you should break reference to this controller to avoid memory leak
-  bool get isDisposed => (statusNotifier as _FormeFieldStatusNotifier).disposed;
+  bool get isDisposed => statusNotifier.value.disposed;
 
   /// get forme controller
   ///
   /// null if field is not wrapped by [Forme]
   FormeController? get formeController => Forme.of(context);
-
-  ///get field's name
-  String get name;
 
   /// whether field is readOnly;
   bool get readOnly => statusNotifier.value.readOnly;
@@ -172,7 +174,7 @@ abstract class FormeFieldController<T extends Object?> {
   /// get old field value
   ///
   /// **after field's value changed , you can use this method to get old value**
-  T? get oldValue => (statusNotifier as _FormeFieldStatusNotifier<T>).oldValue;
+  T? get oldValue;
 
   /// whether field's value changed after initialized
   ///
@@ -204,23 +206,20 @@ abstract class FormeFieldController<T extends Object?> {
   void markNeedsBuild();
 
   /// focus listenable
-  ValueListenable<bool> get focusListenable => FormeValueListenableDelegate(
-      (statusNotifier as _FormeFieldStatusNotifier<T>).focusListenable);
+  ValueListenable<bool> get focusListenable;
 
   /// readOnly listenable
   ///
   /// useful update children items when readOnly state changes
   ///
   /// will trigger when [Forme] or field's readOnly state changed
-  ValueListenable<bool> get readOnlyListenable => FormeValueListenableDelegate(
-      (statusNotifier as _FormeFieldStatusNotifier<T>).readOnlyListenable);
+  ValueListenable<bool> get readOnlyListenable;
 
   /// enabled listenable
   ///
   ///
   /// will trigger when [Forme] or field's readOnly state changed
-  ValueListenable<bool> get enabledListenable => FormeValueListenableDelegate(
-      (statusNotifier as _FormeFieldStatusNotifier<T>).enabledListenable);
+  ValueListenable<bool> get enabledListenable;
 
   /// get value listenable
   ///
@@ -243,29 +242,25 @@ abstract class FormeFieldController<T extends Object?> {
   /// ```
   ///
   /// this notifier is used for [ValueListenableBuilder]
-  ValueListenable<T> get valueListenable => FormeValueListenableDelegate(
-      (statusNotifier as _FormeFieldStatusNotifier<T>).valueListenable);
+  ValueListenable<T> get valueListenable;
 
   /// get validation listenable
   ///
   /// it's useful when you want to display error by your custom way!
   ///
   /// this notifier is used for [ValueListenableBuilder]
-  ValueListenable<FormeFieldValidation> get validationListenable =>
-      FormeValueListenableDelegate(
-          (statusNotifier as _FormeFieldStatusNotifier<T>)
-              .validationListenable);
-
-  /// dispose controller
-  ///
-  /// **DO NOT** call this method by yourself , it will be auto disposed when field is disposed
-  void dispose() {
-    statusNotifier.dispose();
-  }
+  ValueListenable<FormeFieldValidation> get validationListenable;
 }
 
 class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
-  FormeFieldControllerDelegate(this._delegate);
+  FormeFieldControllerDelegate(this._delegate) {
+    _delegate.statusNotifier.addListener(() {
+      final FormeFieldStatus<T> status = _delegate.statusNotifier.value;
+      if (status.disposed) {
+        disposed();
+      }
+    });
+  }
   final FormeFieldController<T> _delegate;
 
   @override
@@ -309,9 +304,6 @@ class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
   void markNeedsBuild() => _delegate.markNeedsBuild();
 
   @override
-  void dispose() => _delegate.dispose();
-
-  @override
   bool get enabled => _delegate.enabled;
 
   @override
@@ -348,47 +340,7 @@ class FormeFieldControllerDelegate<T> implements FormeFieldController<T> {
 
   @override
   bool get isDisposed => _delegate.isDisposed;
-}
 
-class _FormeFieldStatusNotifier<T extends Object?>
-    extends FormeMountedValueNotifier<FormeFieldStatus<T>> {
-  T? oldValue;
-  final ValueNotifier<bool> focusListenable;
-  final ValueNotifier<bool> readOnlyListenable;
-  final ValueNotifier<bool> enabledListenable;
-  final ValueNotifier<T> valueListenable;
-  final ValueNotifier<FormeFieldValidation> validationListenable;
-  _FormeFieldStatusNotifier(
-    FormeFieldStatus<T> value,
-  )   : focusListenable = FormeMountedValueNotifier(value.hasFocus),
-        readOnlyListenable = FormeMountedValueNotifier(value.readOnly),
-        enabledListenable = FormeMountedValueNotifier(value.enabled),
-        valueListenable = FormeMountedValueNotifier(value.value),
-        validationListenable = FormeMountedValueNotifier(value.validation),
-        super(value);
-
-  @override
-  set value(FormeFieldStatus<T> newValue) {
-    super.value = newValue;
-    if (!disposed) {
-      readOnlyListenable.value = newValue.readOnly;
-      focusListenable.value = newValue.hasFocus;
-      enabledListenable.value = newValue.enabled;
-      if (valueListenable.value != newValue.value) {
-        oldValue = valueListenable.value;
-        valueListenable.value = newValue.value;
-      }
-      validationListenable.value = newValue.validation;
-    }
-  }
-
-  @override
-  void dispose() {
-    focusListenable.dispose();
-    readOnlyListenable.dispose();
-    enabledListenable.dispose();
-    valueListenable.dispose();
-    validationListenable.dispose();
-    super.dispose();
-  }
+  @protected
+  void disposed() {}
 }

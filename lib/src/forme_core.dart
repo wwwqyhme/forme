@@ -454,6 +454,8 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   String get name => widget.name;
   T get value => _status.value;
 
+  bool _inited = false;
+
   bool get _hasValidator => widget.validator != null;
   bool get _hasAsyncValidator => widget.asyncValidator != null;
   bool get _hasAnyValidator => _hasValidator || _hasAsyncValidator;
@@ -574,8 +576,6 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
   }
 
-  bool _inited = false;
-
   /// if you want to init some resources relies on [initialValue] or [readOnly] or [enabled]
   ///
   /// use [initModel] instead
@@ -608,13 +608,10 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     );
 
     if (widget.valueUpdater != null) {
-      final bool needUpdateValue = didUpdateValue(oldWidget);
-      if (needUpdateValue) {
-        T newValue = widget.valueUpdater!(oldWidget, widget, value);
-        _status = _status._copyWith(
-          value: _Optional(newValue),
-        );
-      }
+      T newValue = widget.valueUpdater!(oldWidget, widget, value);
+      _status = _status._copyWith(
+        value: _Optional(newValue),
+      );
     }
 
     if (old.validation != _status.validation) {
@@ -622,18 +619,6 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
 
     _onModelChanged(old, _status, true);
-  }
-
-  /// this method is used to determine whether  value  need update or not after widget updated
-  /// eg: Dropdown value is '2',children values are ['1','2','3'] , after widget updated,
-  /// children values are ['1','3','4'] . in this case Dropdown will be crashed due to value '2' is no longer in children values,
-  ///
-  /// override this method to tell user : **you should update this field's value, otherwise something unexpected will happen**
-  ///
-  /// if true , [widget.valueUpdater] will be called to get a new value
-  @protected
-  bool didUpdateValue(covariant FormeField<T> oldWidget) {
-    return false;
   }
 
   @override
@@ -679,6 +664,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
           : FormeFieldValidation.unnecessary,
       value: initialValue,
       hasFocus: _focusNode?.hasFocus ?? false,
+      disposed: false,
     );
   }
 
@@ -697,7 +683,8 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
   @override
   void dispose() {
-    _controller?.dispose();
+    _controller?.statusNotifier.value =
+        _status._copyWith(disposed: _Optional(true));
     _asyncValidatorTimer?.cancel();
     _focusNode?.removeListener(_onFocusChangedListener);
     if (_focusNode is _DisposeRequiredFocusNode) {
@@ -1163,9 +1150,23 @@ class _FormeController extends FormeController {
 class _FormeFieldController<T extends Object?> extends FormeFieldController<T> {
   FormeFieldState<T>? _fieldState;
 
+  @override
+  final String name;
+  @override
+  final _FormeFieldStatusNotifier<T> statusNotifier;
+
   _FormeFieldController(FormeFieldStatus<T> status, FormeFieldState<T> state)
       : _fieldState = state,
-        super(status);
+        statusNotifier = _FormeFieldStatusNotifier(status),
+        name = state.name {
+    statusNotifier.addListener(() {
+      final FormeFieldStatus<T> status = statusNotifier.value;
+      if (status.disposed) {
+        _fieldState = null;
+        statusNotifier.dispose();
+      }
+    });
+  }
 
   FormeFieldState<T> get _state =>
       _fieldState ??
@@ -1173,9 +1174,6 @@ class _FormeFieldController<T extends Object?> extends FormeFieldController<T> {
 
   @override
   FocusNode? get focusNode => _state._focusNode;
-
-  @override
-  String get name => _state.name;
 
   @override
   set readOnly(bool readOnly) => _state.readOnly = readOnly;
@@ -1194,19 +1192,36 @@ class _FormeFieldController<T extends Object?> extends FormeFieldController<T> {
   bool get isValueChanged => _state.isValueChanged;
 
   @override
-  BuildContext get context => _state.context;
-
-  @override
   set enabled(bool enabled) => _state.enabled = enabled;
 
   @override
   void markNeedsBuild() => _state._markNeedsBuild();
 
   @override
-  void dispose() {
-    _fieldState = null;
-    super.dispose();
-  }
+  ValueListenable<bool> get enabledListenable =>
+      FormeValueListenableDelegate(statusNotifier.enabledListenable);
+
+  @override
+  ValueListenable<bool> get focusListenable =>
+      FormeValueListenableDelegate(statusNotifier.focusListenable);
+
+  @override
+  T? get oldValue => statusNotifier.oldValue;
+
+  @override
+  ValueListenable<bool> get readOnlyListenable =>
+      FormeValueListenableDelegate(statusNotifier.readOnlyListenable);
+
+  @override
+  ValueListenable<FormeFieldValidation> get validationListenable =>
+      FormeValueListenableDelegate(statusNotifier.validationListenable);
+
+  @override
+  ValueListenable<T> get valueListenable =>
+      FormeValueListenableDelegate(statusNotifier.valueListenable);
+
+  @override
+  BuildContext get context => _state.context;
 }
 
 /// a focusnode created by FormeField itself rather than set by subclass ,
@@ -1220,12 +1235,16 @@ class FormeFieldStatus<T extends Object?> {
   final T value;
   final bool hasFocus;
 
+  /// field is disposed
+  final bool disposed;
+
   FormeFieldStatus._({
     required this.enabled,
     required this.readOnly,
     required this.validation,
     required this.value,
     required this.hasFocus,
+    required this.disposed,
   });
 
   FormeFieldStatus<T> _copyWith({
@@ -1234,6 +1253,7 @@ class FormeFieldStatus<T extends Object?> {
     _Optional<FormeFieldValidation>? validation,
     _Optional<T>? value,
     _Optional<bool>? hasFocus,
+    _Optional<bool>? disposed,
   }) {
     return FormeFieldStatus<T>._(
       enabled: enabled == null ? this.enabled : enabled.value,
@@ -1241,6 +1261,7 @@ class FormeFieldStatus<T extends Object?> {
       validation: validation == null ? this.validation : validation.value,
       value: value == null ? this.value : value.value,
       hasFocus: hasFocus == null ? this.hasFocus : hasFocus.value,
+      disposed: disposed == null ? this.disposed : disposed.value,
     );
   }
 }
@@ -1248,4 +1269,47 @@ class FormeFieldStatus<T extends Object?> {
 class _Optional<T> {
   final T value;
   _Optional(this.value);
+}
+
+class _FormeFieldStatusNotifier<T extends Object?>
+    extends FormeMountedValueNotifier<FormeFieldStatus<T>> {
+  T? oldValue;
+  final ValueNotifier<bool> focusListenable;
+  final ValueNotifier<bool> readOnlyListenable;
+  final ValueNotifier<bool> enabledListenable;
+  final ValueNotifier<T> valueListenable;
+  final ValueNotifier<FormeFieldValidation> validationListenable;
+  _FormeFieldStatusNotifier(
+    FormeFieldStatus<T> value,
+  )   : focusListenable = FormeMountedValueNotifier(value.hasFocus),
+        readOnlyListenable = FormeMountedValueNotifier(value.readOnly),
+        enabledListenable = FormeMountedValueNotifier(value.enabled),
+        valueListenable = FormeMountedValueNotifier(value.value),
+        validationListenable = FormeMountedValueNotifier(value.validation),
+        super(value);
+
+  @override
+  set value(FormeFieldStatus<T> newValue) {
+    super.value = newValue;
+    if (!newValue.disposed) {
+      readOnlyListenable.value = newValue.readOnly;
+      focusListenable.value = newValue.hasFocus;
+      enabledListenable.value = newValue.enabled;
+      if (valueListenable.value != newValue.value) {
+        oldValue = valueListenable.value;
+        valueListenable.value = newValue.value;
+      }
+      validationListenable.value = newValue.validation;
+    }
+  }
+
+  @override
+  void dispose() {
+    focusListenable.dispose();
+    readOnlyListenable.dispose();
+    enabledListenable.dispose();
+    valueListenable.dispose();
+    validationListenable.dispose();
+    super.dispose();
+  }
 }
