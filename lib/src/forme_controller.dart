@@ -60,7 +60,7 @@ abstract class FormeController {
   /// reset form
   void reset();
 
-  /// listen when field initialed or disposed
+  /// listen when field registered or unregistered
   ///
   /// if [FormeFieldController] is null , means field is not initialed or has been disposed, otherwise means field is initialed
   ///
@@ -80,11 +80,12 @@ abstract class FormeController {
   ///   ```
   ValueListenable<FormeFieldController<T>?> fieldListenable<T>(String name);
 
-  /// listen when fields initialed or disposed
+  /// listen  fields registered or unregistered
   ///
-  /// listenable value is a zero or single size map , key is field name , value is controller
+  /// will only be triggered once in a frame
   ///
-  /// unlike [fieldListenable] , this listenable will listen every field
+  /// value contains all registered|unregistered fields in this frame,
+  /// key is name of field , if value is null , means field unregistered ,otherwise registered
   ValueListenable<Map<String, FormeFieldController?>> get fieldsListenable;
 
   /// used to listen any form field's validation changes

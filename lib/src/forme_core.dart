@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 import '../forme.dart';
@@ -135,9 +136,10 @@ class Forme extends StatefulWidget {
   /// will not continue if any field validation is not passed
   final bool autovalidateByOrder;
 
-  /// listen field registered|unregistered
-  final void Function(String name, FormeFieldController? field)?
-      onFieldsChanged;
+  /// listen fields registered in this frame
+  final void Function(List<FormeFieldController> controllers)?
+      onFieldsRegistered;
+  final void Function(List<String> names)? onFieldsUnregistered;
 
   /// listen [FormeValidation] changed
   final void Function(FormeController field, FormeValidation validation)?
@@ -160,7 +162,8 @@ class Forme extends StatefulWidget {
     this.onFocusChanged,
     AutovalidateMode? autovalidateMode,
     this.autovalidateByOrder = false,
-    this.onFieldsChanged,
+    this.onFieldsRegistered,
+    this.onFieldsUnregistered,
     this.onReadonlyChanged,
     this.onEnabledChanged,
   })  : autovalidateMode = autovalidateMode ?? AutovalidateMode.disabled,
@@ -181,6 +184,8 @@ class _FormeState extends State<Forme> {
       FormeMountedValueNotifier({});
   final ValueNotifier<FormeValidation> validationNotifier =
       FormeMountedValueNotifier(const FormeValidation({}));
+  final List<FormeFieldState> newRegisteredStates = [];
+  final List<String> newUnregisteredStates = [];
 
   Map<String, Object?> get initialValue => widget.initialValue;
 
@@ -372,23 +377,46 @@ class _FormeState extends State<Forme> {
   void registerField(FormeFieldState state) {
     if (!states.contains(state)) {
       states.add(state);
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        widget.onFieldsChanged?.call(state.name, state.controller);
-        fieldNotifiers[state.name]?.value = state.controller;
-        fieldsNotifier.value = {state.name: state.controller};
-        updateValidation();
-      });
+      if (newRegisteredStates.isEmpty) {
+        SchedulerBinding.instance!.endOfFrame.then((_) {
+          try {
+            widget.onFieldsRegistered
+                ?.call(newRegisteredStates.map((e) => e.controller).toList());
+            for (final FormeFieldState state in newRegisteredStates) {
+              fieldNotifiers[state.name]?.value = state.controller;
+            }
+            fieldsNotifier.value = newRegisteredStates
+                .asMap()
+                .map((key, value) => MapEntry(value.name, value.controller));
+            updateValidation();
+          } finally {
+            newRegisteredStates.clear();
+          }
+        });
+      }
+      newRegisteredStates.add(state);
     }
   }
 
   void unregisterField(FormeFieldState state) {
     if (states.remove(state)) {
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        widget.onFieldsChanged?.call(state.name, null);
-        fieldNotifiers[state.name]?.value = null;
-        fieldsNotifier.value = {state.name: null};
-        updateValidation();
-      });
+      if (newUnregisteredStates.isEmpty) {
+        SchedulerBinding.instance!.endOfFrame.then((_) {
+          try {
+            widget.onFieldsUnregistered?.call(List.of(newUnregisteredStates));
+            for (final String name in newUnregisteredStates) {
+              fieldNotifiers[name]?.value = null;
+            }
+            fieldsNotifier.value = newUnregisteredStates
+                .asMap()
+                .map((key, value) => MapEntry(value, null));
+            updateValidation();
+          } finally {
+            newUnregisteredStates.clear();
+          }
+        });
+      }
+      newUnregisteredStates.add(state.name);
     }
   }
 

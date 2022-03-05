@@ -9,7 +9,8 @@
 7. remove readOnly getter & setter from `FormeController`
 8. remove `mounted` from `FormeFieldController` , use `isDisposed` instead
 9. when `FormeFieldController` or `FormeController ` is referenced  by others , `FormeFieldState`&`_FormeState` can be recycled after disposed
-10. remove `compareValue` from `FormeFieldState`
+10. remove `compareValue` on `FormeFieldState`
+11. remove `onFieldsRegistered` on `Forme`,use `onFieldsRegistered` & `onFieldsUnregistered` instead
 
 ## 3.5.2
 
