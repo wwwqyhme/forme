@@ -210,6 +210,8 @@ class _FormeState extends State<Forme> {
       value.dispose();
     });
     fieldNotifiers.clear();
+    newRegisteredStates.clear();
+    newUnregisteredStates.clear();
     super.dispose();
   }
 
@@ -460,10 +462,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   late FormeFieldStatus<T> _status;
   _FormeState? _formeState;
 
-  FormeFieldController<T>? _controller;
-
-  FormeFieldController<T> get controller =>
-      _controller ??= createFormeFieldController();
+  late FormeFieldController<T> controller;
 
   int? get order => widget.order ?? _formeState?.getOrder(this);
 
@@ -682,6 +681,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       hasFocus: _focusNode?.hasFocus ?? false,
       disposed: false,
     );
+    controller = createFormeFieldController();
   }
 
   /// create [FormeFieldController] , this method will only called once in field's lifecycle
@@ -699,7 +699,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
   @override
   void dispose() {
-    _controller?.statusNotifier.value =
+    controller.statusNotifier.value =
         _status._copyWith(disposed: _Optional(true));
     _asyncValidatorTimer?.cancel();
     _focusNode?.removeListener(_onFocusChangedListener);
@@ -763,19 +763,23 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       FormeFieldStatus<T> oldStatus, FormeFieldStatus<T> newStatus,
       [bool onlyAfterFrameCompleted = false]) {
     void _perform(VoidCallback fn) {
+      void task() {
+        controller.statusNotifier.value = newStatus;
+        fn();
+      }
+
       if (onlyAfterFrameCompleted) {
         WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-          fn();
+          task();
         });
       } else {
-        fn();
+        task();
       }
     }
 
     if (oldStatus.enabled != newStatus.enabled) {
       _focusNode?.canRequestFocus = newStatus.enabled;
       _perform(() {
-        _controller?.statusNotifier.value = newStatus;
         widget.onEnabledChanged?.call(controller, newStatus.enabled);
         _formeState?.fieldEnabledChange(this, newStatus.enabled);
         onEnabledChanged(newStatus.enabled);
@@ -783,7 +787,6 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
     if (oldStatus.readOnly != newStatus.readOnly) {
       _perform(() {
-        _controller?.statusNotifier.value = newStatus;
         widget.onReadonlyChanged?.call(controller, newStatus.readOnly);
         _formeState?.fieldReadonlyChange(this, newStatus.readOnly);
         onReadonlyChanged(newStatus.readOnly);
@@ -791,7 +794,6 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
     if (oldStatus.validation != newStatus.validation) {
       _perform(() {
-        _controller?.statusNotifier.value = newStatus;
         widget.onValidationChanged?.call(controller, newStatus.validation);
         _formeState?.fieldValidationChange(this, newStatus.validation);
         onValidationChanged(newStatus.validation);
@@ -800,7 +802,6 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     if (oldStatus.value != newStatus.value) {
       _ignoreValidate = false;
       _perform(() {
-        _controller?.statusNotifier.value = newStatus;
         widget.onValueChanged?.call(controller, newStatus.value);
         _formeState?.fieldValueChange(this, newStatus.value);
         onValueChanged(newStatus.value);
@@ -808,7 +809,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
 
     if (oldStatus.hasFocus != newStatus.hasFocus) {
-      _controller?.statusNotifier.value = newStatus;
+      controller.statusNotifier.value = newStatus;
       widget.onFocusChanged?.call(controller, newStatus.hasFocus);
       _formeState?.fieldFocusChange(this, newStatus.hasFocus);
       onFocusChanged(newStatus.hasFocus);
