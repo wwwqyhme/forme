@@ -204,6 +204,12 @@ class _FormeState extends State<Forme> {
 
   bool get quietlyValidate => widget.quietlyValidate;
 
+  FormeValidation get validation => FormeValidation(states
+      .where((element) => element.enabled)
+      .toList()
+      .asMap()
+      .map((key, value) => MapEntry(value.name, value._status.validation)));
+
   @override
   void initState() {
     super.initState();
@@ -342,9 +348,7 @@ class _FormeState extends State<Forme> {
   }
 
   void updateValidation() {
-    final FormeValidation validation = FormeValidation(states
-        .asMap()
-        .map((key, value) => MapEntry(value.name, value._status.validation)));
+    final FormeValidation validation = this.validation;
     widget.onValidationChanged?.call(controller, validation);
     validationNotifier.value = validation;
   }
@@ -1075,11 +1079,7 @@ class _FormeController extends FormeController {
   bool get quietlyValidate => state.quietlyValidate;
 
   @override
-  FormeValidation get validation => FormeValidation(state.states
-      .where((element) => element.enabled)
-      .toList()
-      .asMap()
-      .map((key, value) => MapEntry(value.name, value._status.validation)));
+  FormeValidation get validation => state.validation;
 
   @override
   T field<T extends FormeFieldController<Object?>>(String name) {

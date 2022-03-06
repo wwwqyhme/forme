@@ -170,6 +170,97 @@ class _FormeValueListenerState extends _FormeVisitorState<FormeValueListener> {
   }
 }
 
+/// used to listen multi field validation change
+///
+///
+/// eg:
+///
+/// ``` Dart
+/// FormeFieldsValidationListener(
+///       names: const {'password', 'confirm'},
+///       builder: (context, validation) {
+///         if (validation == null) {
+///           return const SizedBox();
+///         }
+///         if (validation.isInvalid) {
+///           return Padding(
+///             padding: const EdgeInsets.only(left: 24),
+///             child: Text(
+///               validation.validations.values
+///                   .where((element) => element.isInvalid)
+///                   .first
+///                   .error!,
+///               style: _getErrorStyle(),
+///             ),
+///           );
+///         }
+///         return const SizedBox.shrink();
+///       },
+///     ),
+/// ```
+class FormeFieldsValidationListener extends StatefulWidget {
+  final Set<String> names;
+  final Widget Function(BuildContext context, FormeValidation? validation)
+      builder;
+
+  const FormeFieldsValidationListener({
+    Key? key,
+    required this.names,
+    required this.builder,
+  }) : super(key: key);
+  @override
+  State<StatefulWidget> createState() => _FormeFieldsValidationListenerState();
+}
+
+class _FormeFieldsValidationListenerState
+    extends _FormeVisitorState<FormeFieldsValidationListener> {
+  FormeValidation? _validation;
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.builder(context, _validation);
+  }
+
+  @override
+  void onFieldStatusChanged(
+      FormeController form,
+      FormeFieldController<Object?> field,
+      FormeFieldStatus<Object?> oldStatus,
+      FormeFieldStatus<Object?> newStatus) {
+    if (widget.names.contains(field.name) &&
+        oldStatus.validation != newStatus.validation) {
+      updateValidation(form);
+    }
+  }
+
+  @override
+  void onFieldsRegistered(
+      FormeController form, List<FormeFieldController<Object?>> fields) {
+    if (fields.any((element) => widget.names.contains(element.name))) {
+      updateValidation(form);
+    }
+  }
+
+  @override
+  void onFieldsUnregistered(FormeController form, List<String> names) {
+    if (names.any((element) => widget.names.contains(element))) {
+      updateValidation(form);
+    }
+  }
+
+  void updateValidation(FormeController form) {
+    final Map<String, FormeFieldValidation> validationMap = {};
+    for (final String name in widget.names) {
+      if (form.hasField(name)) {
+        validationMap[name] = form.field(name).validation;
+      }
+    }
+    setState(() {
+      _validation = FormeValidation(validationMap);
+    });
+  }
+}
+
 abstract class _FormeVisitorState<T extends StatefulWidget> extends State<T>
     with FormeVisitor {
   late final FormeController controller;
