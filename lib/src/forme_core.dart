@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
+import 'package:forme/src/visitor/forme_visitor.dart';
 
 import '../forme.dart';
 import 'forme_field_scope.dart';
@@ -186,6 +187,7 @@ class _FormeState extends State<Forme> {
       FormeMountedValueNotifier(const FormeValidation({}));
   final List<FormeFieldState> newRegisteredStates = [];
   final List<String> newUnregisteredStates = [];
+  final List<FormeVisitor> visitors = [];
 
   Map<String, Object?> get initialValue => widget.initialValue;
 
@@ -339,41 +341,64 @@ class _FormeState extends State<Forme> {
     validationNotifier.value = validation;
   }
 
-  void fieldValidationChange(
-      FormeFieldState state, FormeFieldValidation validation) {
-    if (!states.contains(state)) {
-      return;
+  void notifyFieldsRegistered(List<FormeFieldState> states) {
+    for (final FormeVisitor visitor in visitors) {
+      visitor.onFieldsRegistered(
+          controller, states.map((e) => e.controller).toList());
     }
+    for (final FormeFieldState state in states) {
+      fieldNotifiers[state.name]?.value = state.controller;
+    }
+    fieldsNotifier.value = states
+        .asMap()
+        .map((key, value) => MapEntry(value.name, value.controller));
+    widget.onFieldsRegistered?.call(states.map((e) => e.controller).toList());
     updateValidation();
-    widget.onFieldValidationChanged?.call(state.controller, validation);
   }
 
-  void fieldFocusChange(FormeFieldState state, bool hasFocus) {
+  void notifyFieldsUnregistered(List<String> names) {
+    for (final FormeVisitor visitor in visitors) {
+      visitor.onFieldsUnregistered(controller, List.of(names));
+    }
+    for (final String name in names) {
+      fieldNotifiers[name]?.value = null;
+    }
+    fieldsNotifier.value =
+        names.asMap().map((key, value) => MapEntry(value, null));
+    widget.onFieldsUnregistered?.call(List.of(names));
+    updateValidation();
+  }
+
+  void notifiyFieldsStatusChanged(
+    FormeFieldState state,
+    FormeFieldStatus oldStatus,
+    FormeFieldStatus newStatus,
+  ) {
     if (!states.contains(state)) {
       return;
     }
-    widget.onFocusChanged?.call(state.controller, hasFocus);
-  }
-
-  void fieldValueChange(FormeFieldState state, Object? value) {
-    if (!states.contains(state)) {
-      return;
+    for (final FormeVisitor visitor in visitors) {
+      visitor.onFieldsStatusChanged(
+          controller, state.controller, oldStatus, newStatus);
     }
-    widget.onValueChanged?.call(state.controller, value);
-  }
 
-  void fieldReadonlyChange(FormeFieldState state, bool enabled) {
-    if (!states.contains(state)) {
-      return;
+    if (oldStatus.validation != newStatus.validation) {
+      updateValidation();
+      widget.onFieldValidationChanged
+          ?.call(state.controller, newStatus.validation);
     }
-    widget.onEnabledChanged?.call(state.controller, enabled);
-  }
-
-  void fieldEnabledChange(FormeFieldState state, bool readOnly) {
-    if (!states.contains(state)) {
-      return;
+    if (oldStatus.hasFocus != newStatus.hasFocus) {
+      widget.onFocusChanged?.call(state.controller, newStatus.hasFocus);
     }
-    widget.onReadonlyChanged?.call(state.controller, readOnly);
+    if (oldStatus.value != newStatus.value) {
+      widget.onValueChanged?.call(state.controller, newStatus.value);
+    }
+    if (oldStatus.readOnly != newStatus.readOnly) {
+      widget.onReadonlyChanged?.call(state.controller, newStatus.readOnly);
+    }
+    if (oldStatus.enabled != newStatus.enabled) {
+      widget.onEnabledChanged?.call(state.controller, newStatus.enabled);
+    }
   }
 
   void registerField(FormeFieldState state) {
@@ -381,19 +406,9 @@ class _FormeState extends State<Forme> {
       states.add(state);
       if (newRegisteredStates.isEmpty) {
         SchedulerBinding.instance!.endOfFrame.then((_) {
-          try {
-            widget.onFieldsRegistered
-                ?.call(newRegisteredStates.map((e) => e.controller).toList());
-            for (final FormeFieldState state in newRegisteredStates) {
-              fieldNotifiers[state.name]?.value = state.controller;
-            }
-            fieldsNotifier.value = newRegisteredStates
-                .asMap()
-                .map((key, value) => MapEntry(value.name, value.controller));
-            updateValidation();
-          } finally {
-            newRegisteredStates.clear();
-          }
+          final List<FormeFieldState> states = List.of(newRegisteredStates);
+          newRegisteredStates.clear();
+          notifyFieldsRegistered(states);
         });
       }
       newRegisteredStates.add(state);
@@ -404,18 +419,9 @@ class _FormeState extends State<Forme> {
     if (states.remove(state)) {
       if (newUnregisteredStates.isEmpty) {
         SchedulerBinding.instance!.endOfFrame.then((_) {
-          try {
-            widget.onFieldsUnregistered?.call(List.of(newUnregisteredStates));
-            for (final String name in newUnregisteredStates) {
-              fieldNotifiers[name]?.value = null;
-            }
-            fieldsNotifier.value = newUnregisteredStates
-                .asMap()
-                .map((key, value) => MapEntry(value, null));
-            updateValidation();
-          } finally {
-            newUnregisteredStates.clear();
-          }
+          final List<String> names = List.of(newUnregisteredStates);
+          newUnregisteredStates.clear();
+          notifyFieldsUnregistered(names);
         });
       }
       newUnregisteredStates.add(state.name);
@@ -765,6 +771,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     void _perform(VoidCallback fn) {
       void task() {
         controller.statusNotifier.value = newStatus;
+        _formeState?.notifiyFieldsStatusChanged(this, oldStatus, newStatus);
         fn();
       }
 
@@ -781,21 +788,18 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       _focusNode?.canRequestFocus = newStatus.enabled;
       _perform(() {
         widget.onEnabledChanged?.call(controller, newStatus.enabled);
-        _formeState?.fieldEnabledChange(this, newStatus.enabled);
         onEnabledChanged(newStatus.enabled);
       });
     }
     if (oldStatus.readOnly != newStatus.readOnly) {
       _perform(() {
         widget.onReadonlyChanged?.call(controller, newStatus.readOnly);
-        _formeState?.fieldReadonlyChange(this, newStatus.readOnly);
         onReadonlyChanged(newStatus.readOnly);
       });
     }
     if (oldStatus.validation != newStatus.validation) {
       _perform(() {
         widget.onValidationChanged?.call(controller, newStatus.validation);
-        _formeState?.fieldValidationChange(this, newStatus.validation);
         onValidationChanged(newStatus.validation);
       });
     }
@@ -803,7 +807,6 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       _ignoreValidate = false;
       _perform(() {
         widget.onValueChanged?.call(controller, newStatus.value);
-        _formeState?.fieldValueChange(this, newStatus.value);
         onValueChanged(newStatus.value);
       });
     }
@@ -811,7 +814,6 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     if (oldStatus.hasFocus != newStatus.hasFocus) {
       controller.statusNotifier.value = newStatus;
       widget.onFocusChanged?.call(controller, newStatus.hasFocus);
-      _formeState?.fieldFocusChange(this, newStatus.hasFocus);
       onFocusChanged(newStatus.hasFocus);
     }
   }
