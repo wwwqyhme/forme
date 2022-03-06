@@ -386,7 +386,7 @@ class _FormeState extends State<Forme> {
       return;
     }
     for (final FormeVisitor visitor in visitors) {
-      visitor.onFieldsStatusChanged(
+      visitor.onFieldStatusChanged(
           controller, state.controller, oldStatus, newStatus);
     }
 

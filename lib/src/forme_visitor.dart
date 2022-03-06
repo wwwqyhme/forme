@@ -6,7 +6,7 @@ mixin FormeVisitor {
     List<FormeFieldController> fields,
   );
 
-  void onFieldsStatusChanged(
+  void onFieldStatusChanged(
     FormeController form,
     FormeFieldController field,
     FormeFieldStatus oldStatus,
