@@ -92,6 +92,14 @@ abstract class FormeController {
   ///
   /// will also triggered when field registered to forme or unregistered
   ValueListenable<FormeValidation> get validationListenable;
+
+  /// add forme visitor
+  ///
+  /// return false if exists
+  bool addVisitor(FormeVisitor visitor);
+
+  /// remove visitor
+  bool removeVisitor(FormeVisitor visitor);
 }
 
 abstract class FormeFieldController<T extends Object?> {

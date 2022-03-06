@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
-import 'package:forme/src/visitor/forme_visitor.dart';
 
 import '../forme.dart';
 import 'forme_field_scope.dart';
@@ -96,6 +95,14 @@ class FormeKey extends LabeledGlobalKey<State> implements FormeController {
   @override
   ValueListenable<Map<String, FormeFieldController?>> get fieldsListenable =>
       _currentController.fieldsListenable;
+
+  @override
+  bool addVisitor(FormeVisitor visitor) =>
+      _currentController.addVisitor(visitor);
+
+  @override
+  bool removeVisitor(FormeVisitor visitor) =>
+      _currentController.removeVisitor(visitor);
 }
 
 /// build your form !
@@ -206,6 +213,7 @@ class _FormeState extends State<Forme> {
   @override
   void dispose() {
     controller._state = null;
+    visitors.clear();
     fieldsNotifier.dispose();
     validationNotifier.dispose();
     fieldNotifiers.forEach((key, value) {
@@ -365,7 +373,7 @@ class _FormeState extends State<Forme> {
     }
     fieldsNotifier.value =
         names.asMap().map((key, value) => MapEntry(value, null));
-    widget.onFieldsUnregistered?.call(List.of(names));
+    widget.onFieldsUnregistered?.call(names);
     updateValidation();
   }
 
@@ -419,9 +427,11 @@ class _FormeState extends State<Forme> {
     if (states.remove(state)) {
       if (newUnregisteredStates.isEmpty) {
         SchedulerBinding.instance!.endOfFrame.then((_) {
-          final List<String> names = List.of(newUnregisteredStates);
-          newUnregisteredStates.clear();
-          notifyFieldsUnregistered(names);
+          if (mounted) {
+            final List<String> names = List.of(newUnregisteredStates);
+            newUnregisteredStates.clear();
+            notifyFieldsUnregistered(names);
+          }
         });
       }
       newUnregisteredStates.add(state.name);
@@ -659,6 +669,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       _inited = true;
 
       initModel();
+      controller = createFormeFieldController();
     } else {
       final FormeFieldStatus<T> old = _status;
       _status = _status._copyWith(
@@ -687,7 +698,6 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       hasFocus: _focusNode?.hasFocus ?? false,
       disposed: false,
     );
-    controller = createFormeFieldController();
   }
 
   /// create [FormeFieldController] , this method will only called once in field's lifecycle
@@ -1162,6 +1172,20 @@ class _FormeController extends FormeController {
   ValueListenable<FormeFieldController<T>?> fieldListenable<T>(String name) =>
       FormeValueListenableDelegate<FormeFieldController<T>?>(
           state.fieldListenable<T>(name));
+
+  @override
+  bool addVisitor(FormeVisitor visitor) {
+    if (!state.visitors.contains(visitor)) {
+      state.visitors.add(visitor);
+      return true;
+    }
+    return false;
+  }
+
+  @override
+  bool removeVisitor(FormeVisitor visitor) {
+    return state.visitors.remove(visitor);
+  }
 }
 
 class _FormeFieldController<T extends Object?> extends FormeFieldController<T> {
