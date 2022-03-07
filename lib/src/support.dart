@@ -368,6 +368,47 @@ class FormeFieldEnabledListener extends StatelessWidget {
   }
 }
 
+/// used same as [FormeFieldReadOnlyListener]
+class FormeFieldValidationListener extends StatelessWidget {
+  final String name;
+  final Widget? child;
+  final Widget Function(BuildContext context, FormeFieldController? field,
+      FormeFieldValidation? validation, Widget? child) builder;
+
+  const FormeFieldValidationListener(
+      {Key? key, required this.name, required this.builder, this.child})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final FormeFieldController? fieldController = FormeField.of(context);
+
+    if (fieldController != null && fieldController.name == name) {
+      return ValueListenableBuilder<FormeFieldValidation>(
+          child: child,
+          valueListenable: fieldController.validationListenable,
+          builder: (context, value, child) {
+            return builder(context, fieldController, value, child);
+          });
+    }
+
+    final FormeController controller = Forme.of(context)!;
+    return ValueListenableBuilder<FormeFieldController?>(
+        valueListenable: controller.fieldListenable(name),
+        builder: (context, field, child) {
+          if (field == null) {
+            return builder(context, field, null, child);
+          }
+          return ValueListenableBuilder<FormeFieldValidation>(
+              valueListenable: field.validationListenable,
+              child: child,
+              builder: (context, value, child) {
+                return builder(context, field, value, child);
+              });
+        });
+  }
+}
+
 abstract class _FormeVisitorState<T extends StatefulWidget> extends State<T>
     with FormeVisitor {
   late final FormeController controller;

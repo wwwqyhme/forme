@@ -418,6 +418,9 @@ class _FormeState extends State<Forme> {
       states.add(state);
       if (newRegisteredStates.isEmpty) {
         SchedulerBinding.instance!.endOfFrame.then((_) {
+          if (needValidate) {
+            _validateForm();
+          }
           final List<FormeFieldState> states = List.of(newRegisteredStates);
           newRegisteredStates.clear();
           notifyFieldsRegistered(states);
@@ -432,6 +435,9 @@ class _FormeState extends State<Forme> {
       if (newUnregisteredStates.isEmpty) {
         SchedulerBinding.instance!.endOfFrame.then((_) {
           if (mounted) {
+            if (needValidate) {
+              _validateForm();
+            }
             final List<String> names = List.of(newUnregisteredStates);
             newUnregisteredStates.clear();
             notifyFieldsUnregistered(names);

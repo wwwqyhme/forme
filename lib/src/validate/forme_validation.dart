@@ -89,7 +89,8 @@ class FormeValidation {
   /// all fields are valid
   bool get isValid =>
       _validations.isNotEmpty &&
-      _validations.values.every((element) => element.isValid);
+      _validations.values
+          .every((element) => element.isValid || element.isUnnecessary);
 
   /// any fields is waiting for validate
   bool get isWaiting =>
