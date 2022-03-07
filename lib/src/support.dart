@@ -81,6 +81,7 @@ class FormeFieldValueListener<T extends Object?> extends StatelessWidget {
     BuildContext context,
     FormeFieldController<T>? field,
     T? value,
+    Widget? child,
   ) builder;
 
   const FormeFieldValueListener({
@@ -99,7 +100,12 @@ class FormeFieldValueListener<T extends Object?> extends StatelessWidget {
           child: child,
           valueListenable: fieldController.valueListenable,
           builder: (context, value, child) {
-            return builder(context, fieldController, value);
+            return builder(
+              context,
+              fieldController,
+              value,
+              child,
+            );
           });
     }
 
@@ -108,13 +114,13 @@ class FormeFieldValueListener<T extends Object?> extends StatelessWidget {
         valueListenable: controller.fieldListenable<T>(name),
         builder: (context, field, child) {
           if (field == null) {
-            return builder(context, field, null);
+            return builder(context, field, null, child);
           }
           return ValueListenableBuilder<T>(
               valueListenable: field.valueListenable,
               child: child,
               builder: (context, value, child) {
-                return builder(context, field, value);
+                return builder(context, field, value, child);
               });
         });
   }
@@ -258,6 +264,107 @@ class _FormeFieldsValidationListenerState
     setState(() {
       _validation = FormeValidation(validationMap);
     });
+  }
+}
+
+/// used to listen target field is readOnly or not
+///
+/// eg:
+///
+/// ``` Dart
+/// FormeFieldReadOnlyListener(
+///   name:'username',
+///   builder:(context,field,readOnly,child){
+///     if(readOnly == null) {
+///       //field is disposed or not created yet
+///       return const SizedBox.shrink();
+///     }
+///     return Text(readOnly.toString());
+///   }
+/// )
+/// ```
+///
+/// no need to care about order of fields
+///
+/// **this widget must used inside in  [Forme] or [FormeField]**
+class FormeFieldReadOnlyListener extends StatelessWidget {
+  final String name;
+  final Widget? child;
+  final Widget Function(BuildContext context, FormeFieldController? field,
+      bool? readOnly, Widget? child) builder;
+
+  const FormeFieldReadOnlyListener(
+      {Key? key, required this.name, required this.builder, this.child})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final FormeFieldController? fieldController = FormeField.of(context);
+
+    if (fieldController != null && fieldController.name == name) {
+      return ValueListenableBuilder<bool>(
+          child: child,
+          valueListenable: fieldController.readOnlyListenable,
+          builder: (context, value, child) {
+            return builder(context, fieldController, value, child);
+          });
+    }
+
+    final FormeController controller = Forme.of(context)!;
+    return ValueListenableBuilder<FormeFieldController?>(
+        valueListenable: controller.fieldListenable(name),
+        builder: (context, field, child) {
+          if (field == null) {
+            return builder(context, field, null, child);
+          }
+          return ValueListenableBuilder<bool>(
+              valueListenable: field.readOnlyListenable,
+              child: child,
+              builder: (context, value, child) {
+                return builder(context, field, value, child);
+              });
+        });
+  }
+}
+
+/// used same as [FormeFieldReadOnlyListener]
+class FormeFieldEnabledListener extends StatelessWidget {
+  final String name;
+  final Widget? child;
+  final Widget Function(BuildContext context, FormeFieldController? field,
+      bool? enabled, Widget? child) builder;
+
+  const FormeFieldEnabledListener(
+      {Key? key, required this.name, required this.builder, this.child})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final FormeFieldController? fieldController = FormeField.of(context);
+
+    if (fieldController != null && fieldController.name == name) {
+      return ValueListenableBuilder<bool>(
+          child: child,
+          valueListenable: fieldController.enabledListenable,
+          builder: (context, value, child) {
+            return builder(context, fieldController, value, child);
+          });
+    }
+
+    final FormeController controller = Forme.of(context)!;
+    return ValueListenableBuilder<FormeFieldController?>(
+        valueListenable: controller.fieldListenable(name),
+        builder: (context, field, child) {
+          if (field == null) {
+            return builder(context, field, null, child);
+          }
+          return ValueListenableBuilder<bool>(
+              valueListenable: field.enabledListenable,
+              child: child,
+              builder: (context, value, child) {
+                return builder(context, field, value, child);
+              });
+        });
   }
 }
 

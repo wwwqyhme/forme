@@ -12,6 +12,7 @@
 10. remove `compareValue` on `FormeFieldState`
 11. remove `onFieldsRegistered` on `Forme`,use `onFieldsRegistered` & `onFieldsUnregistered` instead
 12. add `addVisitor` and `removeVisitor` on `FormeController`
+13. add support widgets
 
 ## 3.5.2
 
