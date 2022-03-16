@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:forme/src/decorator/forme_decorator_state.dart';
 
 import '../../forme.dart';
 
@@ -52,35 +53,12 @@ class FormeCupertinoInputDecorator<T> extends StatefulWidget {
 }
 
 class _FormeCupertinoInputDecoratorState<T>
-    extends State<FormeCupertinoInputDecorator<T>> with FormeFieldVisitor<T> {
-  bool _inited = false;
-
-  late FormeFieldState<T> state;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_inited) {
-      _inited = true;
-      state = FormeField.of(context)!;
-      final bool quietly = Forme.of(context)?.quietlyValidate ?? false;
-      if (!quietly) {
-        state.addVisitor(this);
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    state.removeVisitor(this);
-    super.dispose();
-  }
-
+    extends FormeDecoratorState<T, FormeCupertinoInputDecorator<T>> {
   @override
   Widget build(BuildContext context) {
     final Widget child =
         widget.wrapper == null ? widget.child : widget.wrapper!(widget.child);
-    if (Forme.of(context)?.quietlyValidate ?? false) {
+    if (isQuietlyValidate) {
       return CupertinoFormRow(
         helper: widget.helper,
         padding: widget.padding,
@@ -106,7 +84,7 @@ class _FormeCupertinoInputDecoratorState<T>
   @override
   void onStatusChanged(FormeState? form, FormeFieldState<T> field,
       FormeFieldChangedStatus<T> status) {
-    if (status.isValidationChanged) {
+    if (!isQuietlyValidate && status.isValidationChanged) {
       setState(() {});
     }
   }

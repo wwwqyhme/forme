@@ -5,12 +5,14 @@ import 'forme_visitor_state.dart';
 
 /// used to listen form value
 class FormeValueListener extends StatefulWidget {
-  final Widget Function(BuildContext context, Map<String, Object?>? value)
-      builder;
+  final Widget Function(
+      BuildContext context, Map<String, Object?>? value, Widget? child) builder;
+  final Widget? child;
 
   const FormeValueListener({
     Key? key,
     required this.builder,
+    this.child,
   }) : super(key: key);
   @override
   State<StatefulWidget> createState() => _FormeValueListenerState();
@@ -21,7 +23,8 @@ class _FormeValueListenerState extends FormeVisitorState<FormeValueListener> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.builder(context, value == null ? null : Map.from(value!));
+    return widget.builder(
+        context, value == null ? null : Map.from(value!), widget.child);
   }
 
   @override
@@ -47,5 +50,10 @@ class _FormeValueListenerState extends FormeVisitorState<FormeValueListener> {
     setState(() {
       value = form.value;
     });
+  }
+
+  @override
+  void onInitialed(FormeState form) {
+    value = form.value;
   }
 }

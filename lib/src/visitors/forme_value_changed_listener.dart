@@ -49,6 +49,11 @@ class _FormeIsValueChangeState
     checkIsValueChanged(form);
   }
 
+  @override
+  void onInitialed(FormeState form) {
+    isValueChanged = form.isValueChanged;
+  }
+
   void checkIsValueChanged(FormeState form) {
     final bool isValueChanged = form.isValueChanged;
     if (isValueChanged != this.isValueChanged) {

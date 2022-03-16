@@ -91,4 +91,9 @@ class _FormeFieldsValidationListenerState
       _validation = FormeValidation(validationMap);
     });
   }
+
+  @override
+  void onInitialed(FormeState form) {
+    _validation = form.validation;
+  }
 }

@@ -2,9 +2,6 @@ import 'package:flutter/widgets.dart';
 import 'package:forme/src/forme_core.dart';
 import 'package:forme/src/visitors/forme_field_visitor_state.dart';
 
-typedef FormeFieldStatusFilter<T extends Object?> = bool Function(
-    FormeFieldChangedStatus<T> status);
-
 /// used to listen target field status
 ///
 /// eg:
@@ -27,7 +24,7 @@ typedef FormeFieldStatusFilter<T extends Object?> = bool Function(
 /// **this widget must used inside in  [Forme] or [FormeField]**
 class FormeFieldStatusListener<T extends Object?>
     extends FormeFieldVisitorWidget {
-  final FormeFieldStatusFilter<T>? filter;
+  final bool Function(FormeFieldChangedStatus<T> status)? filter;
   final Widget? child;
   final Widget Function(
     BuildContext context,
@@ -72,7 +69,7 @@ class _FormeFieldStatusListenerState<T extends Object?>
     final bool notify = widget.filter == null ? true : widget.filter!(status);
     if (notify) {
       setState(() {
-        status = status;
+        this.status = status;
       });
     }
   }
@@ -82,5 +79,10 @@ class _FormeFieldStatusListenerState<T extends Object?>
     setState(() {
       status = null;
     });
+  }
+
+  @override
+  void onInitialed(FormeFieldState<T>? field) {
+    status = field?.status;
   }
 }

@@ -16,30 +16,44 @@ abstract class FormeFieldVisitorWidget extends StatefulWidget {
 abstract class FormeFieldVisitorState<T extends FormeFieldVisitorWidget,
         E extends Object?> extends State<T>
     with FormeFieldVisitor<E>, FormeVisitor {
-  late final FormeState? form;
-  late final FormeFieldState<E>? field;
-
-  bool _inited = false;
+  FormeState? _form;
+  FormeFieldState<E>? _field;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_inited) {
-      _inited = true;
-      form = Forme.of(context);
-      field = FormeField.of(context);
-      if (field != null) {
-        field!.addVisitor(this);
-      } else if (form != null) {
-        form!.addVisitor(this);
+    final FormeFieldState? currentField = FormeField.of(context);
+    _removeVisitor();
+    if (currentField != null && currentField.name == widget.name) {
+      _form = null;
+      final bool initialed = currentField != _field;
+      _field = currentField as FormeFieldState<E>;
+      _field!.addVisitor(this);
+      if (initialed) {
+        onInitialed(_field);
+      }
+    } else {
+      _field = null;
+      final FormeState currentForm = Forme.of(context)!;
+      final bool initialed = currentForm != _form;
+      _form = currentForm;
+      _form!.addVisitor(this);
+      if (initialed) {
+        onInitialed(currentForm.hasField(widget.name)
+            ? currentForm.field(widget.name)
+            : null);
       }
     }
   }
 
+  /// called when widget is initialed
+  ///
+  /// this method is called in [didChangeDependencies] , so there's no need to call [setState]
+  void onInitialed(FormeFieldState<E>? field);
+
   @override
   void dispose() {
-    field?.removeVisitor(this);
-    form?.removeVisitor(this);
+    _removeVisitor();
     super.dispose();
   }
 
@@ -70,5 +84,10 @@ abstract class FormeFieldVisitorState<T extends FormeFieldVisitorWidget,
     if (iterable.isNotEmpty) {
       onUnregistered(form, iterable.first as FormeFieldState<E>);
     }
+  }
+
+  void _removeVisitor() {
+    _field?.removeVisitor(this);
+    _form?.removeVisitor(this);
   }
 }

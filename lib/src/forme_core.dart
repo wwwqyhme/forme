@@ -574,9 +574,14 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   /// get initialValue
   ///
   /// **[Forme.initialValue] has higher priority than field's initialValue**
-  T get initialValue =>
-      _formeState?._getInitialValue(name, widget.initialValue) as T ??
-      widget.initialValue;
+  T get initialValue {
+    Object? initialValue =
+        _formeState?._getInitialValue(name, widget.initialValue);
+    if (initialValue != null) {
+      return initialValue as T;
+    }
+    return widget.initialValue;
+  }
 
   /// whether field request a focusnode or not
   bool get hasFocusNode => _focusNode == null;
@@ -828,12 +833,6 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     if (!_inited) {
       _inited = true;
       initModel();
-    } else {
-      final FormeFieldStatus<T> old = _status;
-      _status = _status._copyWith(
-        readOnly: _Optional(_isReadOnly),
-      );
-      _onModelChanged(old, _status, true);
     }
   }
 

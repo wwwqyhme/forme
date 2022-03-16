@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../forme.dart';
+import 'forme_decorator_state.dart';
 
 class FormeInputDecoratorBuilder<T> implements FormeFieldDecorator<T> {
   const FormeInputDecoratorBuilder({
@@ -63,28 +64,8 @@ class FormeInputDecorator<T> extends StatefulWidget {
   State<StatefulWidget> createState() => _FormeInputDecoratorState<T>();
 }
 
-class _FormeInputDecoratorState<T> extends State<FormeInputDecorator<T>>
-    with FormeFieldVisitor<T> {
-  bool _inited = false;
-
-  late FormeFieldState<T> state;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_inited) {
-      _inited = true;
-      state = FormeField.of(context)!;
-      state.addVisitor(this);
-    }
-  }
-
-  @override
-  void dispose() {
-    state.removeVisitor(this);
-    super.dispose();
-  }
-
+class _FormeInputDecoratorState<T>
+    extends FormeDecoratorState<T, FormeInputDecorator<T>> {
   @override
   Widget build(BuildContext context) {
     final Widget child = widget.wrapper == null

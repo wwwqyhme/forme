@@ -5,23 +5,28 @@ import '../forme_visitor.dart';
 
 abstract class FormeVisitorState<T extends StatefulWidget> extends State<T>
     with FormeVisitor {
-  late final FormeState state;
-
-  bool _inited = false;
+  FormeState? _state;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_inited) {
-      _inited = true;
-      state = Forme.of(context)!;
-      state.addVisitor(this);
+    final FormeState currentForm = Forme.of(context)!;
+    if (currentForm != _state) {
+      _state?.removeVisitor(this);
+      _state = currentForm;
+      _state!.addVisitor(this);
+      onInitialed(_state!);
     }
   }
 
+  /// called when widget is initialed
+  ///
+  /// this method is called in [didChangeDependencies] , so there's no need to call [setState]
+  void onInitialed(FormeState form);
+
   @override
   void dispose() {
-    state.removeVisitor(this);
+    _state?.removeVisitor(this);
     super.dispose();
   }
 }
