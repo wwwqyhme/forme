@@ -1,28 +1,25 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/widgets.dart';
+
 import '../forme.dart';
 import 'forme_field_scope.dart';
 
-typedef FormeValueChanged<T> = void Function(
-    FormeFieldController<T>, T newValue);
+typedef FormeFieldStatusChanged<T> = void Function(
+    FormeFieldState<T>, FormeFieldStatus<T> status);
 
 typedef FormeAsyncValidator<T> = Future<String?> Function(
-  FormeFieldController<T> field,
+  FormeFieldState<T> field,
   T value,
   bool Function() isValid,
 );
-typedef FormeValidator<T> = String? Function(
-    FormeFieldController<T> field, T value);
-typedef FormeFieldValidationChanged<T> = void Function(
-    FormeFieldController<T> field, FormeFieldValidation validation);
-typedef FormeFieldSetter<T> = void Function(
-    FormeFieldController<T> field, T value);
-typedef FormeFocusChanged<T> = void Function(
-    FormeFieldController<T> field, bool hasFocus);
-typedef FormeFieldInitialed<T> = void Function(FormeFieldController<T> field);
+typedef FormeValidator<T> = String? Function(FormeFieldState<T> field, T value);
+typedef FormeFieldSetter<T> = void Function(FormeFieldState<T> field, T value);
+typedef FormeFieldInitialed<T> = void Function(FormeFieldState<T> field);
 typedef FormeFieldBuilder<T extends Object?> = Widget Function(
     FormeFieldState<T> state);
 typedef FormeFieldValueUpdater<T extends Object?> = T Function(
     FormeField<T> oldWidget, FormeField<T> widget, T oldValue);
+typedef FormeValueComparator<T extends Object?> = bool Function(
+    T oldValue, T newValue);
 
 @immutable
 class FormeFieldType extends Type {
@@ -52,15 +49,17 @@ class FormeField<T extends Object?> extends StatefulWidget {
   final bool readOnly;
   final FormeFieldBuilder<T> builder;
 
+  final FormeValueComparator<T>? comparator;
+
   /// whether field is enabled,
   ///
   /// if field is disabled:
   ///
-  /// 1. field will lose focus and can not be focused , but you still can get focusNode from `FormeFieldController` and set `canRequestFocus` to true and require focus
+  /// 1. field will lose focus and can not be focused , but you still can get focusNode from `FormeFieldState` and set `canRequestFocus` to true and require focus
   /// 2. field's validators are ignored (manually validation will  be also ignored)
   /// 3. field is readOnly
   /// 4. value will be ignored when get form data
-  /// 5. value can still be changed via `FormeFieldController`
+  /// 5. value can still be changed via `FormeFieldState`
   /// 6. validation state will always be `FormeValidationState.unnecessary`
   /// 7. when get validation from `FormeController` , this field will be ignored
   final bool enabled;
@@ -77,30 +76,9 @@ class FormeField<T extends Object?> extends StatefulWidget {
   /// whether request focus when field value changed
   final bool requestFocusOnUserInteraction;
 
-  /// triggered whenever field value changed.
-  ///
-  /// it's save to request a new frame here
-  ///
-  /// use [FormeFieldController.oldValue] to get previous value
-  final FormeValueChanged<T>? onValueChanged;
-  final FormeFocusChanged<T>? onFocusChanged;
+  final FormeFieldStatusChanged<T>? onStatusChanged;
 
-  /// triggered whenever field read-only state changed
-  ///
-  /// it's save to request a new frame here
-  final void Function(FormeFieldController<T> field, bool readOnly)?
-      onReadonlyChanged;
-
-  /// triggered whenever field enabled state changed
-  ///
-  /// it's save to request a new frame here
-  final void Function(FormeFieldController<T> field, bool enable)?
-      onEnabledChanged;
-
-  /// used to listen field's validation changes
-  final FormeFieldValidationChanged<T>? onValidationChanged;
-
-  /// called after [FormeController] or [FormeFieldController] initialed
+  /// called after [FormeController] or [FormeFieldState] initialed
   ///
   /// valueListenable will not listen [FormeField.initialValue] , you can do
   /// that in this method
@@ -176,11 +154,7 @@ class FormeField<T extends Object?> extends StatefulWidget {
     this.order,
     this.decorator,
     this.requestFocusOnUserInteraction = true,
-    this.onValueChanged,
-    this.onFocusChanged,
-    this.onReadonlyChanged,
-    this.onEnabledChanged,
-    this.onValidationChanged,
+    this.onStatusChanged,
     this.onInitialed,
     this.onSaved,
     this.quietlyValidate = false,
@@ -188,17 +162,18 @@ class FormeField<T extends Object?> extends StatefulWidget {
     this.asyncValidator,
     this.registrable = true,
     this.valueUpdater,
+    this.comparator,
   })  : autovalidateMode = autovalidateMode ?? AutovalidateMode.disabled,
         super(key: key);
 
   @override
   FormeFieldState<T> createState() => FormeFieldState();
 
-  static FormeFieldController<T>? of<T>(BuildContext context) {
-    final FormeFieldController? controller = FormeFieldScope.of(context);
+  static FormeFieldState<T>? of<T>(BuildContext context) {
+    final FormeFieldState? controller = FormeFieldScope.of(context);
     if (controller == null) {
       return null;
     }
-    return controller as FormeFieldController<T>;
+    return controller as FormeFieldState<T>;
   }
 }

@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
-import '../forme.dart';
-
 class ValueListenableBuilder4<A, B, C, D> extends StatelessWidget {
   const ValueListenableBuilder4(
     this.first,
@@ -113,60 +111,5 @@ class ValueListenableBuilder2<A, B> extends StatelessWidget {
         );
       },
     );
-  }
-}
-
-class FormeFieldValidationBuilder<T> extends StatelessWidget {
-  const FormeFieldValidationBuilder({
-    Key? key,
-    this.name,
-    required this.builder,
-    this.child,
-  }) : super(key: key);
-
-  final String? name;
-  final Widget? child;
-  final Widget Function(
-      BuildContext context,
-      FormeFieldController<T>? controller,
-      FormeFieldValidation? validation,
-      Widget? child) builder;
-
-  @override
-  Widget build(BuildContext context) {
-    final FormeFieldController<T>? fieldController = FormeField.of<T>(context);
-
-    if (name == null && fieldController == null) {
-      throw Exception(
-          'this widget must be placed in FormeField , otherwise you must specific  a field name');
-    }
-
-    if (fieldController != null &&
-        (name == null || fieldController.name == name)) {
-      return ValueListenableBuilder<FormeFieldValidation>(
-          valueListenable: fieldController.validationListenable,
-          builder: (context, validation, child) {
-            return builder(context, fieldController, validation, child);
-          });
-    }
-
-    final FormeController? controller = Forme.of(context);
-
-    if (controller == null) {
-      throw Exception('this widget must be placed in FormeField or Forme');
-    }
-
-    return ValueListenableBuilder<FormeFieldController<T>?>(
-        valueListenable: controller.fieldListenable<T>(name!),
-        builder: (context, controller, child) {
-          if (controller == null) {
-            return builder(context, null, null, child);
-          }
-          return ValueListenableBuilder<FormeFieldValidation>(
-              valueListenable: controller.validationListenable,
-              builder: (context, validation, child) {
-                return builder(context, controller, validation, child);
-              });
-        });
   }
 }

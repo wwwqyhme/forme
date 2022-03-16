@@ -1,8 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
@@ -10,110 +8,66 @@ import '../forme.dart';
 import 'forme_field_scope.dart';
 
 /// form key is a global key , also used to manage form
-class FormeKey extends LabeledGlobalKey<State> implements FormeController {
+class FormeKey extends LabeledGlobalKey<FormeState> {
   FormeKey({String? debugLabel}) : super(debugLabel);
 
   /// whether formKey is initialized
   bool get initialized {
     final State? state = currentState;
-    if (state == null || state is! _FormeState) {
+    if (state == null) {
       return false;
     }
     return true;
   }
 
-  /// get form controller , throw an error if there's no form controller
-  FormeController get _currentController {
-    final State? currentState = super.currentState;
-    if (currentState == null) {
-      throw Exception('current state is null,did you put this key on Forme?');
-    }
-    if (currentState is! _FormeState) {
-      throw Exception(
-          'current state is not a state of Forme , did you put this key on Forme?');
-    }
-    return currentState.controller;
-  }
+  FormeState get _state =>
+      currentState ??
+      (throw Exception(
+          'current state is null , did you put this key on Forme?'));
 
-  @override
-  Map<String, Object?> get value => _currentController.value;
+  Map<String, Object?> get value => _state.value;
 
-  @override
-  FormeValidation get validation => _currentController.validation;
+  FormeValidation get validation => _state.validation;
 
-  @override
-  T field<T extends FormeFieldController<Object?>>(String name) =>
-      _currentController.field<T>(name);
+  T field<T extends FormeFieldState<Object?>>(String name) =>
+      _state.field<T>(name);
 
-  @override
-  bool hasField(String name) => _currentController.hasField(name);
+  bool hasField(String name) => _state.hasField(name);
 
-  @override
   Future<FormeValidateSnapshot> validate({
     bool quietly = false,
     Set<String> names = const {},
     bool clearError = false,
     bool validateByOrder = false,
   }) =>
-      _currentController.validate(
+      _state.validate(
         quietly: quietly,
         names: names,
         validateByOrder: validateByOrder,
         clearError: clearError,
       );
 
-  @override
-  void reset() => _currentController.reset();
+  void reset() => _state.reset();
 
-  @override
-  void save() => _currentController.save();
+  void save() => _state.save();
 
-  @override
-  set value(Map<String, Object?> data) => _currentController.value = data;
+  set value(Map<String, Object?> data) => _state.value = data;
 
-  static FormeController? of(BuildContext context) {
-    return _FormeScope.of(context)?.controller;
-  }
+  bool get quietlyValidate => _state.quietlyValidate;
 
-  @override
-  bool get quietlyValidate => _currentController.quietlyValidate;
+  bool get isValueChanged => _state.isValueChanged;
 
-  @override
-  bool get isValueChanged => _currentController.isValueChanged;
+  List<FormeFieldState> get fields => _state.fields;
 
-  @override
-  List<FormeFieldController> get controllers => _currentController.controllers;
+  bool addVisitor(FormeVisitor visitor) => _state.addVisitor(visitor);
 
-  @override
-  ValueListenable<FormeFieldController<T>?> fieldListenable<T>(String name) =>
-      _currentController.fieldListenable<T>(name);
-
-  @override
-  ValueListenable<FormeValidation> get validationListenable =>
-      _currentController.validationListenable;
-
-  @override
-  ValueListenable<Map<String, FormeFieldController?>> get fieldsListenable =>
-      _currentController.fieldsListenable;
-
-  @override
-  bool addVisitor(FormeVisitor visitor) =>
-      _currentController.addVisitor(visitor);
-
-  @override
-  bool removeVisitor(FormeVisitor visitor) =>
-      _currentController.removeVisitor(visitor);
+  bool removeVisitor(FormeVisitor visitor) => _state.removeVisitor(visitor);
 }
 
 /// build your form !
 class Forme extends StatefulWidget {
-  /// listen form value changed
-  ///
-  /// this listener will be always triggered when field value changed
-  final FormeValueChanged<Object?>? onValueChanged;
-
   /// listen form focus changed
-  final FormeFocusChanged<Object?>? onFocusChanged;
+  final FormeFieldStatusChanged<Object?>? onFieldStatusChanged;
 
   /// form content
   final Widget child;
@@ -122,9 +76,6 @@ class Forme extends StatefulWidget {
   ///
   /// **this property can be overwritten by field's initialValue**
   final Map<String, Object?> initialValue;
-
-  /// used to listen field's validation changed
-  final FormeFieldValidationChanged<Object?>? onFieldValidationChanged;
 
   final WillPopCallback? onWillPop;
 
@@ -145,126 +96,205 @@ class Forme extends StatefulWidget {
   final bool autovalidateByOrder;
 
   /// listen fields registered in this frame
-  final void Function(List<FormeFieldController> controllers)?
-      onFieldsRegistered;
-  final void Function(List<String> names)? onFieldsUnregistered;
+  final void Function(List<FormeFieldState> fields)? onFieldsRegistered;
+  final void Function(List<FormeFieldState> fields)? onFieldsUnregistered;
 
   /// listen [FormeValidation] changed
-  final void Function(FormeController field, FormeValidation validation)?
+  final void Function(FormeState field, FormeValidation validation)?
       onValidationChanged;
-
-  final void Function(FormeFieldController<Object?> field, bool readOnly)?
-      onReadonlyChanged;
-  final void Function(FormeFieldController<Object?> field, bool enable)?
-      onEnabledChanged;
 
   const Forme({
     FormeKey? key,
-    this.onValueChanged,
+    this.onFieldStatusChanged,
     required this.child,
     this.initialValue = const <String, Object?>{},
-    this.onFieldValidationChanged,
     this.onValidationChanged,
     this.onWillPop,
     this.quietlyValidate = false,
-    this.onFocusChanged,
     AutovalidateMode? autovalidateMode,
     this.autovalidateByOrder = false,
     this.onFieldsRegistered,
     this.onFieldsUnregistered,
-    this.onReadonlyChanged,
-    this.onEnabledChanged,
   })  : autovalidateMode = autovalidateMode ?? AutovalidateMode.disabled,
         super(key: key);
 
   @override
-  State<Forme> createState() => _FormeState();
+  State<Forme> createState() => FormeState();
 
-  static FormeController? of(BuildContext context) =>
-      _FormeScope.of(context)?.controller;
+  static FormeState? of(BuildContext context) => _FormeScope.of(context);
 }
 
-class _FormeState extends State<Forme> {
-  final List<FormeFieldState> states = [];
-  late final _FormeController controller;
-  final Map<String, ValueNotifier<FormeFieldController?>> fieldNotifiers = {};
-  final ValueNotifier<Map<String, FormeFieldController?>> fieldsNotifier =
-      FormeMountedValueNotifier({});
-  final ValueNotifier<FormeValidation> validationNotifier =
-      FormeMountedValueNotifier(const FormeValidation({}));
-  final List<FormeFieldState> newRegisteredStates = [];
-  final List<String> newUnregisteredStates = [];
-  final List<FormeVisitor> visitors = [];
+class FormeState extends State<Forme> {
+  final List<FormeFieldState> _states = [];
+  final List<FormeFieldState> _newRegisteredStates = [];
+  final List<FormeFieldState> _newUnregisteredStates = [];
+  final List<FormeVisitor> _visitors = [];
 
+  /// get initialValue
   Map<String, Object?> get initialValue => widget.initialValue;
-
   AutovalidateMode get autovalidateMode => widget.autovalidateMode;
 
-  int gen = 0;
+  int _gen = 0;
 
+  /// whether current form is quietlyValidate or not
   bool get quietlyValidate => widget.quietlyValidate;
 
-  FormeValidation get validation => FormeValidation(states
+  /// get form validation
+  FormeValidation get validation => FormeValidation(_states
       .where((element) => element.enabled)
       .toList()
       .asMap()
       .map((key, value) => MapEntry(value.name, value._status.validation)));
 
-  @override
-  void initState() {
-    super.initState();
-    controller = _FormeController(this);
-  }
-
-  @override
-  void dispose() {
-    controller._state = null;
-    visitors.clear();
-    fieldsNotifier.dispose();
-    validationNotifier.dispose();
-    fieldNotifiers.forEach((key, value) {
-      value.dispose();
-    });
-    fieldNotifiers.clear();
-    newRegisteredStates.clear();
-    newUnregisteredStates.clear();
-    super.dispose();
-  }
-
+  /// reset all registered fields
   void reset() {
-    for (final FormeFieldState element in states) {
+    for (final FormeFieldState element in _states) {
       element.reset();
     }
     if (widget.autovalidateMode == AutovalidateMode.always) {
       setState(() {
-        ++gen;
+        ++_gen;
       });
     }
   }
 
-  ValueNotifier<FormeFieldController<T>?> fieldListenable<T extends Object?>(
-      String name) {
-    return (fieldNotifiers[name] ??
-            fieldNotifiers.putIfAbsent(
-                name,
-                () => FormeMountedValueNotifier<FormeFieldController<T>?>(
-                    getFieldController<T>(name))))
-        as ValueNotifier<FormeFieldController<T>?>;
+  /// whether value is changed or not
+  bool get isValueChanged => _states.any((element) => element.isValueChanged);
+
+  /// get form value
+  ///
+  /// will not contains value of disabled fields
+  Map<String, Object?> get value {
+    final Map<String, Object?> map = <String, Object?>{};
+    for (final FormeFieldState element in _states) {
+      if (!element.enabled) {
+        continue;
+      }
+      final String name = element.name;
+      final Object? value = element.value;
+      map[name] = value;
+    }
+    return map;
   }
 
-  FormeFieldController<T>? getFieldController<T extends Object?>(String name) {
-    final List<FormeFieldController> controllers = states
-        .where((element) => element.name == name)
-        .map((e) => e.controller)
+  /// get field by name
+  ///
+  /// throw an exception if field not found
+  T field<T extends FormeFieldState<Object?>>(String name) {
+    final T? field = _findField(name);
+    if (field == null) {
+      throw Exception('no field can be found by name :$name');
+    }
+    return field;
+  }
+
+  /// whether field is registered
+  bool hasField(String name) => _states.any((element) => element.name == name);
+
+  /// validate form manually
+  ///
+  /// if [names] is not empty , will only validate these fields
+  /// if [clearError] is true, will clear error first before validate
+  /// if [validateByOrder] is true, will validate field by order , only one field will be validated at once
+  Future<FormeValidateSnapshot> validate({
+    bool quietly = false,
+    Set<String> names = const {},
+    bool clearError = false,
+    bool validateByOrder = false,
+  }) async {
+    final List<FormeFieldState> states = (_states
+            .where((element) =>
+                element._hasAnyValidator &&
+                element.enabled &&
+                (names.isEmpty || names.contains(element.name)))
+            .toList()
+          ..sort((a, b) => a.order!.compareTo(b.order!)))
         .toList();
-    return controllers.isEmpty
-        ? null
-        : controllers.first as FormeFieldController<T>;
+    if (states.isEmpty) {
+      return FormeValidateSnapshot([]);
+    }
+    if (clearError) {
+      for (final FormeFieldState element in states) {
+        element.clearError();
+      }
+    }
+    if (validateByOrder) {
+      return _validateByOrderManually(states, quietly);
+    }
+    final List<FormeFieldValidateSnapshot<Object?>> value = await Future.wait(
+        states.map((state) => state.validate(quietly: quietly)),
+        eagerError: true);
+    return FormeValidateSnapshot(value);
+  }
+
+  /// set form value
+  set value(Map<String, Object?> data) => data.forEach((key, Object? value) {
+        field(key).value = value;
+      });
+
+  /// get all regsitered  fields
+  List<FormeFieldState> get fields => List.of(_states);
+
+  /// add visitor
+  ///
+  /// return true if visitor is not exists
+  bool addVisitor(FormeVisitor visitor) {
+    if (!_visitors.contains(visitor)) {
+      _visitors.add(visitor);
+      return true;
+    }
+    return false;
+  }
+
+  /// remove visitor
+  ///
+  /// return true if visitor removed
+  bool removeVisitor(FormeVisitor visitor) {
+    return _visitors.remove(visitor);
+  }
+
+  /// save all registered fields
+  void save() {
+    for (final FormeFieldState element in _states) {
+      element.save();
+    }
+  }
+
+  T? _findField<T extends FormeFieldState<Object?>>(String name) {
+    for (final FormeFieldState state in _states) {
+      if (state.name == name) {
+        return state as T;
+      }
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_needValidate) {
+      _validateForm();
+    }
+    return WillPopScope(
+      onWillPop: widget.onWillPop,
+      child: _FormeScope(
+        gen: _gen,
+        state: this,
+        child: widget.child,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _visitors.clear();
+    _newRegisteredStates.clear();
+    _newUnregisteredStates.clear();
+    super.dispose();
   }
 
   Future<FormeValidation> _validateForm() async {
     if (widget.autovalidateByOrder) {
-      final List<FormeFieldState> valueFieldStates = states
+      final List<FormeFieldState> valueFieldStates = _states
           .where((element) => element._hasAnyValidator && element.enabled)
           .toList()
         ..sort((a, b) => a.order!.compareTo(b.order!));
@@ -274,7 +304,7 @@ class _FormeState extends State<Forme> {
       return _validateByOrder(valueFieldStates, collector: {});
     } else {
       final Map<String, FormeFieldValidation> validations = {};
-      await Future.wait(states
+      await Future.wait(_states
           .where((element) => element.enabled)
           .map((e) => e._validateByForm().then((value) {
                 validations[e.name] = value;
@@ -282,6 +312,126 @@ class _FormeState extends State<Forme> {
               })));
       return FormeValidation(validations);
     }
+  }
+
+  Object? _getInitialValue(String name, Object? value) {
+    if (widget.initialValue.containsKey(name)) {
+      return widget.initialValue[name];
+    }
+    return value;
+  }
+
+  bool get _needValidate {
+    if (autovalidateMode == AutovalidateMode.always) {
+      return true;
+    }
+    if (autovalidateMode == AutovalidateMode.onUserInteraction) {
+      return _states.any((element) => element._hasInteractedByUser);
+    }
+    return false;
+  }
+
+  void _fieldDidChange() {
+    if (_needValidate) {
+      setState(() {
+        ++_gen;
+      });
+    }
+  }
+
+  void _notifyFieldsRegistered(List<FormeFieldState> states) {
+    for (final FormeFieldState state in states) {
+      for (FormeFieldVisitor visitor in state._visitors) {
+        visitor.onRegistered(this, state);
+      }
+    }
+
+    for (final FormeVisitor visitor in _visitors) {
+      visitor.onFieldsRegistered(this, List.of(states));
+    }
+
+    widget.onFieldsRegistered?.call(List.of(states));
+  }
+
+  void _notifyFieldsUnregistered(List<FormeFieldState> states) {
+    for (final FormeFieldState state in states) {
+      for (FormeFieldVisitor visitor in state._visitors) {
+        visitor.onUnregistered(this, state);
+      }
+    }
+    for (final FormeVisitor visitor in _visitors) {
+      visitor.onFieldsUnregistered(this, List.of(states));
+    }
+    widget.onFieldsUnregistered?.call(states);
+  }
+
+  void _notifiyFieldsStatusChanged(
+    FormeFieldState state,
+    FormeFieldChangedStatus status,
+  ) {
+    if (!_states.contains(state)) {
+      return;
+    }
+    for (final FormeVisitor visitor in _visitors) {
+      visitor.onFieldStatusChanged(this, state, status);
+    }
+
+    widget.onFieldStatusChanged?.call(state, status);
+  }
+
+  void _registerField(FormeFieldState state) {
+    if (!_states.contains(state)) {
+      _states.add(state);
+      if (_newRegisteredStates.isEmpty) {
+        SchedulerBinding.instance!.endOfFrame.then((_) {
+          if (_needValidate) {
+            _validateForm();
+          }
+          final List<FormeFieldState> states = List.of(_newRegisteredStates);
+          _newRegisteredStates.clear();
+          _notifyFieldsRegistered(states);
+        });
+      }
+      _newRegisteredStates.add(state);
+    }
+  }
+
+  void _unregisterField(FormeFieldState state) {
+    if (_states.remove(state)) {
+      if (_newUnregisteredStates.isEmpty) {
+        SchedulerBinding.instance!.endOfFrame.then((_) {
+          if (mounted) {
+            if (_needValidate) {
+              _validateForm();
+            }
+            final List<FormeFieldState> states =
+                List.of(_newUnregisteredStates);
+            _newUnregisteredStates.clear();
+            _notifyFieldsUnregistered(states);
+          }
+        });
+      }
+      _newUnregisteredStates.add(state);
+    }
+  }
+
+  int _getOrder(FormeFieldState formeFieldState) {
+    return _states.indexOf(formeFieldState);
+  }
+
+  Future<FormeValidateSnapshot> _validateByOrderManually(
+      List<FormeFieldState> states, bool quietly,
+      {int index = 0, List<FormeFieldValidateSnapshot> list = const []}) async {
+    final int length = states.length;
+    final List<FormeFieldValidateSnapshot> copyList = List.of(list);
+    final FormeFieldValidateSnapshot snapshot =
+        await states[index].validate(quietly: quietly);
+    copyList.add(snapshot);
+    if (!snapshot.isValid || index == length - 1) {
+      return FormeValidateSnapshot(copyList);
+    }
+    return _validateByOrderManually(states, quietly,
+        index: index + 1, list: copyList);
   }
 
   Future<FormeValidation> _validateByOrder(List<FormeFieldState> states,
@@ -300,164 +450,11 @@ class _FormeState extends State<Forme> {
     }
     return FormeValidation(collector);
   }
-
-  void save() {
-    for (final FormeFieldState element in states) {
-      element.save();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (needValidate) {
-      _validateForm();
-    }
-    return WillPopScope(
-      onWillPop: widget.onWillPop,
-      child: _FormeScope(
-        gen: gen,
-        state: this,
-        child: widget.child,
-      ),
-    );
-  }
-
-  Object? getInitialValue(String name, Object? value) {
-    if (widget.initialValue.containsKey(name)) {
-      return widget.initialValue[name];
-    }
-    return value;
-  }
-
-  bool get needValidate {
-    if (autovalidateMode == AutovalidateMode.always) {
-      return true;
-    }
-    if (autovalidateMode == AutovalidateMode.onUserInteraction) {
-      return states.any((element) => element._hasInteractedByUser);
-    }
-    return false;
-  }
-
-  void fieldDidChange() {
-    if (needValidate) {
-      setState(() {
-        ++gen;
-      });
-    }
-  }
-
-  void updateValidation() {
-    final FormeValidation validation = this.validation;
-    widget.onValidationChanged?.call(controller, validation);
-    validationNotifier.value = validation;
-  }
-
-  void notifyFieldsRegistered(List<FormeFieldState> states) {
-    for (final FormeVisitor visitor in visitors) {
-      visitor.onFieldsRegistered(
-          controller, states.map((e) => e.controller).toList());
-    }
-    for (final FormeFieldState state in states) {
-      fieldNotifiers[state.name]?.value = state.controller;
-    }
-    fieldsNotifier.value = states
-        .asMap()
-        .map((key, value) => MapEntry(value.name, value.controller));
-    widget.onFieldsRegistered?.call(states.map((e) => e.controller).toList());
-    updateValidation();
-  }
-
-  void notifyFieldsUnregistered(List<String> names) {
-    for (final FormeVisitor visitor in visitors) {
-      visitor.onFieldsUnregistered(controller, List.of(names));
-    }
-    for (final String name in names) {
-      fieldNotifiers[name]?.value = null;
-    }
-    fieldsNotifier.value =
-        names.asMap().map((key, value) => MapEntry(value, null));
-    widget.onFieldsUnregistered?.call(names);
-    updateValidation();
-  }
-
-  void notifiyFieldsStatusChanged(
-    FormeFieldState state,
-    FormeFieldStatus oldStatus,
-    FormeFieldStatus newStatus,
-  ) {
-    if (!states.contains(state)) {
-      return;
-    }
-    for (final FormeVisitor visitor in visitors) {
-      visitor.onFieldStatusChanged(
-          controller, state.controller, oldStatus, newStatus);
-    }
-
-    if (oldStatus.validation != newStatus.validation) {
-      updateValidation();
-      widget.onFieldValidationChanged
-          ?.call(state.controller, newStatus.validation);
-    }
-    if (oldStatus.hasFocus != newStatus.hasFocus) {
-      widget.onFocusChanged?.call(state.controller, newStatus.hasFocus);
-    }
-    if (oldStatus.value != newStatus.value) {
-      widget.onValueChanged?.call(state.controller, newStatus.value);
-    }
-    if (oldStatus.readOnly != newStatus.readOnly) {
-      widget.onReadonlyChanged?.call(state.controller, newStatus.readOnly);
-    }
-    if (oldStatus.enabled != newStatus.enabled) {
-      widget.onEnabledChanged?.call(state.controller, newStatus.enabled);
-    }
-  }
-
-  void registerField(FormeFieldState state) {
-    if (!states.contains(state)) {
-      states.add(state);
-      if (newRegisteredStates.isEmpty) {
-        SchedulerBinding.instance!.endOfFrame.then((_) {
-          if (needValidate) {
-            _validateForm();
-          }
-          final List<FormeFieldState> states = List.of(newRegisteredStates);
-          newRegisteredStates.clear();
-          notifyFieldsRegistered(states);
-        });
-      }
-      newRegisteredStates.add(state);
-    }
-  }
-
-  void unregisterField(FormeFieldState state) {
-    if (states.remove(state)) {
-      if (newUnregisteredStates.isEmpty) {
-        SchedulerBinding.instance!.endOfFrame.then((_) {
-          if (mounted) {
-            if (needValidate) {
-              _validateForm();
-            }
-            final List<String> names = List.of(newUnregisteredStates);
-            newUnregisteredStates.clear();
-            notifyFieldsUnregistered(names);
-          }
-        });
-      }
-      newUnregisteredStates.add(state.name);
-    }
-  }
-
-  bool get isValueChanged => states.any((element) => element.isValueChanged);
-
-  int getOrder(FormeFieldState formeFieldState) {
-    return states.indexOf(formeFieldState);
-  }
 }
 
 class _FormeScope extends InheritedWidget {
   final int gen;
-  final _FormeState state;
+  final FormeState state;
 
   const _FormeScope({
     required this.gen,
@@ -470,12 +467,14 @@ class _FormeScope extends InheritedWidget {
     return gen != oldWidget.gen;
   }
 
-  static _FormeState? of(BuildContext context) {
+  static FormeState? of(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<_FormeScope>()?.state;
   }
 }
 
 class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
+  final List<FormeFieldVisitor<T>> _visitors = [];
+
   final Duration _defaultAsyncValidatorDebounce =
       const Duration(milliseconds: 500);
 
@@ -486,11 +485,9 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   int _validateGen = 0;
 
   late FormeFieldStatus<T> _status;
-  _FormeState? _formeState;
+  FormeState? _formeState;
 
-  late FormeFieldController<T> controller;
-
-  int? get order => widget.order ?? _formeState?.getOrder(this);
+  int? get order => widget.order ?? _formeState?._getOrder(this);
 
   String get name => widget.name;
   T get value => _status.value;
@@ -519,6 +516,9 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
     return _status.validation;
   }
+
+  /// get current status
+  FormeFieldStatus<T> get status => _status;
 
   /// set field readonly or not
   set readOnly(bool readOnly) {
@@ -559,6 +559,12 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       ? FormeFieldValidation.waiting
       : FormeFieldValidation.unnecessary;
 
+  /// get current validation state
+  FormeFieldValidation get validation => _status.validation;
+
+  /// get errorText
+  ///
+  /// **null when field has no error or quietlyValidate**
   String? get errorText => !enabled ||
           (_formeState?.quietlyValidate ?? false) ||
           widget.quietlyValidate
@@ -566,9 +572,14 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       : _status.validation.error;
 
   /// get initialValue
+  ///
+  /// **[Forme.initialValue] has higher priority than field's initialValue**
   T get initialValue =>
-      _formeState?.getInitialValue(name, widget.initialValue) as T ??
+      _formeState?._getInitialValue(name, widget.initialValue) as T ??
       widget.initialValue;
+
+  /// whether field request a focusnode or not
+  bool get hasFocusNode => _focusNode == null;
 
   /// get current widget's focus node
   ///
@@ -601,20 +612,139 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     _focusNode!.addListener(_onFocusChangedListener);
   }
 
+  /// whether value is changed after initialed
+  bool get isValueChanged => initialValue != value;
+
+  @mustCallSuper
+  void didChange(T newValue) {
+    if (!isValueEquals(_status.value, newValue)) {
+      setState(() {
+        _hasInteractedByUser = true;
+        _status = _status._copyWith(value: _Optional(newValue));
+      });
+      _fieldChange();
+    }
+  }
+
+  /// equals to [FormeFieldState.didChange]
+  set value(T value) => didChange(value);
+
+  /// reset field
+  ///
+  /// 1. clear validation
+  /// 2. set value to initialValue
+  @mustCallSuper
+  void reset() {
+    setState(() {
+      _validateGen++;
+      _hasInteractedByUser = false;
+      _ignoreValidate = false;
+      _status = _status._copyWith(
+          validation: _Optional(_initialValidation),
+          value: _Optional(initialValue));
+    });
+    _fieldChange();
+  }
+
+  /// request focus if user interacted
+  void requestFocusOnUserInteraction() {
+    if (_hasInteractedByUser && widget.requestFocusOnUserInteraction) {
+      _focusNode?.requestFocus();
+    }
+  }
+
+  /// save field
+  void save() {
+    widget.onSaved?.call(this, value);
+  }
+
+  /// reset validation
+  void clearError() {
+    if (_status.validation != _initialValidation) {
+      setState(() {
+        _ignoreValidate = false;
+        _validateGen++;
+        _status = _status._copyWith(validation: _Optional(_initialValidation));
+      });
+    }
+  }
+
+  /// this method is used to manually validate
+  Future<FormeFieldValidateSnapshot<T>> validate({bool quietly = false}) async {
+    final T value = this.value;
+    if (!_hasAnyValidator || !enabled) {
+      return FormeFieldValidateSnapshot(
+          value, FormeFieldValidation.unnecessary, name, false, false);
+    }
+    final int gen = quietly ? _validateGen : ++_validateGen;
+
+    bool isValid() {
+      return mounted && gen == _validateGen;
+    }
+
+    bool needNotify() {
+      return !quietly && isValid();
+    }
+
+    void notify(FormeFieldValidation validation) {
+      if (needNotify() && _status.validation != validation) {
+        setState(() {
+          _status = _status._copyWith(validation: _Optional(validation));
+        });
+      }
+    }
+
+    if (_hasValidator) {
+      final String? errorText = widget.validator!(this, value);
+      if (errorText != null || !_hasAsyncValidator) {
+        final FormeFieldValidation validation =
+            _createFormeFieldValidation(errorText);
+        notify(validation);
+        return FormeFieldValidateSnapshot(
+            value, validation, name, false, false);
+      }
+    }
+
+    notify(FormeFieldValidation.validating);
+
+    FormeFieldValidation validation;
+    try {
+      final String? errorText =
+          await widget.asyncValidator!(this, value, isValid);
+      validation = _createFormeFieldValidation(errorText);
+    } catch (e, stackTrace) {
+      validation = FormeFieldValidation.fail(e, stackTrace);
+    }
+
+    notify(validation);
+    return FormeFieldValidateSnapshot(
+        value, validation, name, value != this.value, value != initialValue);
+  }
+
+  /// add visitor
+  ///
+  /// true if visitor not exists
+  bool addVisitor(FormeFieldVisitor<T> visitor) {
+    if (!_visitors.contains(visitor)) {
+      _visitors.add(visitor);
+      return true;
+    }
+    return false;
+  }
+
+  /// remove visitor
+  ///
+  /// true if visitor exists
+  bool removeVisitor(FormeFieldVisitor<T> visitor) {
+    return _visitors.remove(visitor);
+  }
+
   void _onFocusChangedListener() {
     final FormeFieldStatus<T> old = _status;
     _status = _status._copyWith(
       hasFocus: _Optional(_focusNode?.hasFocus ?? false),
     );
     _onModelChanged(old, _status);
-  }
-
-  bool get isValueChanged => initialValue != value;
-
-  void _register() {
-    if (widget.registrable) {
-      _formeState?.registerField(this);
-    }
   }
 
   /// if you want to init some resources relies on [initialValue] or [readOnly] or [enabled]
@@ -626,9 +756,29 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
     if (widget.onInitialed != null) {
       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        widget.onInitialed?.call(controller);
+        widget.onInitialed?.call(this);
       });
     }
+  }
+
+  /// this method will be called only once in state's lifecircle,immediately  called after [initState]
+  ///
+  /// recommend to init your resources in this method rather than [initState]
+  ///
+  /// Implementations of this method should start with a call to the inherited
+  /// method
+  @protected
+  @mustCallSuper
+  void initModel() {
+    _status = FormeFieldStatus<T>._(
+      enabled: widget.enabled,
+      readOnly: widget.readOnly || !widget.enabled,
+      validation: _hasAnyValidator && widget.enabled
+          ? FormeFieldValidation.waiting
+          : FormeFieldValidation.unnecessary,
+      value: initialValue,
+      hasFocus: _focusNode?.hasFocus ?? false,
+    );
   }
 
   @override
@@ -636,9 +786,9 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     super.didUpdateWidget(oldWidget);
 
     if (widget.registrable) {
-      _formeState?.registerField(this);
+      _formeState?._registerField(this);
     } else {
-      _formeState?.unregisterField(this);
+      _formeState?._unregisterField(this);
     }
 
     final FormeFieldStatus<T> old = _status;
@@ -677,9 +827,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
     if (!_inited) {
       _inited = true;
-
       initModel();
-      controller = createFormeFieldController();
     } else {
       final FormeFieldStatus<T> old = _status;
       _status = _status._copyWith(
@@ -689,44 +837,15 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
   }
 
-  /// this method will be called only once in state's lifecircle,immediately  called after [initState]
-  ///
-  /// recommend to init your resources in this method rather than [initState]
-  ///
-  /// Implementations of this method should start with a call to the inherited
-  /// method
-  @protected
-  @mustCallSuper
-  void initModel() {
-    _status = FormeFieldStatus<T>._(
-      enabled: widget.enabled,
-      readOnly: widget.readOnly || !widget.enabled,
-      validation: _hasAnyValidator && widget.enabled
-          ? FormeFieldValidation.waiting
-          : FormeFieldValidation.unnecessary,
-      value: initialValue,
-      hasFocus: _focusNode?.hasFocus ?? false,
-      disposed: false,
-    );
-  }
-
-  /// create [FormeFieldController] , this method will only called once in field's lifecycle
-  ///
-  /// if you want to override this method, use [FormeFieldControllerDelegate] to wrap parent's controller
-  @protected
-  FormeFieldController<T> createFormeFieldController() =>
-      _FormeFieldController(_status, this);
-
   @override
   void deactivate() {
-    _formeState?.unregisterField(this);
+    _formeState?._unregisterField(this);
     super.deactivate();
   }
 
   @override
   void dispose() {
-    controller.statusNotifier.value =
-        _status._copyWith(disposed: _Optional(true));
+    _visitors.clear();
     _asyncValidatorTimer?.cancel();
     _focusNode?.removeListener(_onFocusChangedListener);
     if (_focusNode is _DisposeRequiredFocusNode) {
@@ -735,31 +854,11 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     super.dispose();
   }
 
-  @mustCallSuper
-  void didChange(T newValue) {
-    if (_status.value != newValue) {
-      setState(() {
-        _hasInteractedByUser = true;
-        _status = _status._copyWith(value: _Optional(newValue));
-      });
-      _fieldChange();
+  void _register() {
+    if (widget.registrable) {
+      _formeState?._registerField(this);
     }
   }
-
-  @mustCallSuper
-  void reset() {
-    setState(() {
-      _validateGen++;
-      _hasInteractedByUser = false;
-      _ignoreValidate = false;
-      _status = _status._copyWith(
-          validation: _Optional(_initialValidation),
-          value: _Optional(initialValue));
-    });
-    _fieldChange();
-  }
-
-  set value(T value) => didChange(value);
 
   @override
   Widget build(BuildContext context) {
@@ -772,111 +871,83 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       _validateByField();
     }
 
-    Widget child = widget.builder(this);
+    _register();
+    return FormeFieldScope(this, Builder(
+      builder: (context) {
+        Widget child = widget.builder(this);
 
-    if (widget.decorator != null) {
-      child = widget.decorator!.build(
-        controller,
-        child,
-      );
+        if (widget.decorator != null) {
+          child = widget.decorator!.build(
+            context,
+            child,
+          );
+        }
+        return child;
+      },
+    ));
+  }
+
+  @protected
+  bool isValueEquals(T oldValue, T newValue) {
+    if (widget.comparator != null) {
+      return widget.comparator!(oldValue, newValue);
     }
 
-    _register();
-    return FormeFieldScope(controller, child);
+    if (oldValue is List && newValue is List) {
+      return listEquals(oldValue, newValue);
+    }
+
+    if (oldValue is Set && newValue is Set) {
+      return setEquals(oldValue, newValue);
+    }
+
+    if (oldValue is Map && newValue is Map) {
+      return mapEquals(oldValue, newValue);
+    }
+
+    return oldValue == newValue;
   }
 
   void _onModelChanged(
       FormeFieldStatus<T> oldStatus, FormeFieldStatus<T> newStatus,
       [bool onlyAfterFrameCompleted = false]) {
-    void _perform(VoidCallback fn) {
-      void task() {
-        controller.statusNotifier.value = newStatus;
-        _formeState?.notifiyFieldsStatusChanged(this, oldStatus, newStatus);
-        fn();
-      }
+    final FormeFieldChangedStatus<T> status = FormeFieldChangedStatus._(
+        newStatus,
+        oldStatus.enabled != newStatus.enabled,
+        oldStatus.hasFocus != newStatus.hasFocus,
+        oldStatus.readOnly != newStatus.readOnly,
+        oldStatus.validation != newStatus.validation,
+        !isValueEquals(oldStatus.value, newStatus.value));
 
-      if (onlyAfterFrameCompleted) {
-        WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-          task();
-        });
-      } else {
-        task();
+    void task() {
+      for (FormeFieldVisitor<T> visitor in _visitors) {
+        visitor.onStatusChanged(_formeState, this, status);
       }
+      _formeState?._notifiyFieldsStatusChanged(this, status);
+      onStatusChanged(status);
+      widget.onStatusChanged?.call(this, status);
     }
 
-    if (oldStatus.enabled != newStatus.enabled) {
+    if (status.isEnabledChanged) {
       _focusNode?.canRequestFocus = newStatus.enabled;
-      _perform(() {
-        widget.onEnabledChanged?.call(controller, newStatus.enabled);
-        onEnabledChanged(newStatus.enabled);
-      });
     }
-    if (oldStatus.readOnly != newStatus.readOnly) {
-      _perform(() {
-        widget.onReadonlyChanged?.call(controller, newStatus.readOnly);
-        onReadonlyChanged(newStatus.readOnly);
-      });
-    }
-    if (oldStatus.validation != newStatus.validation) {
-      _perform(() {
-        widget.onValidationChanged?.call(controller, newStatus.validation);
-        onValidationChanged(newStatus.validation);
-      });
-    }
-    if (oldStatus.value != newStatus.value) {
+
+    if (status.isValueChanged) {
       _ignoreValidate = false;
-      _perform(() {
-        widget.onValueChanged?.call(controller, newStatus.value);
-        onValueChanged(newStatus.value);
+    }
+
+    if (onlyAfterFrameCompleted) {
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        task();
       });
-    }
-
-    if (oldStatus.hasFocus != newStatus.hasFocus) {
-      controller.statusNotifier.value = newStatus;
-      widget.onFocusChanged?.call(controller, newStatus.hasFocus);
-      onFocusChanged(newStatus.hasFocus);
+    } else {
+      task();
     }
   }
 
-  /// override this method if you want to listen value changed
+  /// override this method if you want to listen status changed
   @protected
-  void onValueChanged(T value) {}
-
-  /// override this method if you want to listen validation changed
-  @protected
-  void onValidationChanged(FormeFieldValidation validation) {}
-
-  /// override this method if you want to listen focus changed
-  @protected
-  void onFocusChanged(bool hasFocus) {}
-
-  /// override this method if you want to listen readonly-state change
-  @protected
-  void onReadonlyChanged(bool readOnly) {}
-
-  /// override this method if you want to listen enable-state change
-  @protected
-  void onEnabledChanged(bool enable) {}
-
-  void requestFocusOnUserInteraction() {
-    if (_hasInteractedByUser && widget.requestFocusOnUserInteraction) {
-      _focusNode?.requestFocus();
-    }
-  }
-
-  void save() {
-    widget.onSaved?.call(controller, value);
-  }
-
-  void _clearError() {
-    if (_status.validation != _initialValidation) {
-      setState(() {
-        _ignoreValidate = false;
-        _validateGen++;
-        _status = _status._copyWith(validation: _Optional(_initialValidation));
-      });
-    }
-  }
+  void onStatusChanged(FormeFieldStatus<T> status) {}
 
   /// this method should be only called in [_FormeState.build]
   Future<FormeFieldValidation> _validateByForm() async {
@@ -897,7 +968,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
     final int gen = ++_validateGen;
     if (_hasValidator) {
-      final String? errorText = widget.validator!(controller, value);
+      final String? errorText = widget.validator!(this, value);
       if (errorText != null || !_hasAsyncValidator) {
         notifyValidation(_createFormeFieldValidation(errorText));
         return _status.validation;
@@ -931,7 +1002,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     final int gen = ++_validateGen;
 
     if (_hasValidator) {
-      final String? errorText = widget.validator!(controller, value);
+      final String? errorText = widget.validator!(this, value);
       if (errorText != null || !_hasAsyncValidator) {
         notifyValidation(_createFormeFieldValidation(errorText));
         return;
@@ -967,7 +1038,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
     try {
       final String? errorText =
-          await widget.asyncValidator!(controller, value, isValid);
+          await widget.asyncValidator!(this, value, isValid);
       validation = _createFormeFieldValidation(errorText);
     } catch (e, stackTrace) {
       validation = FormeFieldValidation.fail(e, stackTrace);
@@ -984,7 +1055,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   }
 
   void _fieldChange() {
-    _formeState?.fieldDidChange();
+    _formeState?._fieldDidChange();
   }
 
   FormeFieldValidation _createFormeFieldValidation(String? errorText) {
@@ -993,293 +1064,34 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
     return FormeFieldValidation.invalid(errorText);
   }
-
-  /// this method is used to manually validate
-  Future<FormeFieldValidateSnapshot<T>> _validateManually(
-      {bool quietly = false}) async {
-    final T value = this.value;
-    if (!_hasAnyValidator || !enabled) {
-      return FormeFieldValidateSnapshot(
-          value, FormeFieldValidation.unnecessary, controller, false, false);
-    }
-    final int gen = quietly ? _validateGen : ++_validateGen;
-
-    bool isValid() {
-      return mounted && gen == _validateGen;
-    }
-
-    bool needNotify() {
-      return !quietly && isValid();
-    }
-
-    void notify(FormeFieldValidation validation) {
-      if (needNotify() && _status.validation != validation) {
-        setState(() {
-          _status = _status._copyWith(validation: _Optional(validation));
-        });
-      }
-    }
-
-    if (_hasValidator) {
-      final String? errorText = widget.validator!(controller, value);
-      if (errorText != null || !_hasAsyncValidator) {
-        final FormeFieldValidation validation =
-            _createFormeFieldValidation(errorText);
-        notify(validation);
-        return FormeFieldValidateSnapshot(
-            value, validation, controller, false, false);
-      }
-    }
-
-    notify(FormeFieldValidation.validating);
-
-    FormeFieldValidation validation;
-    try {
-      final String? errorText =
-          await widget.asyncValidator!(controller, value, isValid);
-      validation = _createFormeFieldValidation(errorText);
-    } catch (e, stackTrace) {
-      validation = FormeFieldValidation.fail(e, stackTrace);
-    }
-
-    notify(validation);
-    return FormeFieldValidateSnapshot(value, validation, controller,
-        value != this.value, value != initialValue);
-  }
-
-  void _markNeedsBuild() {
-    setState(() {});
-  }
-}
-
-class _FormeController extends FormeController {
-  _FormeState? _state;
-  @override
-  final ValueListenable<Map<String, FormeFieldController?>> fieldsListenable;
-  @override
-  final ValueListenable<FormeValidation> validationListenable;
-  _FormeController(this._state)
-      : fieldsListenable = FormeValueListenableDelegate(_state!.fieldsNotifier),
-        validationListenable =
-            FormeValueListenableDelegate(_state.validationNotifier);
-
-  _FormeState get state =>
-      _state ??
-      (throw Exception('controller is disposed , should not used anymore'));
-
-  @override
-  Map<String, Object?> get value {
-    final Map<String, Object?> map = <String, Object?>{};
-    for (final FormeFieldState element in state.states) {
-      if (!element.enabled) {
-        continue;
-      }
-      final String name = element.name;
-      final Object? value = element.value;
-      map[name] = value;
-    }
-    return map;
-  }
-
-  @override
-  bool get quietlyValidate => state.quietlyValidate;
-
-  @override
-  FormeValidation get validation => state.validation;
-
-  @override
-  T field<T extends FormeFieldController<Object?>>(String name) {
-    final T? field = findFormeFieldController(name);
-    if (field == null) {
-      throw Exception('no field can be found by name :$name');
-    }
-    return field;
-  }
-
-  @override
-  bool hasField(String name) =>
-      state.states.any((element) => element.name == name);
-
-  @override
-  Future<FormeValidateSnapshot> validate({
-    bool quietly = false,
-    Set<String> names = const {},
-    bool clearError = false,
-    bool validateByOrder = false,
-  }) async {
-    final List<FormeFieldState> states = (state.states
-            .where((element) =>
-                element._hasAnyValidator &&
-                element.enabled &&
-                (names.isEmpty || names.contains(element.name)))
-            .toList()
-          ..sort((a, b) => a.order!.compareTo(b.order!)))
-        .toList();
-    if (states.isEmpty) {
-      return FormeValidateSnapshot([]);
-    }
-    if (clearError) {
-      for (final FormeFieldState element in states) {
-        element._clearError();
-      }
-    }
-    if (validateByOrder) {
-      return _validateByOrder(states, quietly);
-    }
-    final List<FormeFieldValidateSnapshot<Object?>> value = await Future.wait(
-        states.map((state) => state._validateManually(quietly: quietly)),
-        eagerError: true);
-    return FormeValidateSnapshot(value);
-  }
-
-  Future<FormeValidateSnapshot> _validateByOrder(
-      List<FormeFieldState> states, bool quietly,
-      {int index = 0, List<FormeFieldValidateSnapshot> list = const []}) async {
-    final int length = controllers.length;
-    final List<FormeFieldValidateSnapshot> copyList = List.of(list);
-    final FormeFieldValidateSnapshot snapshot =
-        await states[index]._validateManually(quietly: quietly);
-    copyList.add(snapshot);
-    if (!snapshot.isValid || index == length - 1) {
-      return FormeValidateSnapshot(copyList);
-    }
-    return _validateByOrder(states, quietly, index: index + 1, list: copyList);
-  }
-
-  @override
-  void reset() => state.reset();
-
-  @override
-  void save() => state.save();
-
-  @override
-  set value(Map<String, Object?> data) => data.forEach((key, Object? value) {
-        field(key).value = value;
-      });
-
-  T? findFormeFieldController<T extends FormeFieldController<Object?>>(
-      String name) {
-    for (final FormeFieldState state in state.states) {
-      if (state.name == name) {
-        return state.controller as T;
-      }
-    }
-    return null;
-  }
-
-  @override
-  bool get isValueChanged => state.isValueChanged;
-
-  @override
-  List<FormeFieldController> get controllers =>
-      state.states.map((e) => e.controller).toList();
-
-  @override
-  ValueListenable<FormeFieldController<T>?> fieldListenable<T>(String name) =>
-      FormeValueListenableDelegate<FormeFieldController<T>?>(
-          state.fieldListenable<T>(name));
-
-  @override
-  bool addVisitor(FormeVisitor visitor) {
-    if (!state.visitors.contains(visitor)) {
-      state.visitors.add(visitor);
-      return true;
-    }
-    return false;
-  }
-
-  @override
-  bool removeVisitor(FormeVisitor visitor) {
-    return state.visitors.remove(visitor);
-  }
-}
-
-class _FormeFieldController<T extends Object?> extends FormeFieldController<T> {
-  FormeFieldState<T>? _fieldState;
-
-  @override
-  final String name;
-  @override
-  final _FormeFieldStatusNotifier<T> statusNotifier;
-
-  _FormeFieldController(FormeFieldStatus<T> status, FormeFieldState<T> state)
-      : _fieldState = state,
-        statusNotifier = _FormeFieldStatusNotifier(status),
-        name = state.name {
-    statusNotifier.addListener(() {
-      final FormeFieldStatus<T> status = statusNotifier.value;
-      if (status.disposed) {
-        _fieldState = null;
-        statusNotifier.dispose();
-      }
-    });
-  }
-
-  FormeFieldState<T> get _state =>
-      _fieldState ??
-      (throw Exception('controller is disposed , should not used anymore'));
-
-  @override
-  FocusNode? get focusNode => _state._focusNode;
-
-  @override
-  set readOnly(bool readOnly) => _state.readOnly = readOnly;
-
-  @override
-  void reset() => _state.reset();
-
-  @override
-  Future<FormeFieldValidateSnapshot<T>> validate({bool quietly = false}) =>
-      _state._validateManually(quietly: quietly);
-
-  @override
-  set value(T value) => _state.value = value;
-
-  @override
-  bool get isValueChanged => _state.isValueChanged;
-
-  @override
-  set enabled(bool enabled) => _state.enabled = enabled;
-
-  @override
-  void markNeedsBuild() => _state._markNeedsBuild();
-
-  @override
-  ValueListenable<bool> get enabledListenable =>
-      FormeValueListenableDelegate(statusNotifier.enabledListenable);
-
-  @override
-  ValueListenable<bool> get focusListenable =>
-      FormeValueListenableDelegate(statusNotifier.focusListenable);
-
-  @override
-  T? get oldValue => statusNotifier.oldValue;
-
-  @override
-  ValueListenable<bool> get readOnlyListenable =>
-      FormeValueListenableDelegate(statusNotifier.readOnlyListenable);
-
-  @override
-  ValueListenable<FormeFieldValidation> get validationListenable =>
-      FormeValueListenableDelegate(statusNotifier.validationListenable);
-
-  @override
-  ValueListenable<T> get valueListenable =>
-      FormeValueListenableDelegate(statusNotifier.valueListenable);
-
-  @override
-  BuildContext get context => _state.context;
-
-  @override
-  void clearError() => _state._clearError();
-
-  @override
-  int? get order => _state.order;
 }
 
 /// a focusnode created by FormeField itself rather than set by subclass ,
 /// so it's our responsibility to dispose it
 class _DisposeRequiredFocusNode extends FocusNode {}
+
+class FormeFieldChangedStatus<T extends Object?> extends FormeFieldStatus<T> {
+  FormeFieldChangedStatus._(
+    FormeFieldStatus<T> newStatus,
+    this.isEnabledChanged,
+    this.isFocusChanged,
+    this.isReadOnlyChanged,
+    this.isValidationChanged,
+    this.isValueChanged,
+  ) : super._(
+          enabled: newStatus.enabled,
+          readOnly: newStatus.readOnly,
+          validation: newStatus.validation,
+          value: newStatus.value,
+          hasFocus: newStatus.hasFocus,
+        );
+
+  final bool isEnabledChanged;
+  final bool isReadOnlyChanged;
+  final bool isValidationChanged;
+  final bool isValueChanged;
+  final bool isFocusChanged;
+}
 
 class FormeFieldStatus<T extends Object?> {
   final bool enabled;
@@ -1288,16 +1100,12 @@ class FormeFieldStatus<T extends Object?> {
   final T value;
   final bool hasFocus;
 
-  /// field is disposed
-  final bool disposed;
-
   FormeFieldStatus._({
     required this.enabled,
     required this.readOnly,
     required this.validation,
     required this.value,
     required this.hasFocus,
-    required this.disposed,
   });
 
   FormeFieldStatus<T> _copyWith({
@@ -1306,7 +1114,6 @@ class FormeFieldStatus<T extends Object?> {
     _Optional<FormeFieldValidation>? validation,
     _Optional<T>? value,
     _Optional<bool>? hasFocus,
-    _Optional<bool>? disposed,
   }) {
     return FormeFieldStatus<T>._(
       enabled: enabled == null ? this.enabled : enabled.value,
@@ -1314,7 +1121,6 @@ class FormeFieldStatus<T extends Object?> {
       validation: validation == null ? this.validation : validation.value,
       value: value == null ? this.value : value.value,
       hasFocus: hasFocus == null ? this.hasFocus : hasFocus.value,
-      disposed: disposed == null ? this.disposed : disposed.value,
     );
   }
 }
@@ -1322,47 +1128,4 @@ class FormeFieldStatus<T extends Object?> {
 class _Optional<T> {
   final T value;
   _Optional(this.value);
-}
-
-class _FormeFieldStatusNotifier<T extends Object?>
-    extends FormeMountedValueNotifier<FormeFieldStatus<T>> {
-  T? oldValue;
-  final ValueNotifier<bool> focusListenable;
-  final ValueNotifier<bool> readOnlyListenable;
-  final ValueNotifier<bool> enabledListenable;
-  final ValueNotifier<T> valueListenable;
-  final ValueNotifier<FormeFieldValidation> validationListenable;
-  _FormeFieldStatusNotifier(
-    FormeFieldStatus<T> value,
-  )   : focusListenable = FormeMountedValueNotifier(value.hasFocus),
-        readOnlyListenable = FormeMountedValueNotifier(value.readOnly),
-        enabledListenable = FormeMountedValueNotifier(value.enabled),
-        valueListenable = FormeMountedValueNotifier(value.value),
-        validationListenable = FormeMountedValueNotifier(value.validation),
-        super(value);
-
-  @override
-  set value(FormeFieldStatus<T> newValue) {
-    super.value = newValue;
-    if (!newValue.disposed) {
-      readOnlyListenable.value = newValue.readOnly;
-      focusListenable.value = newValue.hasFocus;
-      enabledListenable.value = newValue.enabled;
-      if (valueListenable.value != newValue.value) {
-        oldValue = valueListenable.value;
-        valueListenable.value = newValue.value;
-      }
-      validationListenable.value = newValue.validation;
-    }
-  }
-
-  @override
-  void dispose() {
-    focusListenable.dispose();
-    readOnlyListenable.dispose();
-    enabledListenable.dispose();
-    valueListenable.dispose();
-    validationListenable.dispose();
-    super.dispose();
-  }
 }

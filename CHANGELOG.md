@@ -1,4 +1,4 @@
-## 3.6.0
+## 4.0.0
 **BREAKING CHANGES:**
 1. remove `beforeInitiation` & `afterInitiation` from `FormeFieldState` , use `initModel` instead
 2. remove `updateFieldValueInDidUpdateWidget`

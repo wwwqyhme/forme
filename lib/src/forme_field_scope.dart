@@ -4,14 +4,14 @@ import '../forme.dart';
 
 /// share FormFieldController in sub tree
 class FormeFieldScope extends InheritedWidget {
-  final FormeFieldController controller;
+  final FormeFieldState state;
 
-  const FormeFieldScope(this.controller, Widget child, {Key? key})
+  const FormeFieldScope(this.state, Widget child, {Key? key})
       : super(child: child, key: key);
 
   @override
   bool updateShouldNotify(covariant InheritedWidget oldWidget) => false;
 
-  static FormeFieldController? of(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<FormeFieldScope>()?.controller;
+  static FormeFieldState? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<FormeFieldScope>()?.state;
 }

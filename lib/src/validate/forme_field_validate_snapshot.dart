@@ -28,9 +28,8 @@ class FormeValidateSnapshot {
   /// form data may be changed during async validation**
   ///
   /// use [isValueChangedDuringValidation] to check whether form data changed during async validation
-  Map<String, Object?> get value =>
-      _snapshots.asMap().map<String, Object?>((key, value) =>
-          MapEntry<String, Object?>(value.controller.name, value.value));
+  Map<String, Object?> get value => _snapshots.asMap().map<String, Object?>(
+      (key, value) => MapEntry<String, Object?>(value.name, value.value));
 
   /// whether form' value changed during validation
   bool get isValueChangedDuringValidation =>
@@ -43,8 +42,9 @@ class FormeValidateSnapshot {
       _snapshots.any((element) => element.isValueChanged);
 
   FormeValidation get validation {
-    return FormeValidation(_snapshots.asMap().map(
-        (key, value) => MapEntry(value.controller.name, value.validation)));
+    return FormeValidation(_snapshots
+        .asMap()
+        .map((key, value) => MapEntry(value.name, value.validation)));
   }
 }
 
@@ -58,7 +58,9 @@ class FormeFieldValidateSnapshot<T extends Object?> {
   /// validation , may not equals the field's current validation  if performed another validate during async validation
   final FormeFieldValidation validation;
 
-  final FormeFieldController<T> controller;
+  /// name of field
+  final String name;
+
   final bool isValueChangedDuringValidation;
 
   /// whether value changed after initialized
@@ -69,7 +71,7 @@ class FormeFieldValidateSnapshot<T extends Object?> {
   FormeFieldValidateSnapshot(
     this.value,
     this.validation,
-    this.controller,
+    this.name,
     this.isValueChangedDuringValidation,
     this.isValueChanged,
   );
