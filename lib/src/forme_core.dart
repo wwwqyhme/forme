@@ -946,7 +946,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
   /// override this method if you want to listen status changed
   @protected
-  void onStatusChanged(FormeFieldStatus<T> status) {}
+  void onStatusChanged(FormeFieldChangedStatus<T> status) {}
 
   /// this method should be only called in [_FormeState.build]
   Future<FormeFieldValidation> _validateByForm() async {
