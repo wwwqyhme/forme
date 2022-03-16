@@ -4,7 +4,7 @@ import 'package:forme/src/decorator/forme_decorator_state.dart';
 import '../../forme.dart';
 
 /// this builder will decorate current field with [CupertinoFormRow]
-class FormeCupertinoInputDecoratorBuilder<T> implements FormeFieldDecorator {
+class FormeCupertinoInputDecoratorBuilder<T> implements FormeFieldDecorator<T> {
   final Widget? prefix;
   final EdgeInsetsGeometry? padding;
   final Widget? helper;
@@ -22,7 +22,7 @@ class FormeCupertinoInputDecoratorBuilder<T> implements FormeFieldDecorator {
     BuildContext context,
     Widget child,
   ) {
-    return FormeCupertinoInputDecorator(
+    return FormeCupertinoInputDecorator<T>(
       helper: helper,
       padding: padding,
       prefix: prefix,
@@ -49,7 +49,8 @@ class FormeCupertinoInputDecorator<T> extends StatefulWidget {
   final Widget Function(Widget child)? wrapper;
 
   @override
-  State<StatefulWidget> createState() => _FormeCupertinoInputDecoratorState();
+  State<StatefulWidget> createState() =>
+      _FormeCupertinoInputDecoratorState<T>();
 }
 
 class _FormeCupertinoInputDecoratorState<T>

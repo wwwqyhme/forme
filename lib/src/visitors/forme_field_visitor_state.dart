@@ -5,7 +5,7 @@ import '../forme_field.dart';
 import '../forme_visitor.dart';
 
 abstract class FormeFieldVisitorWidget extends StatefulWidget {
-  final String name;
+  final String? name;
 
   const FormeFieldVisitorWidget({
     Key? key,
@@ -24,7 +24,8 @@ abstract class FormeFieldVisitorState<T extends FormeFieldVisitorWidget,
     super.didChangeDependencies();
     final FormeFieldState? currentField = FormeField.of(context);
     _removeVisitor();
-    if (currentField != null && currentField.name == widget.name) {
+    if (currentField != null &&
+        (widget.name == null || currentField.name == widget.name)) {
       _form = null;
       final bool initialed = currentField != _field;
       _field = currentField as FormeFieldState<E>;
@@ -39,8 +40,8 @@ abstract class FormeFieldVisitorState<T extends FormeFieldVisitorWidget,
       _form = currentForm;
       _form!.addVisitor(this);
       if (initialed) {
-        onInitialed(currentForm.hasField(widget.name)
-            ? currentForm.field(widget.name)
+        onInitialed(currentForm.hasField(widget.name!)
+            ? currentForm.field(widget.name!)
             : null);
       }
     }

@@ -35,7 +35,7 @@ class FormeFieldStatusListener<T extends Object?>
   const FormeFieldStatusListener({
     Key? key,
     required this.builder,
-    required String name,
+    String? name,
     this.child,
     this.filter,
   }) : super(name: name, key: key);

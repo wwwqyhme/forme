@@ -492,6 +492,8 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   String get name => widget.name;
   T get value => _status.value;
 
+  T? _oldValue;
+
   bool _inited = false;
 
   bool get _hasValidator => widget.validator != null;
@@ -516,6 +518,9 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
     return _status.validation;
   }
+
+  /// get previous value
+  T? get oldValue => _oldValue;
 
   /// get current status
   FormeFieldStatus<T> get status => _status;
@@ -584,7 +589,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   }
 
   /// whether field request a focusnode or not
-  bool get hasFocusNode => _focusNode == null;
+  bool get hasFocusNode => _focusNode != null;
 
   /// get current widget's focus node
   ///
@@ -932,6 +937,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
 
     if (status.isValueChanged) {
+      _oldValue = oldStatus.value;
       _ignoreValidate = false;
     }
 
