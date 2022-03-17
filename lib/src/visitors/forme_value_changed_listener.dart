@@ -9,12 +9,10 @@ import 'forme_visitor_state.dart';
 ///
 /// **this widget must be used inside [Forme]**
 class FormeIsValueChangedListener extends StatefulWidget {
-  final FormeKey? formeKey;
   final Widget Function(BuildContext context, bool isValueChanged) builder;
   const FormeIsValueChangedListener({
     Key? key,
     required this.builder,
-    this.formeKey,
   }) : super(key: key);
 
   @override

@@ -8,7 +8,6 @@ https://www.qyh.me/forme3/
 
 ``` 
 flutter pub add forme
-/// add base fields
 flutter pub add forme_base_fields 
 ```
 
@@ -318,6 +317,124 @@ FocusNode will  be auto created when needed.
 
 if you want to override default focusNode , you can extends `FormeFieldState` and use `set focusNode` method to do that,
 in this case , you must dispose focusNode by yourself
+
+## listener widgets
+
+listener widgets used to build your widgets which depends on status of FormeField or form value , you must used them inside Forme or FormeField
+
+### FormeFieldStatusListener
+
+will rebuild whenever field's status changed , use filter to avoid unnecessary rebuild.
+
+eg:
+
+``` Dart
+Forme(
+    child:Column(children:[
+        FormeFieldStatusListener(
+            filter:(status) => status.isValueChanged,
+            name:'name',
+            builder:(context,status,child){
+                return Text('current value:${status.value}')
+            }
+        ),
+        FormeTextField(name:'name'),
+    ]),
+)
+```
+
+### FormeFieldsValidationListener
+
+will rebuild whenever validation of any field changed 
+
+eg:
+
+``` Dart
+FormeFieldsValidationListener(
+      names: const {'password', 'confirm'},
+      builder: (context, validation) {
+        if (validation == null) {
+          return const SizedBox();
+        }
+        if (validation.isInvalid) {
+          return Padding(
+            padding: const EdgeInsets.only(left: 24),
+            child: Text(
+              validation.validations.values
+                  .where((element) => element.isInvalid)
+                  .first
+                  .error!,
+              style: _getErrorStyle(),
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+    },
+),
+```
+
+### FormeValidationListener
+
+will rebuild whenever form validation changed , useful when you want to create a submit button which only clickable when form validation passed
+
+eg:
+
+``` Dart
+Forme(
+    child:Column(children:[
+        ...
+        FormeValidationListener(
+            builder:(context,validation,child){
+                return TextButton(
+                    onPressed:validation.isValid ? submit:null,
+                    child:const Text('submit'),
+                );
+            }
+        )
+    ]),
+)
+```
+
+### FormeIsValueChangedListener 
+
+will rebuild whenever form value changed , useful when you want to create a reset button which depends on form value changed or not
+
+eg:
+
+``` Dart
+Forme(
+    child:Column(children:[
+        ...
+        FormeIsValueChangedListener(
+            builder:(context,isValueChanged,child){
+                return TextButton(
+                    onPressed:isValueChanged ? reset:null,
+                    child:const Text('reset'),
+                );
+            }
+        )
+    ]),
+)
+```
+
+### FormeValueListener 
+
+will rebuild whenever form value changed , typically used in debug .
+
+eg:
+
+``` Dart
+Forme(
+    child:Column(children:[
+        ...
+        FormeValueListener(
+            builder:(context,value,child){
+                return Text(value.toString());
+            }
+        )
+    ]),
+)
+```
 
 ## custom field
 
