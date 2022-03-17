@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
-import 'package:forme/src/forme_core.dart';
-import 'package:forme/src/visitors/forme_field_visitor_state.dart';
+
+import '../forme_core.dart';
+import 'forme_field_visitor_state.dart';
 
 /// used to listen target field status
 ///

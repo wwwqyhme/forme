@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
-import 'package:forme/src/decorator/forme_decorator_state.dart';
 
 import '../../forme.dart';
+import 'forme_decorator_state.dart';
 
 /// this builder will decorate current field with [CupertinoFormRow]
 class FormeCupertinoInputDecoratorBuilder<T> implements FormeFieldDecorator<T> {

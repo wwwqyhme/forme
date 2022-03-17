@@ -1,4 +1,4 @@
-import 'package:forme/forme.dart';
+import 'forme_core.dart';
 
 mixin FormeVisitor {
   void onFieldsRegistered(
