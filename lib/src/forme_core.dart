@@ -638,7 +638,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   }
 
   /// whether value is changed after initialed
-  bool get isValueChanged => initialValue != value;
+  bool get isValueChanged => !isValueEquals(initialValue, value);
 
   @mustCallSuper
   void didChange(T newValue) {

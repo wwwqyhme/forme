@@ -10,6 +10,7 @@
 8. remove `onValidationChanged` from `Forme`
 9. remove `beforeInitiaion` and `afterInitiaion` , use `initStatus` instead
 10. add `onInitialed` on `Forme`
+11. add `FormeVisitor` and `FormeFieldVisitor`, used to listen fields registered|unregistered|status changed
 
 ## 3.5.2
 
