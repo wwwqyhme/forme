@@ -343,7 +343,7 @@ class FormeState extends State<Forme> {
   void _fieldDidChange() {
     if (_needValidate) {
       setState(() {
-        ++_gen;
+        // ++_gen;
       });
     }
   }
