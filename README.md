@@ -29,17 +29,14 @@ Widget forme = Forme(
 | --- | --- | --- | --- |
 | key | false | `FormeKey` | a global key, also used to control form |
 | child | true | `Widget` | form content widget|
-| readOnly | false | `bool` | whether form should be readOnly,default is `false` |
-| onValueChanged | false | `FormeValueChanged` | listen form field's value change |
+| onFieldStatusChanged | false | `FormeFieldStatusChanged` | listen form field's value|read-only|focus|validation|enabled change |
 | initialValue | false | `Map<String,dynamic>` | initialValue , **will override FormField's initialValue** |
-| onFieldValidationChanged  | false | `FormeFieldValidationChanged` | listen form validation changed  |
-| onValidationChanged  | false | `FormeValidationChanged` | listen form validation change  |
 | onWillPop | false | `WillPopCallback` | Signature for a callback that verifies that it's OK to call Navigator.pop |
 | quietlyValidate | false | `bool` | if this attribute is true , will not display default error text|
-| onFocusChanged | false | `FormeFocusChanged` | listen form field's focus change |
 | autovalidateMode| false | `AutovalidateMode` | auto validate form mode |
 | autovalidateByOrder | false | `bool` | whether auto validate form by order |
-| onFieldsChanged | false | function | listen every field initialled or disposed |
+| onFieldsRegistered | false | function | listen registered fields  |
+| onFieldsUnregistered | false | function | listen unregistered fields |
 
 
 ## FormeField
@@ -55,9 +52,7 @@ Widget forme = Forme(
 | quietlyValidate | true | `bool` | whether validate quietly |
 | asyncValidatorDebounce | false | `Duration` | async validate debounce , default is 500ms |
 | autovalidateMode | false | `AutovalidateMode` | autovalidate mode |
-| onValueChanged | false | `FormeValueChanged` | triggered when field's value changed |
-| onFocusChanged | false | `FormeFocusChanged` | triggered when field's focus state changed |
-| onValidationChanged | false | `FormeFieldValidationChanged` | triggered when field's validation error changed |
+| onStatusChanged | false | `FormeFieldStatusChanged` | listen value|read-only|focus|validation|enabled change |
 | onInitialed | false | `FormeFieldInitialed` | triggered when field initialed |
 | onSaved | false | `FormeFieldSetter` | triggered when form saved |
 | validator | false | `FormeValidator` | sync validator |
@@ -132,7 +127,7 @@ you can use `FormeValidates` to simplify your validators
 
 when you use validators from `FormeValidates` , you must specific at least one errorText , otherwise errorText is an empty string
 
-## FormeKey Methods
+## FormeKey|FormeState Methods
 
 ### whether form has a name field
 
@@ -140,28 +135,16 @@ when you use validators from `FormeValidates` , you must specific at least one e
 bool hasField = formeKey.hasField(String name);
 ```
 
-### whether current form is readOnly
+### get field by name
 
 ``` Dart
-bool readOnly = formeKey.readOnly;
-```
-
-### set readOnly 
-
-``` Dart
-formeKey.readOnly = bool readOnly;
-```
-
-### get field's controller
-
-``` Dart
-T controller = formeKey.field<T extends FormeFieldController>(String name);
+T field = formeKey.field<T extends FormeFieldState>(String name);
 ```
 
 ### get form data
 
 ``` Dart
-Map<String, dynamic> data = formeKey.data;
+Map<String, dynamic> data = formeKey.value;
 ```
 
 ### set form data
@@ -171,8 +154,6 @@ formeKey.data = Map<String,dynamic> data;
 ```
 
 ### validate
-
-**since 2.5.0 , this method will return a Future ranther than a Map** 
 
 you can use `FormeValidateSnapshot.isValueChanged` to check whether form value is changed duration this validation , 
 if is changed , typically means this validation is invalid , you should not submit your form even though validation is passed
@@ -222,57 +203,13 @@ formeKey.quieltyValidate = bool quietlyValidate;
 bool isChanged = formeKey.isValueChanged
 ```
 
-### get all field controllers (2.5.2)
+### get all fields (2.5.2)
 
 ``` Dart
-List<FormeFieldController> controllers = formeKey.controllers;
-```
-
-### get fieldListenable
-
-``` Dart
-ValueListenable<FormeFieldController> fieldListenable = formeKey.fieldListenable(String name);
-```
-
-### get fieldsListenable
-
-``` Dart
-ValueListenable<Map<String, FormeFieldController<dynamic>?>> fieldsListenable = 
-      formeKey.fieldsListenable;
-```
-
-used to listen every field initialed or disposed , value is an empty or single sized map , key is field name, value is `FormeFieldController`
-
-### get validation listenable
-
-``` Dart
-ValueListenable<FormeValidation> validationListenable = formeKey.validationListenable;
-```
-
-useful when you want to show or hide a submit button when validation passed or not,eg:
-
-```Dart
- Builder(
-    builder: (context) {
-    return ValueListenableBuilder<FormeValidation>(
-        valueListenable: key.validationListenable,
-        builder: (context, validation, child) {
-            if (!validation.isValidOrUnnecessaryOrEmpty) {
-                return const SizedBox.shrink();
-            }
-            return yourSubmitButton;
-        });
-    },
-),
+List<FormeFieldState> fields = formeKey.fields;
 ```
 
 ## Forme Field Methods
-
-### get forme controller
-
-``` Dart
-FormeController? formeController = field.formeController;
-```
 
 ### get field's name
 
@@ -304,34 +241,16 @@ bool enabled = field.enabled;
 field.enabled = bool enabled;
 ```
 
-### get focusNode
+### has focus node
 
 ``` Dart
-FocusNode? focusNode = field.focusNode;
+bool hasFocusNode = field.hasFocusNode;
 ```
 
-### get context
+### get or create a focusNode
 
 ``` Dart
-BuilderContext context = field.context;
-```
-
-### get focusListenable
-
-``` Dart
-ValueListenable<bool> focusListenable = field.focusListenable;
-```
-
-### get readOnlyListenable
-
-``` Dart
-ValueListenable<bool> readOnlyListenable = field.readOnlyListenable;
-```
-
-### get enabledListenable
-
-``` Dart
-ValueListenable<bool> enabledListenable = field.enabledListenable;
+FocusNode focusNode = field.focusNode;
 ```
 
 ### get value
@@ -354,8 +273,6 @@ field.reset();
 
 ### validate field
 
-**since 2.5.0 , this method will return a Future ranther than a String** 
-
 ``` Dart
 Future<FormeFieldValidateSnapshot> future = field.validate({bool quietly = false});
 ```
@@ -364,18 +281,6 @@ Future<FormeFieldValidateSnapshot> future = field.validate({bool quietly = false
 
 ``` Dart
 FormeFieldValidation validation = field.validation;
-```
-
-### get validationListenable
-
-``` Dart
-ValueListenable<FormeFieldValidation>  validationListenable = field.validationListenable;
-```
-
-### get valueListenable
-
-``` Dart
-ValueListenable<T> valueListenable = field.valueListenable;
 ```
 
 ### get oldValue
@@ -392,12 +297,6 @@ T? value = field.oldValue;
 bool isChanged = field.isValueChanged
 ```
 
-###  whether is field mounted
-
-``` Dart
-bool mounted = field.mounted
-```
-
 ### get generic type
 
 ``` Dart
@@ -410,7 +309,6 @@ Type type = field.type;
 bool isNullable = field.isNullable;
 ```
 
-
 ## FocusNode
 
 for simplify form control , Forme not support set focus node on field,
@@ -420,7 +318,6 @@ FocusNode will  be auto created when needed.
 
 if you want to override default focusNode , you can extends `FormeFieldState` and use `set focusNode` method to do that,
 in this case , you must dispose focusNode by yourself
-
 
 ## custom field
 

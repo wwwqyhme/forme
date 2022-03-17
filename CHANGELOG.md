@@ -1,18 +1,15 @@
 ## 4.0.0
-**BREAKING CHANGES:**
-1. remove `beforeInitiation` & `afterInitiation` from `FormeFieldState` , use `initModel` instead
-2. remove `updateFieldValueInDidUpdateWidget`
-3. add `FormeFieldValueUpdater` on `FormeField` , used to update value when `didUpdateWidget` called
-4. initialValue on `Forme` has higher priority than `FormeField`'s initialValue
-5. `FormeField`'s generic type is `T extends Object?`  now
-6. `FormeController`'s data renamed to value
-7. remove readOnly getter & setter from `FormeController`
-8. remove `mounted` from `FormeFieldController` , use `isDisposed` instead
-9. when `FormeFieldController` or `FormeController ` is referenced  by others , `FormeFieldState`&`_FormeState` can be recycled after disposed
-10. remove `compareValue` on `FormeFieldState`
-11. remove `onFieldsRegistered` on `Forme`,use `onFieldsRegistered` & `onFieldsUnregistered` instead
-12. add `addVisitor` and `removeVisitor` on `FormeController`
-13. add support widgets
+
+1. remove `FormeController` and `FormeFieldController` , use `FormeState` and `FormeFieldState` instead
+2. remove `onValueChanged`,`onFocusChanged`... from `FormeField` , use `onStatusChanged` instead
+3. add `FormeFieldStatusListener` widget to listen status change
+4. add `FormeFieldsValidationListener` widget to listen multi fields validation change
+5. add `FormeIsValueChangedListener` widget to listen form value change
+6. add `FormeValidationListener` widget to listen form validation change
+7. add `FormeValueListener` widget to listen form value change
+8. remove `onValidationChanged` from `Forme`
+9. remove `beforeInitiaion` and `afterInitiaion` , use `initStatus` instead
+10. add `onInitialed` on `Forme`
 
 ## 3.5.2
 

@@ -99,22 +99,25 @@ class Forme extends StatefulWidget {
   final void Function(List<FormeFieldState> fields)? onFieldsRegistered;
   final void Function(List<FormeFieldState> fields)? onFieldsUnregistered;
 
-  /// listen [FormeValidation] changed
-  final void Function(FormeState field, FormeValidation validation)?
-      onValidationChanged;
+  /// called in [FormeState.initState]
+  ///
+  /// typically used to add visitors
+  ///
+  /// **DO NOT** get any field or request a new frame here
+  final void Function(FormeState form)? onInitialed;
 
   const Forme({
     FormeKey? key,
     this.onFieldStatusChanged,
     required this.child,
     this.initialValue = const <String, Object?>{},
-    this.onValidationChanged,
     this.onWillPop,
     this.quietlyValidate = false,
     AutovalidateMode? autovalidateMode,
     this.autovalidateByOrder = false,
     this.onFieldsRegistered,
     this.onFieldsUnregistered,
+    this.onInitialed,
   })  : autovalidateMode = autovalidateMode ?? AutovalidateMode.disabled,
         super(key: key);
 
@@ -267,6 +270,12 @@ class FormeState extends State<Forme> {
       }
     }
     return null;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.onInitialed?.call(this);
   }
 
   @override
@@ -519,6 +528,12 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     return _status.validation;
   }
 
+  /// get generic type
+  Type get type => T;
+
+  /// whether value can be nullable or not
+  bool get isNullable => null is T;
+
   /// get previous value
   T? get oldValue => _oldValue;
 
@@ -754,21 +769,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     _status = _status._copyWith(
       hasFocus: _Optional(_focusNode?.hasFocus ?? false),
     );
-    _onModelChanged(old, _status);
-  }
-
-  /// if you want to init some resources relies on [initialValue] or [readOnly] or [enabled]
-  ///
-  /// use [initModel] instead
-  @override
-  void initState() {
-    super.initState();
-
-    if (widget.onInitialed != null) {
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        widget.onInitialed?.call(this);
-      });
-    }
+    _onStatusChanged(old, _status);
   }
 
   /// this method will be called only once in state's lifecircle,immediately  called after [initState]
@@ -779,7 +780,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   /// method
   @protected
   @mustCallSuper
-  void initModel() {
+  void initStatus() {
     _status = FormeFieldStatus<T>._(
       enabled: widget.enabled,
       readOnly: widget.readOnly || !widget.enabled,
@@ -819,14 +820,14 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       _validateGen++;
     }
 
-    _onModelChanged(old, _status, true);
+    _onStatusChanged(old, _status, true);
   }
 
   @override
   void setState(VoidCallback fn) {
     final FormeFieldStatus<T> old = _status;
     super.setState(fn);
-    _onModelChanged(old, _status);
+    _onStatusChanged(old, _status);
   }
 
   @override
@@ -837,7 +838,8 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
     if (!_inited) {
       _inited = true;
-      initModel();
+      initStatus();
+      widget.onInitialed?.call(this);
     }
   }
 
@@ -912,7 +914,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     return oldValue == newValue;
   }
 
-  void _onModelChanged(
+  void _onStatusChanged(
       FormeFieldStatus<T> oldStatus, FormeFieldStatus<T> newStatus,
       [bool onlyAfterFrameCompleted = false]) {
     final FormeFieldChangedStatus<T> status = FormeFieldChangedStatus._(
@@ -993,7 +995,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       if (mounted && _status.validation != validation) {
         final FormeFieldStatus<T> oldStatus = _status;
         _status = _status._copyWith(validation: _Optional(validation));
-        _onModelChanged(oldStatus, _status, true);
+        _onStatusChanged(oldStatus, _status, true);
       }
     }
 

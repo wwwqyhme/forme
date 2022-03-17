@@ -78,12 +78,11 @@ class FormeField<T extends Object?> extends StatefulWidget {
 
   final FormeFieldStatusChanged<T>? onStatusChanged;
 
-  /// called after [FormeController] or [FormeFieldState] initialed
+  /// called immediately after [FormeFieldState.initStatus]
   ///
-  /// valueListenable will not listen [FormeField.initialValue] , you can do
-  /// that in this method
+  /// typically used to add visitors
   ///
-  /// **try to get another field's controller in this method will cause an error**
+  /// **DO NOT** request a new frame here
   final FormeFieldInitialed<T>? onInitialed;
 
   final FormeFieldSetter<T>? onSaved;
