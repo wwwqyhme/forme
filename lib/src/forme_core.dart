@@ -214,7 +214,7 @@ class FormeState extends State<Forme> {
     }
     if (clearError) {
       for (final FormeFieldState element in states) {
-        element.clearError();
+        element.errorText = null;
       }
     }
     if (validateByOrder) {
@@ -686,13 +686,25 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     widget.onSaved?.call(this, value);
   }
 
-  /// reset validation
-  void clearError() {
-    if (_status.validation != _initialValidation) {
+  /// if [errorText] is null , reset validation
+  /// if [errorText] not null , set custom error text even though field has no validators at all
+  ///
+  /// will not worked on disabled fields
+  set errorText(String? errorText) {
+    if (!enabled) {
+      return;
+    }
+    final FormeFieldValidation validation;
+    if (errorText == null) {
+      validation = _initialValidation;
+    } else {
+      validation = FormeFieldValidation.invalid(errorText);
+    }
+    if (_status.validation != validation) {
       setState(() {
-        _ignoreValidate = false;
+        _ignoreValidate = errorText != null;
         _validateGen++;
-        _status = _status._copyWith(validation: _Optional(_initialValidation));
+        _status = _status._copyWith(validation: _Optional(validation));
       });
     }
   }

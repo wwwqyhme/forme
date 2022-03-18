@@ -20,10 +20,11 @@ class FormeFieldValidation {
   static FormeFieldValidation waiting = const FormeFieldValidation._(
       null, FormeValidationState.waiting, null, null);
 
-  const FormeFieldValidation.invalid(this.error)
+  const FormeFieldValidation.invalid(String errorText)
       : exception = null,
         state = FormeValidationState.invalid,
-        stackTrace = null;
+        stackTrace = null,
+        error = errorText;
 
   const FormeFieldValidation.fail(this.exception, this.stackTrace)
       : error = null,
