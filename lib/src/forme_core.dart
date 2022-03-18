@@ -73,8 +73,6 @@ class Forme extends StatefulWidget {
   final Widget child;
 
   /// map initial value
-  ///
-  /// **this property can be overwritten by field's initialValue**
   final Map<String, Object?> initialValue;
 
   final WillPopCallback? onWillPop;
@@ -155,9 +153,7 @@ class FormeState extends State<Forme> {
       element.reset();
     }
     if (widget.autovalidateMode == AutovalidateMode.always) {
-      setState(() {
-        ++_gen;
-      });
+      setState(() {});
     }
   }
 
@@ -261,6 +257,13 @@ class FormeState extends State<Forme> {
     for (final FormeFieldState element in _states) {
       element.save();
     }
+  }
+
+  /// rebuild all widgets of form
+  void rebuildForm() {
+    setState(() {
+      ++_gen;
+    });
   }
 
   T? _findField<T extends FormeFieldState<Object?>>(String name) {
