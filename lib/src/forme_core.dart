@@ -540,6 +540,11 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   /// get previous value
   T? get oldValue => _oldValue;
 
+  /// get form state
+  ///
+  /// return null if field not wrapped by [Forme]
+  FormeState? get form => _formeState;
+
   /// get current status
   FormeFieldStatus<T> get status => _status;
 
