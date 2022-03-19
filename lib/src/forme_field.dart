@@ -61,7 +61,7 @@ class FormeField<T extends Object?> extends StatefulWidget {
   /// 4. value will be ignored when get form data
   /// 5. value can still be changed via `FormeFieldState`
   /// 6. validation state will always be `FormeValidationState.unnecessary`
-  /// 7. when get validation from `FormeController` , this field will be ignored
+  /// 7. when get validation from `FormeState` , this field will be ignored
   final bool enabled;
   final T initialValue;
 

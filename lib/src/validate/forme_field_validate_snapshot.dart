@@ -37,7 +37,7 @@ class FormeValidateSnapshot {
 
   /// whether value changed after initialized
   ///
-  /// **unlike [FormeController.isValueChanged] , this method is compare snapshot value and initialValue**
+  /// **unlike [FormeState.isValueChanged] , this method is compare snapshot value and initialValue**
   bool get isValueChanged =>
       _snapshots.any((element) => element.isValueChanged);
 
@@ -65,7 +65,7 @@ class FormeFieldValidateSnapshot<T extends Object?> {
 
   /// whether value changed after initialized
   ///
-  /// **unlike [FormeFieldController.isValueChanged] , this method is compare snapshot value and initialValue**
+  /// **unlike [FormeFieldState.isValueChanged] , this method is compare snapshot value and initialValue**
   final bool isValueChanged;
 
   FormeFieldValidateSnapshot(
