@@ -666,7 +666,6 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     setState(() {
       _validateGen++;
       _hasInteractedByUser = false;
-      _ignoreValidate = false;
       _status = _status._copyWith(
           validation: _Optional(_initialValidation),
           value: _Optional(initialValue));
@@ -702,7 +701,6 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
     if (_status.validation != validation) {
       setState(() {
-        _ignoreValidate = errorText != null;
         _validateGen++;
         _status = _status._copyWith(validation: _Optional(validation));
       });
@@ -949,6 +947,13 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       widget.onStatusChanged?.call(this, status);
     }
 
+    if (status.isValidationChanged) {
+      final FormeFieldValidation validation = status.validation;
+      if (validation.isWaiting || validation.isUnnecessary) {
+        _ignoreValidate = false;
+      }
+    }
+
     if (status.isEnabledChanged) {
       _focusNode?.canRequestFocus = newStatus.enabled;
     }
@@ -981,10 +986,12 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       }
     }
 
-    if (_ignoreValidate || !_hasAnyValidator) {
-      if (!_hasAnyValidator) {
-        notifyValidation(FormeFieldValidation.unnecessary);
-      }
+    if (_ignoreValidate) {
+      return _status.validation;
+    }
+
+    if (!_hasAnyValidator) {
+      notifyValidation(FormeFieldValidation.unnecessary);
       return _status.validation;
     }
 
@@ -1014,10 +1021,12 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       }
     }
 
-    if (_ignoreValidate || !_hasAnyValidator) {
-      if (!_hasAnyValidator) {
-        notifyValidation(FormeFieldValidation.unnecessary);
-      }
+    if (_ignoreValidate) {
+      return;
+    }
+
+    if (!_hasAnyValidator) {
+      notifyValidation(FormeFieldValidation.unnecessary);
       return;
     }
 
@@ -1068,7 +1077,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
     if (isValid()) {
       setState(() {
-        _ignoreValidate = true;
+        _ignoreValidate = validation.isInvalid || validation.isValid;
         _status = _status._copyWith(validation: _Optional(validation));
       });
       return true;
