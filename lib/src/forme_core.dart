@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
+import 'package:forme/src/validate/forme_field_validation_context.dart';
 
 import '../forme.dart';
 import 'forme_field_scope.dart';
@@ -492,7 +493,6 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
   FocusNode? _focusNode;
   Timer? _asyncValidatorTimer;
-  bool _ignoreValidate = false;
   bool _hasInteractedByUser = false;
   int _validateGen = 0;
 
@@ -505,6 +505,8 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   T get value => _status.value;
 
   T? _oldValue;
+  T? _latestSuccessfulValidationValue;
+  T? _validatingValue;
 
   bool _inited = false;
 
@@ -547,6 +549,9 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
   /// get current status
   FormeFieldStatus<T> get status => _status;
+
+  /// whether current validation is set via [errorText]
+  bool get isCustomValidation => _status.validation is _CustomValidation;
 
   /// set field readonly or not
   set readOnly(bool readOnly) {
@@ -670,6 +675,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   void reset() {
     setState(() {
       _validateGen++;
+      _latestSuccessfulValidationValue = null;
       _hasInteractedByUser = false;
       _status = _status._copyWith(
           validation: _Optional(_initialValidation),
@@ -693,7 +699,14 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   /// if [errorText] is null , reset validation
   /// if [errorText] not null , set custom error text even though field has no validators at all
   ///
+  /// field will rebuild after this method called , a validation may be performed during building.
+  /// in this case , custom validation  will be overwritten by new validation.
+  ///
   /// will not worked on disabled fields
+  ///
+  /// see  [FormeFieldState.isCustomValidation]
+  ///
+  /// see  [FormeField.validateFilter]
   set errorText(String? errorText) {
     if (!enabled) {
       return;
@@ -702,7 +715,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     if (errorText == null) {
       validation = _initialValidation;
     } else {
-      validation = FormeFieldValidation.invalid(errorText);
+      validation = _CustomValidation.invalid(errorText);
     }
     if (_status.validation != validation) {
       setState(() {
@@ -911,12 +924,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     ));
   }
 
-  @protected
-  bool isValueEquals(T oldValue, T newValue) {
-    if (widget.comparator != null) {
-      return widget.comparator!(oldValue, newValue);
-    }
-
+  bool _defaultComparator(T oldValue, T newValue) {
     if (oldValue is List && newValue is List) {
       return listEquals(oldValue, newValue);
     }
@@ -930,6 +938,11 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
 
     return oldValue == newValue;
+  }
+
+  @protected
+  bool isValueEquals(T oldValue, T newValue) {
+    return (widget.comparator ?? _defaultComparator).call(oldValue, newValue);
   }
 
   void _onStatusChanged(
@@ -953,9 +966,13 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
 
     if (status.isValidationChanged) {
+      _validatingValue = null;
       final FormeFieldValidation validation = status.validation;
-      if (validation.isWaiting || validation.isUnnecessary) {
-        _ignoreValidate = false;
+      if (validation.isValid || validation.isInvalid) {
+        _latestSuccessfulValidationValue = status.value;
+      }
+      if (validation.isValidating) {
+        _validatingValue = status.value;
       }
     }
 
@@ -965,7 +982,6 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
     if (status.isValueChanged) {
       _oldValue = oldStatus.value;
-      _ignoreValidate = false;
     }
 
     if (onlyAfterFrameCompleted) {
@@ -981,22 +997,60 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   @protected
   void onStatusChanged(FormeFieldChangedStatus<T> status) {}
 
-  /// this method should be only called in [_FormeState.build]
-  Future<FormeFieldValidation> _validateByForm() async {
-    void notifyValidation(FormeFieldValidation validation) {
-      if (mounted && validation != _status.validation) {
+  bool _defaultValidationFilter(FormeFieldValidationContext<T> context) {
+    final FormeFieldValidation validation = context.validation;
+
+    if (validation.isWaiting || validation.isFail) {
+      return true;
+    }
+
+    if (validation.isValidating) {
+      if (context.comparator(
+          context.validatingValue as T, context.currentValidateValue)) {
+        return false;
+      }
+      return true;
+    }
+
+    return !context.comparator(context.latestSuccessfulValidationValue as T,
+        context.currentValidateValue);
+  }
+
+  bool get _needValidate {
+    final FormeFieldValidationContext<T> context =
+        FormeFieldValidationContext<T>(
+            this,
+            form,
+            _latestSuccessfulValidationValue,
+            status.value,
+            _validatingValue,
+            isValueEquals);
+    return (widget.validationFilter ?? _defaultValidationFilter).call(context);
+  }
+
+  void _notifyValidation(
+      FormeFieldValidation validation, bool requestNewFrame) {
+    if (mounted && validation != _status.validation) {
+      if (requestNewFrame) {
         setState(() {
           _status = _status._copyWith(validation: _Optional(validation));
         });
+      } else {
+        final FormeFieldStatus<T> oldStatus = _status;
+        _status = _status._copyWith(validation: _Optional(validation));
+        _onStatusChanged(oldStatus, _status, true);
       }
     }
+  }
 
-    if (_ignoreValidate) {
+  /// this method should be only called in [_FormeState.build]
+  Future<FormeFieldValidation> _validateByForm() async {
+    if (!_needValidate) {
       return _status.validation;
     }
 
     if (!_hasAnyValidator) {
-      notifyValidation(FormeFieldValidation.unnecessary);
+      _notifyValidation(FormeFieldValidation.unnecessary, true);
       return _status.validation;
     }
 
@@ -1004,13 +1058,13 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     if (_hasValidator) {
       final String? errorText = widget.validator!(this, value);
       if (errorText != null || !_hasAsyncValidator) {
-        notifyValidation(_createFormeFieldValidation(errorText));
+        _notifyValidation(_createFormeFieldValidation(errorText), true);
         return _status.validation;
       }
     }
 
     if (_hasAsyncValidator) {
-      notifyValidation(FormeFieldValidation.validating);
+      _notifyValidation(FormeFieldValidation.validating, true);
       await _performAsyncValidate(gen);
     }
     return _status.validation;
@@ -1018,20 +1072,12 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
   /// this method should  be only called in [FormeFieldState.build]
   void _validateByField() {
-    void notifyValidation(FormeFieldValidation validation) {
-      if (mounted && _status.validation != validation) {
-        final FormeFieldStatus<T> oldStatus = _status;
-        _status = _status._copyWith(validation: _Optional(validation));
-        _onStatusChanged(oldStatus, _status, true);
-      }
-    }
-
-    if (_ignoreValidate) {
+    if (!_needValidate) {
       return;
     }
 
     if (!_hasAnyValidator) {
-      notifyValidation(FormeFieldValidation.unnecessary);
+      _notifyValidation(FormeFieldValidation.unnecessary, false);
       return;
     }
 
@@ -1040,29 +1086,18 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     if (_hasValidator) {
       final String? errorText = widget.validator!(this, value);
       if (errorText != null || !_hasAsyncValidator) {
-        notifyValidation(_createFormeFieldValidation(errorText));
+        _notifyValidation(_createFormeFieldValidation(errorText), false);
         return;
       }
     }
     if (_hasAsyncValidator) {
-      notifyValidation(FormeFieldValidation.validating);
-      _asyncValidate(gen);
+      _notifyValidation(FormeFieldValidation.validating, false);
+      _asyncValidatorTimer?.cancel();
+      _asyncValidatorTimer = Timer(
+          widget.asyncValidatorDebounce ?? _defaultAsyncValidatorDebounce, () {
+        _performAsyncValidate(gen);
+      });
     }
-  }
-
-  void _asyncValidate(
-    int gen, {
-    VoidCallback? onCompleted,
-  }) {
-    _asyncValidatorTimer?.cancel();
-    _asyncValidatorTimer =
-        Timer(widget.asyncValidatorDebounce ?? _defaultAsyncValidatorDebounce,
-            () async {
-      final bool isValid = await _performAsyncValidate(gen);
-      if (isValid) {
-        onCompleted?.call();
-      }
-    });
   }
 
   Future<bool> _performAsyncValidate(int gen) async {
@@ -1080,14 +1115,15 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       validation = FormeFieldValidation.fail(e, stackTrace);
     }
 
-    if (isValid()) {
+    final bool valid = isValid();
+
+    if (valid) {
       setState(() {
-        _ignoreValidate = validation.isInvalid || validation.isValid;
         _status = _status._copyWith(validation: _Optional(validation));
       });
-      return true;
     }
-    return false;
+
+    return valid;
   }
 
   void _fieldChange() {
@@ -1164,4 +1200,8 @@ class FormeFieldStatus<T extends Object?> {
 class _Optional<T> {
   final T value;
   _Optional(this.value);
+}
+
+class _CustomValidation extends FormeFieldValidation {
+  const _CustomValidation.invalid(String errorText) : super.invalid(errorText);
 }

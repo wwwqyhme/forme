@@ -20,6 +20,8 @@ typedef FormeFieldValueUpdater<T extends Object?> = T Function(
     FormeField<T> oldWidget, FormeField<T> widget, T oldValue);
 typedef FormeValueComparator<T extends Object?> = bool Function(
     T oldValue, T newValue);
+typedef FormeFieldValidationFilter<T extends Object?> = bool Function(
+    FormeFieldValidationContext<T> context);
 
 @immutable
 class FormeFieldType extends Type {
@@ -49,6 +51,27 @@ class FormeField<T extends Object?> extends StatefulWidget {
   final bool readOnly;
   final FormeFieldBuilder<T> builder;
 
+  /// used to compare two value
+  ///
+  /// default:
+  ///
+  /// ``` Dart
+  /// bool _defaultComparator(T oldValue, T newValue) {
+  ///      if (oldValue is List && newValue is List) {
+  ///        return listEquals(oldValue, newValue);
+  ///     }
+  ///
+  ///      if (oldValue is Set && newValue is Set) {
+  ///        return setEquals(oldValue, newValue);
+  ///     }
+  ///
+  ///     if (oldValue is Map && newValue is Map) {
+  ///      return mapEquals(oldValue, newValue);
+  ///   }
+  ///
+  ///    return oldValue == newValue;
+  ///  }
+  /// ```
   final FormeValueComparator<T>? comparator;
 
   /// whether field is enabled,
@@ -63,6 +86,10 @@ class FormeField<T extends Object?> extends StatefulWidget {
   /// 6. validation state will always be `FormeValidationState.unnecessary`
   /// 7. when get validation from `FormeState` , this field will be ignored
   final bool enabled;
+
+  /// initial value
+  ///
+  /// **[Forme.initialValue] has higher priority than field's initialValue**
   final T initialValue;
 
   /// used to support [Forme.autovalidateByOrder]
@@ -76,6 +103,7 @@ class FormeField<T extends Object?> extends StatefulWidget {
   /// whether request focus when field value changed
   final bool requestFocusOnUserInteraction;
 
+  /// listen field status change
   final FormeFieldStatusChanged<T>? onStatusChanged;
 
   /// called immediately after [FormeFieldState.initStatus]
@@ -95,9 +123,10 @@ class FormeField<T extends Object?> extends StatefulWidget {
   final bool quietlyValidate;
   final Duration? asyncValidatorDebounce;
 
+  /// sync validator
   final FormeValidator<T>? validator;
 
-  /// used to perform an async validate
+  /// used to perform an async validation
   ///
   /// if you specific both asyncValidator and validator , asyncValidator will only worked after validator passed
   ///
@@ -133,8 +162,37 @@ class FormeField<T extends Object?> extends StatefulWidget {
   /// after widget updated , children values are ['1','3','4'] , in this case
   /// Dropdown will be crashsed. use [valueUpdater] to avoid this
   ///
-  /// [onValueChanged] will be triggered if new value not equals with old value
+  /// [onStatusChanged] will be triggered if new value not equals with old value
   final FormeFieldValueUpdater<T>? valueUpdater;
+
+  /// used to determine whether perform a validation
+  ///
+  /// will not work when validate manually
+  ///
+  ///
+  /// default :
+  ///
+  /// ``` Dart
+  ///    bool _defaultValidationFilter(FormeFieldValidationContext<T> context) {
+  ///   final FormeFieldValidation validation = context.validation;
+  ///
+  ///   if (validation.isWaiting || validation.isFail) {
+  ///     return true;
+  ///   }
+  ///
+  ///   if (validation.isValidating) {
+  ///    if (context.comparator(
+  ///        context.validatingValue as T, context.currentValidateValue)) {
+  ///      return false;
+  ///    }
+  ///    return true;
+  ///   }
+  ///
+  ///   return !context.comparator(context.latestSuccessfulValidationValue as T,
+  ///     context.currentValidateValue);
+  ///}
+  /// ```
+  final FormeFieldValidationFilter<T>? validationFilter;
 
   Type get fieldType => super.runtimeType;
 
@@ -162,6 +220,7 @@ class FormeField<T extends Object?> extends StatefulWidget {
     this.registrable = true,
     this.valueUpdater,
     this.comparator,
+    this.validationFilter,
   })  : autovalidateMode = autovalidateMode ?? AutovalidateMode.disabled,
         super(key: key);
 

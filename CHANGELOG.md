@@ -1,3 +1,7 @@
+## 4.0.1
+
+1. add `FormeFieldValidationFilter` on `FormeField` , used to determine whether perform validation or not
+
 ## 4.0.0
 
 1. remove `FormeController` and `FormeFieldController` , use `FormeState` and `FormeFieldState` instead
