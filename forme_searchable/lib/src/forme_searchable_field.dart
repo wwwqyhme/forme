@@ -32,12 +32,14 @@ abstract class FormeSearchableFieldState<T extends Object>
   int? get maximum => _inheritController!.maximum;
 
   FormeAsyncOperationState? _state;
+  FormeSearchablePageResult<T>? _result;
 
+  FormeSearchablePageResult<T>? get result => _result;
   FormeAsyncOperationState? get state => _state;
 
   bool get isProcessing => state == FormeAsyncOperationState.processing;
   bool get hasError => state == FormeAsyncOperationState.error;
-  bool get hasResult => state == FormeAsyncOperationState.success;
+  bool get hasResult => _result != null;
 
   StreamSubscription<FormeSearchableEvent<T>>? _scription;
 
@@ -63,6 +65,7 @@ abstract class FormeSearchableFieldState<T extends Object>
     }
 
     _state = event.state;
+    _result = event.result;
 
     if (event.hasError) {
       onError(event.page, event.condition, event.error!, event.stackTrace!);
