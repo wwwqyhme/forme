@@ -1,30 +1,43 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
+import 'dart:async';
 
-class FormeSearchableController extends ValueNotifier<SearchCondition> {
-  FormeSearchableController(value) : super(value);
+import 'package:flutter/widgets.dart';
+import 'package:forme/forme.dart';
+import 'package:forme_searchable/src/searchable_controller.dart';
+import 'package:forme_searchable/src/forme_searchable_strem_event.dart';
 
-  int get page => value.page;
+class FormeSearchableController<T extends Object> extends InheritedWidget {
+  final SearchController controller;
+  final Stream<FormeSearchableEvent<T>> eventStream;
+  final Stream<FormeFieldChangedStatus<List<T>>> statusStream;
+  final FormeFieldStatus<List<T>> status;
+  final ValueChanged<List<T>> valueUpdater;
+  final int? maximum;
+  final FocusNode focusNode;
 
-  Map<String, Object?> get condition => value.condition;
+  const FormeSearchableController(
+    this.controller,
+    this.eventStream,
+    this.statusStream,
+    this.status,
+    this.valueUpdater,
+    this.focusNode, {
+    Key? key,
+    required Widget child,
+    this.maximum,
+  }) : super(child: child, key: key);
 
-  set page(int page) => value = SearchCondition(condition, page);
-
-  set condition(Map<String, Object?> condition) =>
-      value = SearchCondition(condition, page);
-}
-
-class SearchCondition {
-  final Map<String, Object?> condition;
-  final int page;
-
-  SearchCondition(this.condition, this.page);
   @override
-  int get hashCode => hashValues(condition, page);
+  bool updateShouldNotify(covariant InheritedWidget oldWidget) {
+    final FormeSearchableController old =
+        oldWidget as FormeSearchableController;
+    return old.status != status ||
+        old.maximum != maximum ||
+        old.focusNode != focusNode;
+  }
 
-  @override
-  bool operator ==(Object other) =>
-      other is SearchCondition &&
-      other.page == page &&
-      mapEquals(other.condition, condition);
+  static FormeSearchableController<T> of<T extends Object>(
+      BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<FormeSearchableController<T>>()!;
+  }
 }

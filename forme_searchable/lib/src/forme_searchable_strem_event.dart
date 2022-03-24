@@ -8,16 +8,28 @@ class FormeSearchableEvent<T extends Object> {
   final FormeSearchablePageResult<T>? result;
   final Object? error;
   final StackTrace? stackTrace;
+  final bool cancel;
 
   FormeSearchableEvent.success(this.result, this.page, this.condition)
       : error = null,
         stackTrace = null,
-        state = FormeAsyncOperationState.success;
+        state = FormeAsyncOperationState.success,
+        cancel = false;
 
   FormeSearchableEvent.error(
       this.page, this.condition, this.error, this.stackTrace)
       : result = null,
-        state = FormeAsyncOperationState.error;
+        state = FormeAsyncOperationState.error,
+        cancel = false;
+
+  FormeSearchableEvent.cancel(
+    this.page,
+    this.condition,
+  )   : result = null,
+        error = null,
+        stackTrace = null,
+        state = FormeAsyncOperationState.processing,
+        cancel = true;
 
   FormeSearchableEvent.processing(
     this.page,
@@ -25,8 +37,10 @@ class FormeSearchableEvent<T extends Object> {
   )   : result = null,
         error = null,
         stackTrace = null,
-        state = FormeAsyncOperationState.processing;
+        state = FormeAsyncOperationState.processing,
+        cancel = false;
 
+  bool get isCancel => cancel == true;
   bool get isProcessing => state == FormeAsyncOperationState.processing;
 
   bool get hasResult =>

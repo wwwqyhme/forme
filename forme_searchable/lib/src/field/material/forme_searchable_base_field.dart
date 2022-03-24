@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:forme/forme.dart';
-import 'package:forme_searchable/src/forme_searchable_controller.dart';
+import 'package:forme_searchable/src/searchable_controller.dart';
 
 import '../../forme_searchable_field.dart';
 import '../../forme_searchable_result.dart';
@@ -22,7 +22,6 @@ class FormeSearchableBaseField<T extends Object>
   final InputDecoration? decoration;
   final InputDecoration? searchFieldDecoration;
   final String name;
-  final Duration? debounce;
 
   /// will not work on web
   final bool searchWhenComposing;
@@ -39,7 +38,6 @@ class FormeSearchableBaseField<T extends Object>
     this.searchInputStepWidth,
     this.searchInputMinWidth = 50,
     this.name = 'query',
-    this.debounce,
     this.searchWhenComposing = false,
     this.displayStringForOption = RawAutocomplete.defaultStringForOption,
     this.maxOptionsHeight = 300,
@@ -54,14 +52,18 @@ class FormeSearchableBaseField<T extends Object>
 
 class _FormeSearchableBaseFieldState<T extends Object>
     extends FormeSearchableFieldState<T> {
-  Timer? timer;
-
+  /// control options view visible state
+  late final ValueNotifier<bool> _optionsViewVisibleStateNotifier =
+      ValueNotifier(false);
+  late final ValueNotifier<FormeAsyncOperationState?>
+      _asyncOpertionStateNotifier = ValueNotifier(null);
   late final ValueNotifier<int> _indexNotifier;
   late final Map<Type, Action<Intent>> _actionMap;
   late final CallbackAction<AutocompletePreviousOptionIntent>
       _previousOptionAction;
   late final CallbackAction<AutocompleteNextOptionIntent> _nextOptionAction;
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _textEditingController = TextEditingController();
 
   static const Map<ShortcutActivator, Intent> _shortcuts =
       <ShortcutActivator, Intent>{
@@ -89,66 +91,15 @@ class _FormeSearchableBaseFieldState<T extends Object>
   FormeSearchableBaseField<T> get widget =>
       super.widget as FormeSearchableBaseField<T>;
 
-  final TextEditingController textEditingController = TextEditingController();
-
-  void _search() {
-    final Map<String, Object?> condition = {
-      widget.name: textEditingController.value
-    };
-    controller.value = SearchCondition(condition, 1);
-  }
-
-  void _toggle(int index) {
-    final T highlight = result!.datas[index];
-    final List<T> value = List.of(status.value);
-    if (value.remove(highlight)) {
-      super.value = value;
-    } else {
-      super.value = value..add(highlight);
-    }
-  }
-
-  void _updateHighlight(int newIndex) {
-    _indexNotifier.value = newIndex;
-  }
-
-  void _highlightPreviousOption(AutocompletePreviousOptionIntent intent) {
-    if (_indexNotifier.value == 0) {
-      return;
-    }
-    _updateHighlight(_indexNotifier.value - 1);
-  }
-
-  void _highlightNextOption(AutocompleteNextOptionIntent intent) {
-    final int? dataLength = result?.datas.length;
-    if (dataLength == null || _indexNotifier.value == dataLength - 1) {
-      return;
-    }
-    _updateHighlight(_indexNotifier.value + 1);
-  }
-
-  void _delete(T option) {
-    final List<T> value = List.of(status.value)
-      ..removeWhere((element) => element == option);
-    super.value = value;
-  }
-
   @override
   Widget build(BuildContext context) {
     final TextField textfield = TextField(
       onChanged: (String v) {
-        timer?.cancel();
-        timer = Timer(widget.debounce ?? const Duration(milliseconds: 500), () {
-          if (textEditingController.value.composing != TextRange.empty &&
-              !widget.searchWhenComposing) {
-            return;
-          }
-          _search();
-        });
+        _search();
       },
       decoration: widget.searchFieldDecoration,
       focusNode: focusNode,
-      controller: textEditingController,
+      controller: _textEditingController,
       enabled: status.enabled,
       readOnly: status.readOnly,
       onSubmitted: status.readOnly
@@ -209,19 +160,32 @@ class _FormeSearchableBaseFieldState<T extends Object>
 
     final FormeFieldDecorator<List<T>> decorator = FormeInputDecoratorBuilder(
         decoration: widget.decoration?.copyWith(
-            suffixIcon: isProcessing
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                : null,
-            suffixIconConstraints:
-                isProcessing ? const BoxConstraints.tightFor() : null),
+            suffixIcon: ValueListenableBuilder<FormeAsyncOperationState?>(
+                valueListenable: _asyncOpertionStateNotifier,
+                builder: (context, state, child) {
+                  if (state == null) {
+                    return const SizedBox.shrink();
+                  }
+                  switch (state) {
+                    case FormeAsyncOperationState.processing:
+                      return const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    case FormeAsyncOperationState.success:
+                      return const SizedBox.shrink();
+                    case FormeAsyncOperationState.error:
+                      return Icon(
+                        Icons.error,
+                        color: Theme.of(context).errorColor,
+                      );
+                  }
+                }),
+            suffixIconConstraints: const BoxConstraints.tightFor()),
         emptyChecker: (value, state) {
-          return state.value.isEmpty && textEditingController.text.isEmpty;
+          return state.value.isEmpty && _textEditingController.text.isEmpty;
         });
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,65 +196,123 @@ class _FormeSearchableBaseFieldState<T extends Object>
           },
           child: decorator.build(context, wrap),
         ),
-        if (hasResult)
-          Material(
-            elevation: 4,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                  maxHeight: widget.maxOptionsHeight ?? double.infinity),
-              child: AutocompleteHighlightedOption(
-                highlightIndexNotifier: _indexNotifier,
-                child: ListView.builder(
-                  controller: _scrollController,
-                  itemCount: result!.datas.length,
-                  shrinkWrap: true,
-                  itemBuilder: (BuildContext context, int index) {
-                    final T option = result!.datas[index];
-                    final bool highlight =
-                        AutocompleteHighlightedOption.of(context) == index;
-                    if (highlight) {
-                      WidgetsBinding.instance!
-                          .addPostFrameCallback((timeStamp) {
-                        _scrollController.position.ensureVisible(
-                          context.findRenderObject()!,
-                          alignment: 0.5,
+        ValueListenableBuilder<bool>(
+          valueListenable: _optionsViewVisibleStateNotifier,
+          builder: (context, visible, child) {
+            if (visible) {
+              return Material(
+                elevation: 4,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                      maxHeight: widget.maxOptionsHeight ?? double.infinity),
+                  child: AutocompleteHighlightedOption(
+                    highlightIndexNotifier: _indexNotifier,
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      itemCount: result!.datas.length,
+                      shrinkWrap: true,
+                      itemBuilder: (BuildContext context, int index) {
+                        final T option = result!.datas[index];
+                        final bool highlight =
+                            AutocompleteHighlightedOption.of(context) == index;
+                        if (highlight) {
+                          WidgetsBinding.instance!
+                              .addPostFrameCallback((timeStamp) {
+                            _scrollController.position.ensureVisible(
+                              context.findRenderObject()!,
+                              alignment: 0.5,
+                            );
+                          });
+                        }
+                        final bool isSelected = status.value.contains(option);
+                        Widget optionWidget;
+                        if (widget.optionWidgetBuilder != null) {
+                          optionWidget = widget.optionWidgetBuilder!(
+                              context, option, isSelected, highlight);
+                        } else {
+                          optionWidget = Container(
+                            color:
+                                highlight ? Theme.of(context).focusColor : null,
+                            child: ListTile(
+                              leading: isSelected
+                                  ? const Icon(Icons.check_circle)
+                                  : null,
+                              title: Text('$option'),
+                            ),
+                          );
+                        }
+                        return InkWell(
+                          onTap: status.readOnly
+                              ? null
+                              : () {
+                                  _toggle(index);
+                                },
+                          child: optionWidget,
                         );
-                      });
-                    }
-                    final bool isSelected = status.value.contains(option);
-                    Widget optionWidget;
-                    if (widget.optionWidgetBuilder != null) {
-                      optionWidget = widget.optionWidgetBuilder!(
-                          context, option, isSelected, highlight);
-                    } else {
-                      optionWidget = Container(
-                        color: highlight ? Theme.of(context).focusColor : null,
-                        child: ListTile(
-                          leading: isSelected
-                              ? const Icon(Icons.check_circle)
-                              : null,
-                          title: Text('$option'),
-                        ),
-                      );
-                    }
-                    return InkWell(
-                      onTap: status.readOnly
-                          ? null
-                          : () {
-                              _toggle(index);
-                            },
-                      child: optionWidget,
-                    );
-                  },
+                      },
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ),
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
       ],
     );
   }
 
-  void onDelete(T option) {
+  // void _updateCondition(Map<String, Object?> condition) {
+  //   final Object? query = condition[widget.name];
+  //   if (query == null || query is! String) {
+  //     _textEditingController.text = '';
+  //   }
+
+  //   if (_textEditingController.text != query) {
+  //     _textEditingController.text = query as String;
+  //   }
+  // }
+
+  void _search() {
+    if (_textEditingController.value.composing != TextRange.empty &&
+        !widget.searchWhenComposing) {
+      return;
+    }
+    final SearchCondition searchCondition =
+        SearchCondition({widget.name: _textEditingController.text}, 1);
+    controller.value = searchCondition;
+  }
+
+  void _toggle(int index) {
+    final T highlight = result!.datas[index];
+    final List<T> value = List.of(status.value);
+    if (value.remove(highlight)) {
+      super.value = value;
+    } else {
+      super.value = value..add(highlight);
+    }
+  }
+
+  void _updateHighlight(int newIndex) {
+    _indexNotifier.value = newIndex;
+  }
+
+  void _highlightPreviousOption(AutocompletePreviousOptionIntent intent) {
+    if (_indexNotifier.value == 0) {
+      return;
+    }
+    _updateHighlight(_indexNotifier.value - 1);
+  }
+
+  void _highlightNextOption(AutocompleteNextOptionIntent intent) {
+    final int? dataLength = result?.datas.length;
+    if (dataLength == null || _indexNotifier.value == dataLength - 1) {
+      return;
+    }
+    _updateHighlight(_indexNotifier.value + 1);
+  }
+
+  void _delete(T option) {
     final List<T> newValue = List.of(status.value)
       ..removeWhere((element) => element == option);
     if (newValue.length != status.value.length) {
@@ -302,28 +324,48 @@ class _FormeSearchableBaseFieldState<T extends Object>
   void onData(int page, Map<String, Object?> condition,
       FormeSearchablePageResult<T> result) {
     _indexNotifier.value = result.datas.isNotEmpty ? 0 : -1;
-    setState(() {});
+    _optionsViewVisibleStateNotifier.value = true;
+    _asyncOpertionStateNotifier.value = FormeAsyncOperationState.success;
   }
 
   @override
   void onProcessing(int page, Map<String, Object?> condition) {
     _indexNotifier.value = -1;
-    setState(() {});
+    _optionsViewVisibleStateNotifier.value = false;
+    _asyncOpertionStateNotifier.value = FormeAsyncOperationState.processing;
   }
 
   @override
   void onError(int page, Map<String, Object?> condition, Object error,
       StackTrace stackTrace) {
-    _indexNotifier.value = -1;
     debugPrint(error.toString());
-    setState(() {});
+    _indexNotifier.value = -1;
+    _optionsViewVisibleStateNotifier.value = false;
+    _asyncOpertionStateNotifier.value = FormeAsyncOperationState.error;
+  }
+
+  @override
+  void onCancel(int page, Map<String, Object?> condition) {
+    _indexNotifier.value = -1;
+    _optionsViewVisibleStateNotifier.value = false;
+    _asyncOpertionStateNotifier.value = null;
+    // _updateCondition(condition);
+  }
+
+  @override
+  void onStatusChanged(FormeFieldChangedStatus<List<T>> status) {
+    super.onStatusChanged(status);
+    if (status.isFocusChanged) {
+      _search();
+    }
   }
 
   @override
   void dispose() {
-    timer?.cancel();
     _scrollController.dispose();
-    textEditingController.dispose();
+    _textEditingController.dispose();
+    _asyncOpertionStateNotifier.dispose();
+    _optionsViewVisibleStateNotifier.dispose();
     super.dispose();
   }
 }

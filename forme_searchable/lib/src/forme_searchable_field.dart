@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:forme/forme.dart';
 
+import 'searchable_controller.dart';
 import 'forme_searchable_controller.dart';
-import 'forme_searchable_inherit_controller.dart';
 import 'forme_searchable_result.dart';
 import 'forme_searchable_strem_event.dart';
 
@@ -17,10 +17,10 @@ abstract class FormeSearchableField<T extends Object> extends StatefulWidget {
 
 abstract class FormeSearchableFieldState<T extends Object>
     extends State<FormeSearchableField<T>> {
-  FormeSearchableInheritController<T>? _inheritController;
+  FormeSearchableController<T>? _inheritController;
 
   @protected
-  FormeSearchableController get controller => _inheritController!.controller;
+  SearchController get controller => _inheritController!.controller;
 
   @protected
   FormeFieldStatus<List<T>> get status => _inheritController!.status;
@@ -41,23 +41,29 @@ abstract class FormeSearchableFieldState<T extends Object>
   bool get hasError => state == FormeAsyncOperationState.error;
   bool get hasResult => _result != null;
 
-  StreamSubscription<FormeSearchableEvent<T>>? _scription;
+  StreamSubscription<FormeSearchableEvent<T>>? _eventScription;
+  StreamSubscription<FormeFieldChangedStatus<List<T>>>? _statusScription;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final FormeSearchableInheritController<T> current =
-        FormeSearchableInheritController.of<T>(context);
+    final FormeSearchableController<T> current =
+        FormeSearchableController.of<T>(context);
 
     if (_inheritController != current) {
-      _scription?.cancel();
+      _eventScription?.cancel();
+      _statusScription?.cancel();
       _inheritController = current;
-      _scription = _inheritController!.stream.listen(_onEvent);
+      _eventScription = _inheritController!.eventStream.listen(_onEvent);
+      _statusScription =
+          _inheritController!.statusStream.listen(onStatusChanged);
     }
   }
 
   set value(List<T> newValue) => _inheritController?.valueUpdater(newValue);
+
+  void onStatusChanged(FormeFieldChangedStatus<List<T>> status) {}
 
   void _onEvent(FormeSearchableEvent<T> event) {
     if (!mounted) {
@@ -78,6 +84,10 @@ abstract class FormeSearchableFieldState<T extends Object>
     if (event.isProcessing) {
       onProcessing(event.page, event.condition);
     }
+
+    if (event.isCancel) {
+      onCancel(event.page, event.condition);
+    }
   }
 
   void onError(int page, Map<String, Object?> condition, Object error,
@@ -87,10 +97,12 @@ abstract class FormeSearchableFieldState<T extends Object>
       FormeSearchablePageResult<T> result);
 
   void onProcessing(int page, Map<String, Object?> condition);
+  void onCancel(int page, Map<String, Object?> condition);
 
   @override
   void dispose() {
-    _scription?.cancel();
+    _statusScription?.cancel();
+    _eventScription?.cancel();
     super.dispose();
   }
 }

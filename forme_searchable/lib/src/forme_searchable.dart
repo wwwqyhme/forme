@@ -4,15 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 import 'package:forme_searchable/src/field/material/forme_searchable_base_field.dart';
 
-import 'forme_searchable_controller.dart';
+import 'searchable_controller.dart';
 import 'forme_searchable_field.dart';
-import 'forme_searchable_inherit_controller.dart';
+import 'forme_searchable_controller.dart';
 import 'forme_searchable_result.dart';
 import 'forme_searchable_strem_event.dart';
 
 typedef FormeSearchableQuery<T extends Object>
     = Future<FormeSearchablePageResult<T>> Function(
         int page, Map<String, Object?> condition);
+typedef FormeSearchableSearchConditionFilter = bool Function(
+    SearchCondition condition);
 
 class FormeSearchable<T extends Object> extends FormeField<List<T>> {
   final int page;
@@ -20,6 +22,8 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
   final FormeSearchableQuery<T> query;
   final int? maximum;
   final List<T> Function(List<T> value, int maximum)? onMaximumExceed;
+  final FormeSearchableSearchConditionFilter? searchConditionFilter;
+  final Duration debounce;
   FormeSearchable._({
     Key? key,
     required String name,
@@ -30,6 +34,8 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
     required FormeSearchableField<T> child,
     this.maximum,
     this.onMaximumExceed,
+    this.searchConditionFilter,
+    this.debounce = const Duration(milliseconds: 500),
   }) : super(
             key: key,
             name: name,
@@ -51,9 +57,10 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
             builder: (genericState) {
               final _FormeSearchableState<T> state =
                   genericState as _FormeSearchableState<T>;
-              return FormeSearchableInheritController<T>(
+              return FormeSearchableController<T>(
                 state.controller,
-                state.streamController.stream,
+                state.eventStreamController.stream,
+                state.statusStreamController.stream,
                 state.status,
                 state.didChange,
                 state.focusNode,
@@ -73,10 +80,12 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
     required FormeSearchableQuery<T> query,
     int? maximum,
     List<T> Function(List<T> value, int maximum)? onMaximumExceed,
+    FormeSearchableSearchConditionFilter? searchConditionFilter,
   }) {
     return FormeSearchable<T>._(
       name: name,
       query: query,
+      searchConditionFilter: searchConditionFilter,
       child: FormeSearchableBaseField<T>(),
       page: page,
       condition: condition,
@@ -89,25 +98,29 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
 
 class _FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
     with FormeAsyncOperationHelper<FormeSearchablePageResult<T>> {
-  late final FormeSearchableController controller;
+  late final SearchController controller;
+  Timer? _timer;
 
   SearchCondition? condition;
 
   @override
   FormeSearchable<T> get widget => super.widget as FormeSearchable<T>;
 
-  late final StreamController<FormeSearchableEvent<T>> streamController;
+  late final StreamController<FormeSearchableEvent<T>> eventStreamController;
+  late final StreamController<FormeFieldChangedStatus<List<T>>>
+      statusStreamController;
 
   @override
   void initStatus() {
     super.initStatus();
-    controller = FormeSearchableController(
-        SearchCondition(widget.condition, widget.page));
+    controller =
+        SearchController(SearchCondition(widget.condition, widget.page));
     controller.addListener(() {
       condition = controller.value;
       query();
     });
-    streamController = StreamController.broadcast();
+    eventStreamController = StreamController.broadcast();
+    statusStreamController = StreamController.broadcast();
   }
 
   @override
@@ -132,21 +145,48 @@ class _FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
 
   @override
   void dispose() {
+    _timer?.cancel();
     controller.dispose();
-    streamController.close();
+    statusStreamController.close();
+    eventStreamController.close();
     super.dispose();
   }
 
+  @override
+  void onStatusChanged(FormeFieldChangedStatus<List<T>> status) {
+    super.onStatusChanged(status);
+    statusStreamController.add(status);
+  }
+
   void query() {
-    if (mounted) {
-      perform(widget.query(condition!.page, condition!.condition));
+    if (!mounted) {
+      return;
     }
+    _timer?.cancel();
+    if (widget.searchConditionFilter != null &&
+        !widget.searchConditionFilter!(condition!)) {
+      cancelAllAsyncOperations();
+      eventStreamController.add(
+          FormeSearchableEvent.cancel(condition!.page, condition!.condition));
+      return;
+    }
+    _timer = Timer(widget.debounce, () {
+      if (mounted) {
+        perform(widget.query(condition!.page, condition!.condition));
+      }
+    });
+  }
+
+  @override
+  void reset() {
+    super.reset();
+    controller.value = SearchCondition(widget.condition, widget.page);
   }
 
   @override
   void onAsyncStateChanged(FormeAsyncOperationState state, Object? key) {
     if (mounted && state == FormeAsyncOperationState.processing) {
-      streamController.add(FormeSearchableEvent.processing(
+      eventStreamController.add(FormeSearchableEvent.processing(
           condition!.page, condition!.condition));
     }
   }
@@ -154,7 +194,7 @@ class _FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
   @override
   void onSuccess(FormeSearchablePageResult<T> result, Object? key) {
     if (mounted) {
-      streamController.add(FormeSearchableEvent.success(
+      eventStreamController.add(FormeSearchableEvent.success(
           result, condition!.page, condition!.condition));
     }
   }
@@ -162,7 +202,7 @@ class _FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
   @override
   void onError(Object error, StackTrace stackTrace) {
     if (mounted) {
-      streamController.add(FormeSearchableEvent.error(
+      eventStreamController.add(FormeSearchableEvent.error(
           condition!.page, condition!.condition, error, stackTrace));
     }
   }
