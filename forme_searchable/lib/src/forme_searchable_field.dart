@@ -1,12 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/widgets.dart';
 import 'package:forme/forme.dart';
+import 'package:forme_searchable/forme_searchable.dart';
 
-import 'searchable_controller.dart';
+import 'forme_searchable_reader.dart';
 import 'forme_searchable_controller.dart';
-import 'forme_searchable_result.dart';
-import 'forme_searchable_strem_event.dart';
 
 abstract class FormeSearchableField<T extends Object> extends StatefulWidget {
   const FormeSearchableField({Key? key}) : super(key: key);
@@ -16,93 +13,91 @@ abstract class FormeSearchableField<T extends Object> extends StatefulWidget {
 }
 
 abstract class FormeSearchableFieldState<T extends Object>
-    extends State<FormeSearchableField<T>> {
-  FormeSearchableController<T>? _inheritController;
-
-  @protected
-  SearchController get controller => _inheritController!.controller;
-
-  @protected
-  FormeFieldStatus<List<T>> get status => _inheritController!.status;
-
-  @protected
-  FocusNode get focusNode => _inheritController!.focusNode;
-
-  @protected
-  int? get maximum => _inheritController!.maximum;
-
-  FormeAsyncOperationState? _state;
+    extends State<FormeSearchableField<T>> with FormeSearchableReader<T> {
+  FormeSearchableController<T>? _controller;
+  late FormeFieldStatus<List<T>> _status;
+  late FocusNode _focusNode;
   FormeSearchablePageResult<T>? _result;
+  FormeSearchablePageResult<T>? _lastNonnullResult;
 
+  FormeFieldStatus<List<T>> get status => _status;
+  FocusNode get focusNode => _focusNode;
   FormeSearchablePageResult<T>? get result => _result;
-  FormeAsyncOperationState? get state => _state;
+  FormeSearchablePageResult<T>? get lastNonnullResult => _lastNonnullResult;
+  bool _isProcessing = false;
 
-  bool get isProcessing => state == FormeAsyncOperationState.processing;
-  bool get hasError => state == FormeAsyncOperationState.error;
   bool get hasResult => _result != null;
+  bool get isProcessing => _isProcessing;
 
-  StreamSubscription<FormeSearchableEvent<T>>? _eventScription;
-  StreamSubscription<FormeFieldChangedStatus<List<T>>>? _statusScription;
+  FormeSearchCondition? _cache;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
-    final FormeSearchableController<T> current =
-        FormeSearchableController.of<T>(context);
-
-    if (_inheritController != current) {
-      _eventScription?.cancel();
-      _statusScription?.cancel();
-      _inheritController = current;
-      _eventScription = _inheritController!.eventStream.listen(_onEvent);
-      _statusScription =
-          _inheritController!.statusStream.listen(onStatusChanged);
-    }
+    _controller?.writer.removeReader(this);
+    _controller = FormeSearchableController.of<T>(context);
+    _status = _controller!.status;
+    _focusNode = _controller!.focusNode;
+    _controller!.writer.addReader(this);
   }
-
-  set value(List<T> newValue) => _inheritController?.valueUpdater(newValue);
-
-  void onStatusChanged(FormeFieldChangedStatus<List<T>> status) {}
-
-  void _onEvent(FormeSearchableEvent<T> event) {
-    if (!mounted) {
-      return;
-    }
-
-    _state = event.state;
-    _result = event.result;
-
-    if (event.hasError) {
-      onError(event.page, event.condition, event.error!, event.stackTrace!);
-    }
-
-    if (event.hasResult) {
-      onData(event.page, event.condition, event.result!);
-    }
-
-    if (event.isProcessing) {
-      onProcessing(event.page, event.condition);
-    }
-
-    if (event.isCancel) {
-      onCancel(event.page, event.condition);
-    }
-  }
-
-  void onError(int page, Map<String, Object?> condition, Object error,
-      StackTrace stackTrace);
-
-  void onData(int page, Map<String, Object?> condition,
-      FormeSearchablePageResult<T> result);
-
-  void onProcessing(int page, Map<String, Object?> condition);
-  void onCancel(int page, Map<String, Object?> condition);
 
   @override
-  void dispose() {
-    _statusScription?.cancel();
-    _eventScription?.cancel();
-    super.dispose();
+  void onFocusNodeChanged(FocusNode node) {
+    setState(() {
+      _focusNode = node;
+    });
   }
+
+  @override
+  void onStatusChanged(FormeFieldChangedStatus<List<T>> status) {
+    setState(() {
+      _status = status;
+    });
+  }
+
+  set page(int page) {
+    if (_cache?.page == page) {
+      return;
+    }
+    _controller!.writer.page = page;
+  }
+
+  set condition(FormeSearchCondition condition) {
+    if (condition == _cache) {
+      return;
+    }
+    _controller!.writer.condition = condition;
+  }
+
+  set value(List<T> value) => _controller!.writer.value = value;
+
+  @override
+  @mustCallSuper
+  void onQuerySuccess(
+      FormeSearchCondition condition, FormeSearchablePageResult<T> result) {
+    _isProcessing = false;
+    _result = result;
+    _lastNonnullResult = _result;
+    _cache = condition;
+    onQueryComplete(condition);
+  }
+
+  @override
+  @mustCallSuper
+  void onQueryFail(
+      FormeSearchCondition condition, Object error, StackTrace trace) {
+    _isProcessing = false;
+    _result = null;
+    onQueryComplete(condition);
+  }
+
+  @override
+  @mustCallSuper
+  void onQueryProcessing(FormeSearchCondition condition) {
+    _isProcessing = true;
+    _result = null;
+    onQueryComplete(condition);
+  }
+
+  void onQueryComplete(FormeSearchCondition condition) {}
 }

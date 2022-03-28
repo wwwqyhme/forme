@@ -1,49 +1,41 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:forme/forme.dart';
-import 'package:forme_searchable/src/field/material/forme_searchable_base_field.dart';
 
-import 'searchable_controller.dart';
-import 'forme_searchable_field.dart';
+import 'field/material/forme_searchable_base_field.dart';
+import 'forme_searchable_condition.dart';
+import 'forme_searchable_writer.dart';
 import 'forme_searchable_controller.dart';
 import 'forme_searchable_result.dart';
-import 'forme_searchable_strem_event.dart';
+import 'forme_searchable_reader.dart';
 
 typedef FormeSearchableQuery<T extends Object>
     = Future<FormeSearchablePageResult<T>> Function(
-        int page, Map<String, Object?> condition);
-typedef FormeSearchableSearchConditionFilter = bool Function(
-    SearchCondition condition);
+        FormeSearchCondition condition);
 
 class FormeSearchable<T extends Object> extends FormeField<List<T>> {
-  final int page;
-  final Map<String, Object?> condition;
   final FormeSearchableQuery<T> query;
   final int? maximum;
   final List<T> Function(List<T> value, int maximum)? onMaximumExceed;
-  final FormeSearchableSearchConditionFilter? searchConditionFilter;
   final Duration debounce;
   FormeSearchable._({
     Key? key,
     required String name,
     required List<T> initialValue,
-    required this.page,
-    required this.condition,
     required this.query,
-    required FormeSearchableField<T> child,
+    required Widget child,
     this.maximum,
     this.onMaximumExceed,
-    this.searchConditionFilter,
-    this.debounce = const Duration(milliseconds: 500),
+    required this.debounce,
   }) : super(
             key: key,
             name: name,
             valueUpdater: (oldWidget, newWidget, oldValue) {
               final int? newMaximum = (newWidget as FormeSearchable<T>).maximum;
-              if (newMaximum != null && newMaximum > oldValue.length) {
+              if (newMaximum != null && oldValue.length > newMaximum) {
                 if (onMaximumExceed == null) {
-                  return oldValue.sublist(0, newMaximum);
+                  return oldValue.sublist(oldValue.length - newMaximum);
                 }
                 final List<T> newValue = onMaximumExceed(oldValue, newMaximum);
                 if (newValue.length > newMaximum) {
@@ -58,14 +50,10 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
               final _FormeSearchableState<T> state =
                   genericState as _FormeSearchableState<T>;
               return FormeSearchableController<T>(
-                state.controller,
-                state.eventStreamController.stream,
-                state.statusStreamController.stream,
-                state.status,
-                state.didChange,
+                state._writer,
                 state.focusNode,
+                state.status,
                 child: child,
-                maximum: maximum,
               );
             },
             initialValue: initialValue);
@@ -75,20 +63,16 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
 
   factory FormeSearchable.base({
     required String name,
-    int page = 1,
-    Map<String, Object?> condition = const {},
     required FormeSearchableQuery<T> query,
     int? maximum,
     List<T> Function(List<T> value, int maximum)? onMaximumExceed,
-    FormeSearchableSearchConditionFilter? searchConditionFilter,
+    Duration? debounce,
   }) {
     return FormeSearchable<T>._(
       name: name,
       query: query,
-      searchConditionFilter: searchConditionFilter,
+      debounce: debounce ?? const Duration(milliseconds: 500),
       child: FormeSearchableBaseField<T>(),
-      page: page,
-      condition: condition,
       maximum: maximum,
       onMaximumExceed: onMaximumExceed,
       initialValue: const [],
@@ -98,29 +82,47 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
 
 class _FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
     with FormeAsyncOperationHelper<FormeSearchablePageResult<T>> {
-  late final SearchController controller;
   Timer? _timer;
 
-  SearchCondition? condition;
+  final List<FormeSearchableReader<T>> readers = [];
 
   @override
   FormeSearchable<T> get widget => super.widget as FormeSearchable<T>;
 
-  late final StreamController<FormeSearchableEvent<T>> eventStreamController;
-  late final StreamController<FormeFieldChangedStatus<List<T>>>
-      statusStreamController;
+  late FormeSearchableWriter<T> _writer;
+
+  FormeSearchCondition? _condition;
+  FormeSearchCondition get condition => _condition!;
 
   @override
   void initStatus() {
     super.initStatus();
-    controller =
-        SearchController(SearchCondition(widget.condition, widget.page));
-    controller.addListener(() {
-      condition = controller.value;
-      query();
-    });
-    eventStreamController = StreamController.broadcast();
-    statusStreamController = StreamController.broadcast();
+    _writer = FormeSearchableWriter<T>(
+        onChanged: OnChanged(
+      onPageChanged: (int page) {
+        _condition = FormeSearchCondition(_condition?.condition ?? {}, page);
+        pageChange();
+      },
+      onConditionChanged: (FormeSearchCondition condition) {
+        _condition = condition;
+        query();
+      },
+      onValueChanged: (List<T> newValue) {
+        if (mounted) {
+          didChange(newValue);
+        }
+      },
+      onReaderAdd: (FormeSearchableReader<T> reader) {
+        if (mounted) {
+          addReader(reader);
+        }
+      },
+      onReaderRemove: (FormeSearchableReader<T> reader) {
+        if (mounted) {
+          removeReader(reader);
+        }
+      },
+    ));
   }
 
   @override
@@ -128,7 +130,7 @@ class _FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
     if (widget.maximum != null && newValue.length > widget.maximum!) {
       List<T> finalValue;
       if (widget.onMaximumExceed == null) {
-        finalValue = newValue.sublist(0, widget.maximum);
+        finalValue = newValue.sublist(newValue.length - widget.maximum!);
       } else {
         finalValue =
             widget.onMaximumExceed!(List.of(newValue), widget.maximum!);
@@ -144,18 +146,39 @@ class _FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
   }
 
   @override
+  set focusNode(FocusNode node) {
+    final FocusNode? current = hasFocusNode ? focusNode : null;
+    super.focusNode = node;
+    if (current != focusNode) {
+      for (final FormeSearchableReader<T> reader in readers) {
+        reader.onFocusNodeChanged(node);
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _timer?.cancel();
-    controller.dispose();
-    statusStreamController.close();
-    eventStreamController.close();
     super.dispose();
   }
 
   @override
   void onStatusChanged(FormeFieldChangedStatus<List<T>> status) {
     super.onStatusChanged(status);
-    statusStreamController.add(status);
+    for (final FormeSearchableReader<T> reader in readers) {
+      reader.onStatusChanged(status);
+    }
+  }
+
+  void pageChange() {
+    if (!mounted) {
+      return;
+    }
+    _timer?.cancel();
+    for (final FormeSearchableReader<T> reader in readers) {
+      reader.onQueryProcessing(condition);
+    }
+    perform(widget.query(condition));
   }
 
   void query() {
@@ -163,16 +186,12 @@ class _FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
       return;
     }
     _timer?.cancel();
-    if (widget.searchConditionFilter != null &&
-        !widget.searchConditionFilter!(condition!)) {
-      cancelAllAsyncOperations();
-      eventStreamController.add(
-          FormeSearchableEvent.cancel(condition!.page, condition!.condition));
-      return;
+    for (final FormeSearchableReader<T> reader in readers) {
+      reader.onQueryProcessing(condition);
     }
     _timer = Timer(widget.debounce, () {
       if (mounted) {
-        perform(widget.query(condition!.page, condition!.condition));
+        perform(widget.query(condition));
       }
     });
   }
@@ -180,30 +199,37 @@ class _FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
   @override
   void reset() {
     super.reset();
-    controller.value = SearchCondition(widget.condition, widget.page);
-  }
-
-  @override
-  void onAsyncStateChanged(FormeAsyncOperationState state, Object? key) {
-    if (mounted && state == FormeAsyncOperationState.processing) {
-      eventStreamController.add(FormeSearchableEvent.processing(
-          condition!.page, condition!.condition));
+    for (final FormeSearchableReader<T> reader in readers) {
+      reader.onReset();
     }
   }
 
   @override
+  void onAsyncStateChanged(FormeAsyncOperationState state, Object? key) {}
+
+  @override
   void onSuccess(FormeSearchablePageResult<T> result, Object? key) {
     if (mounted) {
-      eventStreamController.add(FormeSearchableEvent.success(
-          result, condition!.page, condition!.condition));
+      for (final FormeSearchableReader<T> reader in readers) {
+        reader.onQuerySuccess(condition, result);
+      }
     }
   }
 
   @override
   void onError(Object error, StackTrace stackTrace) {
     if (mounted) {
-      eventStreamController.add(FormeSearchableEvent.error(
-          condition!.page, condition!.condition, error, stackTrace));
+      for (final FormeSearchableReader<T> reader in readers) {
+        reader.onQueryFail(condition, error, stackTrace);
+      }
     }
+  }
+
+  void addReader(FormeSearchableReader<T> reader) {
+    readers.add(reader);
+  }
+
+  void removeReader(FormeSearchableReader<T> reader) {
+    readers.remove(reader);
   }
 }
