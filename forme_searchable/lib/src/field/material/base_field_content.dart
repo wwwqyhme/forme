@@ -22,6 +22,11 @@ typedef FormeSearchableSearchFieldsBuilder = Widget Function(
     FormeKey formeKey);
 typedef FormeSearchableOptionWidgetBuilder<T extends Object> = Widget Function(
     BuildContext context, T option, bool isSelected);
+typedef FormeSearchableErrorWidgetBuilder = Widget Function(
+    BuildContext context,
+    Object error,
+    StackTrace stackTrace,
+    VoidCallback? refresh);
 
 class BaseFieldContent<T extends Object> extends FormeSearchableField<T> {
   /// build pagination bar
@@ -31,11 +36,11 @@ class BaseFieldContent<T extends Object> extends FormeSearchableField<T> {
   final FormeSearchableSearchFieldsBuilder? searchFieldsBuilder;
   final FormeSearchableOptionWidgetBuilder<T>? optionWidgetBuilder;
   final WidgetBuilder? processingWidgetBuilder;
-  final Widget Function(BuildContext context, VoidCallback? refresh)?
-      errorWidgetBuilder;
+  final FormeSearchableErrorWidgetBuilder? errorWidgetBuilder;
   final InputDecoration? decoration;
   final AutocompleteOptionToString<T> displayStringForOption;
   final WidgetBuilder? emptyContentWidgetBuilder;
+  final bool performSearchAfterInitState;
 
   final bool flexiable;
   const BaseFieldContent({
@@ -51,6 +56,7 @@ class BaseFieldContent<T extends Object> extends FormeSearchableField<T> {
     this.errorWidgetBuilder,
     this.emptyContentWidgetBuilder,
     this.flexiable = false,
+    this.performSearchAfterInitState = true,
   }) : super(key: key);
   @override
   FormeSearchableFieldState<T> createState() => _BaseFieldContentState<T>();
@@ -88,9 +94,11 @@ class _BaseFieldContentState<T extends Object>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-      _search();
-    });
+    if (widget.performSearchAfterInitState) {
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        _search();
+      });
+    }
   }
 
   @override
@@ -155,27 +163,27 @@ class _BaseFieldContentState<T extends Object>
         : processingWidget;
   }
 
-  Widget _createErrorWidget() {
-    final Widget errorWidget =
-        widget.errorWidgetBuilder?.call(context, readOnly ? null : reload) ??
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  Icon(
-                    Icons.error,
-                    size: 36,
-                    color: Theme.of(context).errorColor,
-                  ),
-                  IconButton(
-                      onPressed: readOnly ? null : reload,
-                      icon: Icon(
-                        Icons.refresh,
-                        color: Theme.of(context).primaryColor,
-                      )),
-                ]),
+  Widget _createErrorWidget(Object error, StackTrace stackTrace) {
+    final Widget errorWidget = widget.errorWidgetBuilder
+            ?.call(context, error, stackTrace, readOnly ? null : reload) ??
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Icon(
+                Icons.error,
+                size: 36,
+                color: Theme.of(context).errorColor,
               ),
-            );
+              IconButton(
+                  onPressed: readOnly ? null : reload,
+                  icon: Icon(
+                    Icons.refresh,
+                    color: Theme.of(context).primaryColor,
+                  )),
+            ]),
+          ),
+        );
     return widget.flexiable ? Flexible(child: errorWidget) : errorWidget;
   }
 
@@ -188,7 +196,7 @@ class _BaseFieldContentState<T extends Object>
         }
 
         if (state == FormeAsyncOperationState.error) {
-          return _createErrorWidget();
+          return _createErrorWidget(error!, stackTrace!);
         }
 
         if (state == FormeAsyncOperationState.success) {
@@ -323,7 +331,6 @@ class _BaseFieldContentState<T extends Object>
   void onQueryFail(
       FormeSearchCondition condition, Object error, StackTrace trace) {
     super.onQueryFail(condition, error, trace);
-    debugPrint(error.toString());
     _asyncOpertionStateNotifier.value = FormeAsyncOperationState.error;
   }
 

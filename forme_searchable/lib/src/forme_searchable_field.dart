@@ -37,6 +37,12 @@ abstract class FormeSearchableFieldState<T extends Object>
   /// whether a query is in processing
   bool get isProcessing => _isProcessing;
 
+  Object? _error;
+  StackTrace? _stackTrace;
+
+  Object? get error => _error;
+  StackTrace? get stackTrace => _stackTrace;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -81,6 +87,8 @@ abstract class FormeSearchableFieldState<T extends Object>
     _isProcessing = false;
     _result = result;
     _lastNonnullResult = _result;
+    _error = null;
+    _stackTrace = null;
     onQueryComplete(condition);
   }
 
@@ -88,8 +96,11 @@ abstract class FormeSearchableFieldState<T extends Object>
   @mustCallSuper
   void onQueryFail(
       FormeSearchCondition condition, Object error, StackTrace trace) {
+    debugPrintStack(stackTrace: trace, label: '$error');
     _isProcessing = false;
     _result = null;
+    _error = error;
+    _stackTrace = trace;
     onQueryComplete(condition);
   }
 
@@ -98,6 +109,8 @@ abstract class FormeSearchableFieldState<T extends Object>
   void onQueryProcessing(FormeSearchCondition condition) {
     _isProcessing = true;
     _result = null;
+    _error = null;
+    _stackTrace = null;
     onQueryComplete(condition);
   }
 
@@ -106,6 +119,8 @@ abstract class FormeSearchableFieldState<T extends Object>
   void onReset() {
     _result = null;
     _lastNonnullResult = null;
+    _error = null;
+    _stackTrace = null;
   }
 
   void onQueryComplete(FormeSearchCondition condition) {}

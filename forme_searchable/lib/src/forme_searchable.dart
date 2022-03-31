@@ -134,9 +134,9 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
     FormeSearchablePaginationBarPosition? paginationBarPosition,
     FormePaginationConfiguration? defaultPaginationConfiguration,
     FormeSearchableSearchFieldsBuilder? searchFieldsBuilder,
-    Widget Function(BuildContext context, VoidCallback? refresh)?
-        errorWidgetBuilder,
+    FormeSearchableErrorWidgetBuilder? errorWidgetBuilder,
     InputDecoration? decoration,
+    bool performSearchAfterOpen = true,
   }) {
     return FormeSearchable<T>._(
       readOnly: readOnly,
@@ -160,6 +160,7 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
       query: query,
       debounce: debounce ?? const Duration(milliseconds: 500),
       child: FormeSearchableBaseRouteField<T>(
+        performSearchAfterOpen: performSearchAfterOpen,
         emptyContentWidgetBuilder: emptyContentWidgetBuilder,
         decoration: decoration,
         searchFieldsBuilder: searchFieldsBuilder,
@@ -217,9 +218,9 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
     FormeSearchablePaginationBarPosition? paginationBarPosition,
     FormePaginationConfiguration? defaultPaginationConfiguration,
     FormeSearchableSearchFieldsBuilder? searchFieldsBuilder,
-    Widget Function(BuildContext context, VoidCallback? refresh)?
-        errorWidgetBuilder,
+    FormeSearchableErrorWidgetBuilder? errorWidgetBuilder,
     InputDecoration? decoration,
+    bool performSearchAfterOpen = true,
   }) {
     return FormeSearchable<T>._(
       readOnly: readOnly,
@@ -243,6 +244,7 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
       query: query,
       debounce: debounce ?? const Duration(milliseconds: 500),
       child: FormeSearchableBaseRouteField<T>(
+        performSearchAfterOpen: performSearchAfterOpen,
         emptyContentWidgetBuilder: emptyContentWidgetBuilder,
         decoration: decoration,
         searchFieldsBuilder: searchFieldsBuilder,

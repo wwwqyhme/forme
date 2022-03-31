@@ -31,9 +31,9 @@ class FormeSearchableBaseRouteField<T extends Object>
   final FormeSearchableSearchFieldsBuilder? searchFieldsBuilder;
   final FormeBottomSheetConfiguration bottomSheetConfiguration;
   final FormeDialogConfiguration dialogConfiguration;
-  final Widget Function(BuildContext context, VoidCallback? refresh)?
-      errorWidgetBuilder;
+  final FormeSearchableErrorWidgetBuilder? errorWidgetBuilder;
   final InputDecoration? decoration;
+  final bool performSearchAfterOpen;
 
   final Mode mode;
 
@@ -53,6 +53,7 @@ class FormeSearchableBaseRouteField<T extends Object>
     this.dialogConfiguration = const FormeDialogConfiguration(),
     this.errorWidgetBuilder,
     this.decoration,
+    this.performSearchAfterOpen = true,
   }) : super(key: key);
 
   @override
@@ -131,6 +132,7 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
 
   Widget _baseFieldContent({bool flexiable = false}) {
     return BaseFieldContent<T>(
+      performSearchAfterInitState: widget.performSearchAfterOpen,
       emptyContentWidgetBuilder: widget.emptyContentWidgetBuilder,
       displayStringForOption: widget.displayStringForOption,
       errorWidgetBuilder: widget.errorWidgetBuilder,

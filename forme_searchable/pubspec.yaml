@@ -1,6 +1,6 @@
 name: forme_searchable
 description: searchable widget for Forme , pagination support
-version: 2.0.0-beta.1
+version: 2.0.0-beta.1+1
 homepage: https://github.com/wwwqyhme/forme/forme_searchable
 
 environment:
