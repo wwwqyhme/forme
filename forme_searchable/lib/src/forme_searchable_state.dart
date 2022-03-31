@@ -19,19 +19,23 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
 
   FormeSearchCondition? _condition;
 
+  bool get isTimerActive => _timer != null && _timer!.isActive;
+
+  @override
+  FormeSearchableStatus<T> get status =>
+      FormeSearchableStatus._(super.status, widget.maximum);
+
   @override
   void didChange(List<T> newValue) {
     if (widget.maximum != null && newValue.length > widget.maximum!) {
-      List<T> finalValue;
       if (widget.onMaximumExceed == null) {
-        finalValue = newValue.sublist(newValue.length - widget.maximum!);
-      } else {
-        finalValue =
-            widget.onMaximumExceed!(List.of(newValue), widget.maximum!);
-        if (finalValue.length > widget.maximum!) {
-          throw Exception(
-              'length of new value which returned by onMaximumExceed should smaller or equals than maximum');
-        }
+        return;
+      }
+      final List<T> finalValue =
+          widget.onMaximumExceed!(List.of(newValue), widget.maximum!);
+      if (finalValue.length > widget.maximum!) {
+        throw Exception(
+            'length of new value which returned by onMaximumExceed should smaller or equals than maximum');
       }
       super.didChange(finalValue);
       return;
@@ -72,7 +76,7 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
 
   @override
   void onSuccess(FormeSearchablePageResult<T> result, Object? key) {
-    if (mounted) {
+    if (mounted && !isTimerActive) {
       _triggerListeners(
           (listener) => listener.onQuerySuccess(_condition!, result));
     }
@@ -80,7 +84,7 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
 
   @override
   void onError(Object error, StackTrace stackTrace) {
-    if (mounted) {
+    if (mounted && !isTimerActive) {
       _triggerListeners(
           (listener) => listener.onQueryFail(_condition!, error, stackTrace));
     }
@@ -109,6 +113,15 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
     search(FormeSearchCondition(_condition?.condition ?? {}, page), false);
   }
 
+  void _cancel() {
+    cancelAllAsyncOperations();
+    _triggerListeners((listener) => listener.onQueryCancelled(_condition!));
+  }
+
+  void _processing() {
+    _triggerListeners((listener) => listener.onQueryProcessing(_condition!));
+  }
+
   void search(FormeSearchCondition condition, [bool debounce = true]) {
     if (!mounted) {
       return;
@@ -118,11 +131,10 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
     final bool cancel =
         widget.queryFilter != null && !widget.queryFilter!.call(condition);
     if (cancel) {
-      cancelAllAsyncOperations();
-      _triggerListeners((listener) => listener.onQueryCancelled(_condition!));
+      _cancel();
       return;
     }
-    _triggerListeners((listener) => listener.onQueryProcessing(_condition!));
+    _processing();
     if (debounce) {
       _timer = Timer(widget.debounce, () {
         if (mounted) {
@@ -133,4 +145,13 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
       perform(widget.query(_condition!));
     }
   }
+}
+
+class FormeSearchableStatus<T extends Object>
+    extends FormeFieldStatus<List<T>> {
+  final int? maximum;
+  FormeSearchableStatus._(
+    FormeFieldStatus<List<T>> parent,
+    this.maximum,
+  ) : super(parent);
 }

@@ -17,7 +17,9 @@ typedef FormeSearchablePaginationBarBuilder = Widget Function(
     int totalPage,
     ValueChanged<int>? onPageChanged);
 typedef FormeSearchableSearchFieldsBuilder = Widget Function(
-    BuildContext context, VoidCallback? query, FormeKey formeKey);
+    BuildContext context,
+    void Function({bool withDebounce})? query,
+    FormeKey formeKey);
 typedef FormeSearchableOptionWidgetBuilder<T extends Object> = Widget Function(
     BuildContext context, T option, bool isSelected);
 
@@ -26,19 +28,17 @@ class BaseFieldContent<T extends Object> extends FormeSearchableField<T> {
   final FormeSearchablePaginationBarBuilder? paginationBarBuilder;
   final FormeSearchablePaginationBarPosition paginationBarPosition;
   final FormePaginationConfiguration? defaultPaginationConfiguration;
-
   final FormeSearchableSearchFieldsBuilder? searchFieldsBuilder;
-
   final FormeSearchableOptionWidgetBuilder<T>? optionWidgetBuilder;
   final WidgetBuilder? processingWidgetBuilder;
   final WidgetBuilder? errorWidgetBuilder;
-
   final InputDecoration? decoration;
+  final AutocompleteOptionToString<T> displayStringForOption;
 
   final bool flexiable;
-
   const BaseFieldContent({
     Key? key,
+    required this.displayStringForOption,
     this.paginationBarBuilder,
     this.paginationBarPosition = FormeSearchablePaginationBarPosition.top,
     this.searchFieldsBuilder,
@@ -69,6 +69,8 @@ class _BaseFieldContentState<T extends Object>
 
   @override
   BaseFieldContent<T> get widget => super.widget as BaseFieldContent<T>;
+
+  bool get readOnly => status.readOnly;
 
   @override
   void dispose() {
@@ -118,7 +120,7 @@ class _BaseFieldContentState<T extends Object>
               context, pageInfo.currentPage, pageInfo.totalPage, goToPage);
         }
         return FormeSearchablePaginationBar(
-          onPageChanged: goToPage,
+          onPageChanged: readOnly ? null : goToPage,
           configuration: widget.defaultPaginationConfiguration ??
               const FormePaginationConfiguration(),
           currentPage: pageInfo.currentPage,
@@ -190,11 +192,11 @@ class _BaseFieldContentState<T extends Object>
                 } else {
                   optionWidget = ListTile(
                     leading: isSelected ? const Icon(Icons.check_circle) : null,
-                    title: Text('$option'),
+                    title: Text(widget.displayStringForOption(option)),
                   );
                 }
                 return InkWell(
-                  onTap: status.readOnly
+                  onTap: readOnly
                       ? null
                       : () {
                           _toggle(index);
@@ -212,12 +214,18 @@ class _BaseFieldContentState<T extends Object>
     );
   }
 
-  void _search() {
-    search(FormeSearchCondition(_condition, 1));
+  void _search({bool withDebounce = true}) {
+    if (readOnly) {
+      return;
+    }
+    search(FormeSearchCondition(_condition, 1), withDebounce);
     _paginationNotifier.value = null;
   }
 
   void _toggle(int index) {
+    if (readOnly) {
+      return;
+    }
     final T highlight = result!.datas[index];
     final List<T> value = List.of(status.value);
     if (value.remove(highlight)) {
@@ -229,8 +237,13 @@ class _BaseFieldContentState<T extends Object>
 
   Widget _createSearchFields() {
     if (widget.searchFieldsBuilder != null) {
-      return widget.searchFieldsBuilder!
-          .call(context, status.readOnly ? null : () => _search(), formeKey);
+      return widget.searchFieldsBuilder!.call(
+          context,
+          readOnly
+              ? null
+              : ({bool withDebounce = true}) =>
+                  _search(withDebounce: withDebounce),
+          formeKey);
     }
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -247,17 +260,24 @@ class _BaseFieldContentState<T extends Object>
           builder: (state) {
             return TextField(
               autofocus: true,
+              enabled: state.enabled,
+              readOnly: state.readOnly,
               controller: _controller,
               decoration:
                   (widget.decoration ?? const InputDecoration()).copyWith(
                       prefixIcon: const Icon(Icons.search),
-                      suffixIcon: IconButton(
-                          onPressed: () {
-                            _controller.text = '';
-                            state.value = '';
-                          },
-                          icon: const Icon(Icons.clear))),
+                      suffixIcon: state.readOnly
+                          ? null
+                          : IconButton(
+                              onPressed: () {
+                                _controller.text = '';
+                                state.value = '';
+                              },
+                              icon: const Icon(Icons.clear))),
               onChanged: (String value) {
+                state.value = value;
+              },
+              onSubmitted: (String value) {
                 state.value = value;
               },
             );
@@ -302,6 +322,17 @@ class _BaseFieldContentState<T extends Object>
     formeKey.reset();
     _asyncOpertionStateNotifier.value = null;
     _resetPagination();
+  }
+
+  @override
+  void onStatusChanged(FormeFieldChangedStatus<List<T>> status) {
+    super.onStatusChanged(status);
+
+    if (status.isReadOnlyChanged && formeKey.initialized) {
+      for (final FormeFieldState element in formeKey.fields) {
+        element.readOnly = status.readOnly;
+      }
+    }
   }
 
   void _resetPagination() {

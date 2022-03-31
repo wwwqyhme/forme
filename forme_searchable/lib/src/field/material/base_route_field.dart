@@ -18,9 +18,6 @@ typedef FormeSearchableDisplayWidgetBuilder<T extends Object> = Widget Function(
     FocusNode focusNode,
     FormeFieldStatus<List<T>> status);
 
-typedef FormeSearchableOptionWidgetBuilder<T extends Object> = Widget Function(
-    BuildContext context, T option, bool isSelected);
-
 class FormeSearchableBaseRouteField<T extends Object>
     extends FormeSearchableField<T> {
   final AutocompleteOptionToString<T> displayStringForOption;
@@ -33,6 +30,9 @@ class FormeSearchableBaseRouteField<T extends Object>
   final FormeSearchableSearchFieldsBuilder? searchFieldsBuilder;
   final FormeBottomSheetConfiguration bottomSheetConfiguration;
   final FormeDialogConfiguration dialogConfiguration;
+  final WidgetBuilder? errorWidgetBuilder;
+  final InputDecoration? decoration;
+
   final Mode mode;
 
   const FormeSearchableBaseRouteField({
@@ -48,6 +48,8 @@ class FormeSearchableBaseRouteField<T extends Object>
     this.processingWidgetBuilder,
     required this.mode,
     this.dialogConfiguration = const FormeDialogConfiguration(),
+    this.errorWidgetBuilder,
+    this.decoration,
   }) : super(key: key);
 
   @override
@@ -102,6 +104,20 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
     }
   }
 
+  Widget _baseFieldContent({bool flexiable = false}) {
+    return BaseFieldContent<T>(
+      displayStringForOption: widget.displayStringForOption,
+      errorWidgetBuilder: widget.errorWidgetBuilder,
+      optionWidgetBuilder: widget.optionWidgetBuilder,
+      searchFieldsBuilder: widget.searchFieldsBuilder,
+      paginationBarPosition: widget.paginationBarPosition,
+      processingWidgetBuilder: widget.processingWidgetBuilder,
+      paginationBarBuilder: widget.paginationBarBuilder,
+      defaultPaginationConfiguration: widget.defaultPaginationConfiguration,
+      flexiable: flexiable,
+    );
+  }
+
   void _showDialog() {
     final double bottomPadding = MediaQuery.of(context).viewInsets.bottom;
     showDialog<void>(
@@ -118,39 +134,61 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
                 query.size;
         return Center(
           child: SizedBox(
-              width: size.width,
-              height: size.height,
-              child: inherit(
-                Material(
-                    animationDuration: materialConfiguration.animationDuration,
-                    clipBehavior: materialConfiguration.clipBehavior,
-                    borderOnForeground:
-                        materialConfiguration.borderOnForeground,
-                    shape:
-                        widget.dialogConfiguration.materialConfiguration.shape,
-                    borderRadius: materialConfiguration.borderRadius,
-                    textStyle: materialConfiguration.textStyle,
-                    shadowColor: materialConfiguration.shadowColor,
-                    color:
-                        widget.dialogConfiguration.materialConfiguration.color,
-                    type: widget.dialogConfiguration.materialConfiguration.type,
-                    elevation: materialConfiguration.elevation,
-                    child: Padding(
-                      padding: EdgeInsets.only(bottom: bottomPadding),
-                      child: AnimatedSize(
-                        duration: const Duration(milliseconds: 150),
-                        child: BaseFieldContent<T>(
-                          flexiable: true,
-                          processingWidgetBuilder:
-                              widget.processingWidgetBuilder,
-                          paginationBarBuilder: widget.paginationBarBuilder,
-                          paginationBarPosition: widget.paginationBarPosition,
-                          defaultPaginationConfiguration:
-                              widget.defaultPaginationConfiguration,
+            width: size.width,
+            height: size.height,
+            child: inherit(
+              Material(
+                animationDuration: materialConfiguration.animationDuration,
+                clipBehavior: materialConfiguration.clipBehavior,
+                borderOnForeground: materialConfiguration.borderOnForeground,
+                shape: widget.dialogConfiguration.materialConfiguration.shape,
+                borderRadius: materialConfiguration.borderRadius,
+                textStyle: materialConfiguration.textStyle,
+                shadowColor: materialConfiguration.shadowColor,
+                color: widget.dialogConfiguration.materialConfiguration.color,
+                type: widget.dialogConfiguration.materialConfiguration.type,
+                elevation: materialConfiguration.elevation,
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: bottomPadding),
+                  child: Stack(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(
+                            bottom: 10 +
+                                (widget.dialogConfiguration.closeButtonRadius ??
+                                        20) *
+                                    2),
+                        child: _baseFieldContent(flexiable: true),
+                      ),
+                      Positioned.fill(
+                        bottom: 5,
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: CircleAvatar(
+                            backgroundColor: widget
+                                .dialogConfiguration.closeButtonBackgroundColor,
+                            radius:
+                                widget.dialogConfiguration.closeButtonRadius,
+                            child: IconButton(
+                              iconSize:
+                                  widget.dialogConfiguration.closeButtonSize,
+                              icon: Icon(
+                                widget.dialogConfiguration.closeButtonIcon ??
+                                    Icons.close,
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ),
                         ),
                       ),
-                    )),
-              )),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         );
       },
     );
@@ -181,13 +219,7 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
               ),
               child: AnimatedSize(
                 duration: const Duration(milliseconds: 150),
-                child: BaseFieldContent<T>(
-                  processingWidgetBuilder: widget.processingWidgetBuilder,
-                  paginationBarBuilder: widget.paginationBarBuilder,
-                  paginationBarPosition: widget.paginationBarPosition,
-                  defaultPaginationConfiguration:
-                      widget.defaultPaginationConfiguration,
-                ),
+                child: _baseFieldContent(),
               ),
             ),
           ));

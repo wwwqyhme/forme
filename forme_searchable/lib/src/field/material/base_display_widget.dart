@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
+import 'package:forme_searchable/src/forme_searchable_state.dart';
 
 class BaseDisplayWidget<T extends Object> extends StatelessWidget {
   final ValueChanged<T>? delete;
   final FocusNode focusNode;
   final AutocompleteOptionToString<T> displayStringForOption;
-  final FormeFieldStatus<List<T>> status;
+  final FormeSearchableStatus<T> status;
 
   const BaseDisplayWidget({
     Key? key,
@@ -28,6 +29,7 @@ class BaseDisplayWidget<T extends Object> extends StatelessWidget {
     );
     final FormeFieldDecorator<List<T>> decorator = FormeInputDecoratorBuilder(
         decoration: InputDecoration(errorText: status.validation.error),
+        maxLength: status.maximum,
         emptyChecker: (value, state) {
           return state.value.isEmpty;
         });

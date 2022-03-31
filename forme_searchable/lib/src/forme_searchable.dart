@@ -1,9 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
+import 'field/material/base_field_content.dart';
 import 'field/material/base_route_field.dart';
+import 'field/material/pagination_bar.dart';
 import 'field/material/route_configuration.dart';
 import 'forme_searchable_condition.dart';
 import 'forme_searchable_state.dart';
@@ -23,6 +25,7 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
   final List<T> Function(List<T> value, int maximum)? onMaximumExceed;
   final Duration debounce;
   final FormeSearchableQueryFilter? queryFilter;
+
   FormeSearchable._({
     Key? key,
     required String name,
@@ -34,32 +37,33 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
     required this.debounce,
     this.queryFilter,
   }) : super(
-            key: key,
-            name: name,
-            valueUpdater: (oldWidget, newWidget, oldValue) {
-              final int? newMaximum = (newWidget as FormeSearchable<T>).maximum;
-              if (newMaximum != null && oldValue.length > newMaximum) {
-                if (onMaximumExceed == null) {
-                  return oldValue.sublist(oldValue.length - newMaximum);
-                }
-                final List<T> newValue = onMaximumExceed(oldValue, newMaximum);
-                if (newValue.length > newMaximum) {
-                  throw Exception(
-                      'length of new value which returned by onMaximumExceed should smaller or equals than maximum');
-                }
-                return newValue;
+          key: key,
+          name: name,
+          valueUpdater: (oldWidget, newWidget, oldValue) {
+            final int? newMaximum = (newWidget as FormeSearchable<T>).maximum;
+            if (newMaximum != null && oldValue.length > newMaximum) {
+              if (onMaximumExceed == null) {
+                return oldValue.sublist(oldValue.length - newMaximum);
               }
-              return oldValue;
-            },
-            builder: (genericState) {
-              final FormeSearchableState<T> state =
-                  genericState as FormeSearchableState<T>;
-              return FormeSearchableController<T>(
-                state,
-                child: _MediaQueryHolder(child: child),
-              );
-            },
-            initialValue: initialValue);
+              final List<T> newValue = onMaximumExceed(oldValue, newMaximum);
+              if (newValue.length > newMaximum) {
+                throw Exception(
+                    'length of new value which returned by onMaximumExceed should smaller or equals than maximum');
+              }
+              return newValue;
+            }
+            return oldValue;
+          },
+          builder: (genericState) {
+            final FormeSearchableState<T> state =
+                genericState as FormeSearchableState<T>;
+            return FormeSearchableController<T>(
+              state,
+              child: _MediaQueryHolder(child: child),
+            );
+          },
+          initialValue: initialValue,
+        );
 
   @override
   FormeFieldState<List<T>> createState() => FormeSearchableState<T>();
@@ -73,6 +77,16 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
     List<T>? initialValue,
     FormeSearchableQueryFilter? queryFilter,
     FormeBottomSheetConfiguration? bottomSheetConfiguration,
+    AutocompleteOptionToString<T>? displayStringForOption,
+    FormeSearchableDisplayWidgetBuilder<T>? displayBuilder,
+    FormeSearchableOptionWidgetBuilder<T>? optionWidgetBuilder,
+    FormeSearchablePaginationBarBuilder? paginationBarBuilder,
+    WidgetBuilder? processingWidgetBuilder,
+    FormeSearchablePaginationBarPosition? paginationBarPosition,
+    FormePaginationConfiguration? defaultPaginationConfiguration,
+    FormeSearchableSearchFieldsBuilder? searchFieldsBuilder,
+    WidgetBuilder? errorWidgetBuilder,
+    InputDecoration? decoration,
   }) {
     return FormeSearchable<T>._(
       queryFilter: queryFilter,
@@ -80,6 +94,18 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
       query: query,
       debounce: debounce ?? const Duration(milliseconds: 500),
       child: FormeSearchableBaseRouteField<T>(
+        decoration: decoration,
+        searchFieldsBuilder: searchFieldsBuilder,
+        errorWidgetBuilder: errorWidgetBuilder,
+        displayBuilder: displayBuilder,
+        optionWidgetBuilder: optionWidgetBuilder,
+        paginationBarBuilder: paginationBarBuilder,
+        processingWidgetBuilder: processingWidgetBuilder,
+        defaultPaginationConfiguration: defaultPaginationConfiguration,
+        paginationBarPosition:
+            paginationBarPosition ?? FormeSearchablePaginationBarPosition.top,
+        displayStringForOption:
+            displayStringForOption ?? RawAutocomplete.defaultStringForOption,
         mode: Mode.bottomSheet,
         bottomSheetConfiguration:
             bottomSheetConfiguration ?? const FormeBottomSheetConfiguration(),
@@ -99,6 +125,16 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
     List<T>? initialValue,
     FormeSearchableQueryFilter? queryFilter,
     FormeDialogConfiguration? dialogConfiguration,
+    AutocompleteOptionToString<T>? displayStringForOption,
+    FormeSearchableDisplayWidgetBuilder<T>? displayBuilder,
+    FormeSearchableOptionWidgetBuilder<T>? optionWidgetBuilder,
+    FormeSearchablePaginationBarBuilder? paginationBarBuilder,
+    WidgetBuilder? processingWidgetBuilder,
+    FormeSearchablePaginationBarPosition? paginationBarPosition,
+    FormePaginationConfiguration? defaultPaginationConfiguration,
+    FormeSearchableSearchFieldsBuilder? searchFieldsBuilder,
+    WidgetBuilder? errorWidgetBuilder,
+    InputDecoration? decoration,
   }) {
     return FormeSearchable<T>._(
       queryFilter: queryFilter,
@@ -106,6 +142,18 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
       query: query,
       debounce: debounce ?? const Duration(milliseconds: 500),
       child: FormeSearchableBaseRouteField<T>(
+        decoration: decoration,
+        searchFieldsBuilder: searchFieldsBuilder,
+        errorWidgetBuilder: errorWidgetBuilder,
+        displayBuilder: displayBuilder,
+        optionWidgetBuilder: optionWidgetBuilder,
+        paginationBarBuilder: paginationBarBuilder,
+        processingWidgetBuilder: processingWidgetBuilder,
+        defaultPaginationConfiguration: defaultPaginationConfiguration,
+        paginationBarPosition:
+            paginationBarPosition ?? FormeSearchablePaginationBarPosition.top,
+        displayStringForOption:
+            displayStringForOption ?? RawAutocomplete.defaultStringForOption,
         mode: Mode.dialog,
         dialogConfiguration:
             dialogConfiguration ?? const FormeDialogConfiguration(),

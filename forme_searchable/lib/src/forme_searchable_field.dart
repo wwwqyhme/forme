@@ -4,6 +4,7 @@ import 'package:forme_searchable/forme_searchable.dart';
 
 import 'forme_searchable_listener.dart';
 import 'forme_searchable_controller.dart';
+import 'forme_searchable_state.dart';
 
 abstract class FormeSearchableField<T extends Object> extends StatefulWidget {
   const FormeSearchableField({Key? key}) : super(key: key);
@@ -18,7 +19,7 @@ abstract class FormeSearchableFieldState<T extends Object>
   FormeSearchablePageResult<T>? _result;
   FormeSearchablePageResult<T>? _lastNonnullResult;
 
-  FormeFieldStatus<List<T>> get status => _controller!.state.status;
+  FormeSearchableStatus<T> get status => _controller!.state.status;
 
   /// get focusNode
   FocusNode get focusNode => _controller!.state.focusNode;

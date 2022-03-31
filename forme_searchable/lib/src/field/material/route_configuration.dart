@@ -39,6 +39,11 @@ class FormeDialogConfiguration {
   final Size Function(BuildContext context, MediaQueryData query)? sizeProvider;
   final FormeMaterialConfiguration materialConfiguration;
 
+  final double? closeButtonSize;
+  final double? closeButtonRadius;
+  final IconData? closeButtonIcon;
+  final Color? closeButtonBackgroundColor;
+
   const FormeDialogConfiguration({
     this.barrierDismissible = true,
     this.barrierColor = Colors.black54,
@@ -47,6 +52,10 @@ class FormeDialogConfiguration {
     this.useRootNavigator = true,
     this.sizeProvider,
     this.materialConfiguration = const FormeMaterialConfiguration(),
+    this.closeButtonSize,
+    this.closeButtonRadius,
+    this.closeButtonIcon,
+    this.closeButtonBackgroundColor,
   });
 }
 
