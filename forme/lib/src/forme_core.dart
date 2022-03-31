@@ -1161,6 +1161,14 @@ class FormeFieldChangedStatus<T extends Object?> extends FormeFieldStatus<T> {
           hasFocus: newStatus.hasFocus,
         );
 
+  FormeFieldChangedStatus(FormeFieldChangedStatus<T> parent)
+      : isEnabledChanged = parent.isEnabledChanged,
+        isFocusChanged = parent.isFocusChanged,
+        isReadOnlyChanged = parent.isReadOnlyChanged,
+        isValidationChanged = parent.isValidationChanged,
+        isValueChanged = parent.isValueChanged,
+        super(parent);
+
   final bool isEnabledChanged;
   final bool isReadOnlyChanged;
   final bool isValidationChanged;
@@ -1182,6 +1190,13 @@ class FormeFieldStatus<T extends Object?> {
     required this.value,
     required this.hasFocus,
   });
+
+  FormeFieldStatus(FormeFieldStatus<T> parent)
+      : enabled = parent.enabled,
+        hasFocus = parent.hasFocus,
+        readOnly = parent.readOnly,
+        validation = parent.validation,
+        value = parent.value;
 
   FormeFieldStatus<T> _copyWith({
     _Optional<bool>? enabled,

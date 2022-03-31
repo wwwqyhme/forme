@@ -1,3 +1,7 @@
+## 4.0.2
+
+1. allow subclass extends `FormeFieldStatus` & `FormeFieldChangedStatus`
+
 ## 4.0.1
 
 1. add `FormeFieldValidationFilter` on `FormeField` , used to determine whether perform validation or not
