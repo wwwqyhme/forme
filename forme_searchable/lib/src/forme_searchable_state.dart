@@ -109,6 +109,10 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
     cancelAllAsyncOperations();
   }
 
+  void reload() {
+    search(_condition ?? FormeSearchCondition({}, 1), false);
+  }
+
   void goToPage(int page) {
     search(FormeSearchCondition(_condition?.condition ?? {}, page), false);
   }

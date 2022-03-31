@@ -25,12 +25,14 @@ class FormeSearchableBaseRouteField<T extends Object>
   final FormeSearchableOptionWidgetBuilder<T>? optionWidgetBuilder;
   final FormeSearchablePaginationBarBuilder? paginationBarBuilder;
   final WidgetBuilder? processingWidgetBuilder;
+  final WidgetBuilder? emptyContentWidgetBuilder;
   final FormeSearchablePaginationBarPosition paginationBarPosition;
   final FormePaginationConfiguration? defaultPaginationConfiguration;
   final FormeSearchableSearchFieldsBuilder? searchFieldsBuilder;
   final FormeBottomSheetConfiguration bottomSheetConfiguration;
   final FormeDialogConfiguration dialogConfiguration;
-  final WidgetBuilder? errorWidgetBuilder;
+  final Widget Function(BuildContext context, VoidCallback? refresh)?
+      errorWidgetBuilder;
   final InputDecoration? decoration;
 
   final Mode mode;
@@ -38,6 +40,7 @@ class FormeSearchableBaseRouteField<T extends Object>
   const FormeSearchableBaseRouteField({
     Key? key,
     this.displayBuilder,
+    this.emptyContentWidgetBuilder,
     this.displayStringForOption = RawAutocomplete.defaultStringForOption,
     this.optionWidgetBuilder,
     this.paginationBarBuilder,
@@ -106,6 +109,7 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
 
   Widget _baseFieldContent({bool flexiable = false}) {
     return BaseFieldContent<T>(
+      emptyContentWidgetBuilder: widget.emptyContentWidgetBuilder,
       displayStringForOption: widget.displayStringForOption,
       errorWidgetBuilder: widget.errorWidgetBuilder,
       optionWidgetBuilder: widget.optionWidgetBuilder,

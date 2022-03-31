@@ -66,6 +66,8 @@ abstract class FormeSearchableFieldState<T extends Object>
 
   void goToPage(int page) => _controller?.state.goToPage(page);
 
+  void reload() => _controller?.state.reload();
+
   set value(List<T> value) => _controller!.state.value = value;
 
   void cancel() {

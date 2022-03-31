@@ -31,9 +31,11 @@ class BaseFieldContent<T extends Object> extends FormeSearchableField<T> {
   final FormeSearchableSearchFieldsBuilder? searchFieldsBuilder;
   final FormeSearchableOptionWidgetBuilder<T>? optionWidgetBuilder;
   final WidgetBuilder? processingWidgetBuilder;
-  final WidgetBuilder? errorWidgetBuilder;
+  final Widget Function(BuildContext context, VoidCallback? refresh)?
+      errorWidgetBuilder;
   final InputDecoration? decoration;
   final AutocompleteOptionToString<T> displayStringForOption;
+  final WidgetBuilder? emptyContentWidgetBuilder;
 
   final bool flexiable;
   const BaseFieldContent({
@@ -47,6 +49,7 @@ class BaseFieldContent<T extends Object> extends FormeSearchableField<T> {
     this.processingWidgetBuilder,
     this.decoration,
     this.errorWidgetBuilder,
+    this.emptyContentWidgetBuilder,
     this.flexiable = false,
   }) : super(key: key);
   @override
@@ -108,6 +111,11 @@ class _BaseFieldContentState<T extends Object>
     );
   }
 
+  Widget _createEmptyContentWidget() {
+    return widget.emptyContentWidgetBuilder?.call(context) ??
+        const SizedBox.shrink();
+  }
+
   Widget _createPaginationBar() {
     return ValueListenableBuilder<PageInfo?>(
       valueListenable: _paginationNotifier,
@@ -148,19 +156,26 @@ class _BaseFieldContentState<T extends Object>
   }
 
   Widget _createErrorWidget() {
-    final Widget errorWidget = widget.errorWidgetBuilder?.call(context) ??
-        SizedBox(
-          width: double.maxFinite,
-          child: Center(
+    final Widget errorWidget =
+        widget.errorWidgetBuilder?.call(context, readOnly ? null : reload) ??
+            Center(
               child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Icon(
-              Icons.error,
-              size: 36,
-              color: Theme.of(context).errorColor,
-            ),
-          )),
-        );
+                padding: const EdgeInsets.all(20),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(
+                    Icons.error,
+                    size: 36,
+                    color: Theme.of(context).errorColor,
+                  ),
+                  IconButton(
+                      onPressed: readOnly ? null : reload,
+                      icon: Icon(
+                        Icons.refresh,
+                        color: Theme.of(context).primaryColor,
+                      )),
+                ]),
+              ),
+            );
     return widget.flexiable ? Flexible(child: errorWidget) : errorWidget;
   }
 
@@ -177,6 +192,9 @@ class _BaseFieldContentState<T extends Object>
         }
 
         if (state == FormeAsyncOperationState.success) {
+          if (result!.datas.isEmpty) {
+            return _createEmptyContentWidget();
+          }
           return Flexible(
             child: ListView.builder(
               controller: _scrollController,

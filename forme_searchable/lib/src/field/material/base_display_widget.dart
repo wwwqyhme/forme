@@ -28,8 +28,11 @@ class BaseDisplayWidget<T extends Object> extends StatelessWidget {
       }).toList(),
     );
     final FormeFieldDecorator<List<T>> decorator = FormeInputDecoratorBuilder(
-        decoration: InputDecoration(errorText: status.validation.error),
+        decoration: InputDecoration(
+            errorText: status.validation.error,
+            suffixIcon: const Icon(Icons.search)),
         maxLength: status.maximum,
+        counter: (value) => value.length,
         emptyChecker: (value, state) {
           return state.value.isEmpty;
         });
