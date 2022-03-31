@@ -11,7 +11,7 @@ import 'package:forme_searchable/forme_searchable.dart';
 /// }
 /// ```
 ///
-mixin FormeSearchableReader<T extends Object> {
+mixin FormeSearchableListener<T extends Object> {
   /// field status changed
   void onStatusChanged(FormeFieldChangedStatus<List<T>> status);
 
@@ -31,4 +31,7 @@ mixin FormeSearchableReader<T extends Object> {
 
   /// when focusNode changed
   void onFocusNodeChanged(FocusNode node);
+
+  /// when [FormeSearchable.queryFilter] not passed
+  void onQueryCancelled(FormeSearchCondition condition) {}
 }

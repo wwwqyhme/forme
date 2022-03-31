@@ -1,17 +1,12 @@
 import 'package:flutter/widgets.dart';
-import 'package:forme/forme.dart';
 
-import 'forme_searchable_writer.dart';
+import 'forme_searchable_state.dart';
 
 class FormeSearchableController<T extends Object> extends InheritedWidget {
-  final FormeSearchableWriter<T> writer;
-  final FormeFieldStatus<List<T>> status;
-  final FocusNode focusNode;
+  final FormeSearchableState<T> state;
 
   const FormeSearchableController(
-    this.writer,
-    this.focusNode,
-    this.status, {
+    this.state, {
     Key? key,
     required Widget child,
   }) : super(child: child, key: key);
