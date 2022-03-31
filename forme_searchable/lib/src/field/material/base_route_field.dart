@@ -61,13 +61,35 @@ class FormeSearchableBaseRouteField<T extends Object>
 }
 
 class _FormeSearchableBaseRouteFieldState<T extends Object>
-    extends FormeSearchableFieldState<T> {
+    extends FormeSearchableFieldState<T> with WidgetsBindingObserver {
   @override
   FormeSearchableBaseRouteField<T> get widget =>
       super.widget as FormeSearchableBaseRouteField<T>;
 
   FormeMaterialConfiguration get materialConfiguration =>
       widget.dialogConfiguration.materialConfiguration;
+
+  late final ValueNotifier<MediaQueryData?> _mediaQueryDataNotifier =
+      FormeMountedValueNotifier(null);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance!.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance!.removeObserver(this);
+    _mediaQueryDataNotifier.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    _mediaQueryDataNotifier.value =
+        MediaQueryData.fromWindow(WidgetsBinding.instance!.window);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,8 +144,25 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
     );
   }
 
+  double _getDialogBottomPadding(MediaQueryData data, Size dialogSize) {
+    double bottomPadding;
+    if (dialogSize == data.size) {
+      bottomPadding = data.viewInsets.bottom;
+    } else {
+      double statusBarHeight = 0;
+      if (widget.dialogConfiguration.useSafeArea) {
+        statusBarHeight = data.padding.top;
+      }
+      final double bottom = (data.size.height - dialogSize.height) / 2;
+      bottomPadding = data.viewInsets.bottom - bottom + statusBarHeight / 2;
+      if (bottomPadding < 0) {
+        bottomPadding = 0;
+      }
+    }
+    return bottomPadding;
+  }
+
   void _showDialog() {
-    final double bottomPadding = MediaQuery.of(context).viewInsets.bottom;
     showDialog<void>(
       barrierDismissible: widget.dialogConfiguration.barrierDismissible,
       barrierColor: widget.dialogConfiguration.barrierColor,
@@ -132,74 +171,85 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
       useRootNavigator: widget.dialogConfiguration.useRootNavigator,
       context: context,
       builder: (context) {
-        final MediaQueryData query = MediaQuery.of(context);
-        final Size size =
-            widget.dialogConfiguration.sizeProvider?.call(context, query) ??
-                query.size;
-        return Center(
-          child: SizedBox(
-            width: size.width,
-            height: size.height,
-            child: inherit(
-              Material(
-                animationDuration: materialConfiguration.animationDuration,
-                clipBehavior: materialConfiguration.clipBehavior,
-                borderOnForeground: materialConfiguration.borderOnForeground,
-                shape: widget.dialogConfiguration.materialConfiguration.shape,
-                borderRadius: materialConfiguration.borderRadius,
-                textStyle: materialConfiguration.textStyle,
-                shadowColor: materialConfiguration.shadowColor,
-                color: widget.dialogConfiguration.materialConfiguration.color,
-                type: widget.dialogConfiguration.materialConfiguration.type,
-                elevation: materialConfiguration.elevation,
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: bottomPadding),
-                  child: Stack(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.only(
-                            bottom: 10 +
-                                (widget.dialogConfiguration.closeButtonRadius ??
-                                        20) *
-                                    2),
-                        child: _baseFieldContent(flexiable: true),
-                      ),
-                      Positioned.fill(
-                        bottom: 5,
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
-                          child: CircleAvatar(
-                            backgroundColor: widget
-                                .dialogConfiguration.closeButtonBackgroundColor,
-                            radius:
-                                widget.dialogConfiguration.closeButtonRadius,
-                            child: IconButton(
-                              iconSize:
-                                  widget.dialogConfiguration.closeButtonSize,
-                              icon: Icon(
-                                widget.dialogConfiguration.closeButtonIcon ??
-                                    Icons.close,
+        return ValueListenableBuilder<MediaQueryData?>(
+          valueListenable: _mediaQueryDataNotifier,
+          builder: (context, nullableData, child) {
+            final MediaQueryData data = nullableData ?? MediaQuery.of(context);
+            final Size size =
+                widget.dialogConfiguration.sizeProvider?.call(context, data) ??
+                    data.size;
+
+            return Center(
+              child: SizedBox(
+                width: size.width,
+                height: size.height,
+                child: inherit(
+                  Material(
+                    animationDuration: materialConfiguration.animationDuration,
+                    clipBehavior: materialConfiguration.clipBehavior,
+                    borderOnForeground:
+                        materialConfiguration.borderOnForeground,
+                    shape:
+                        widget.dialogConfiguration.materialConfiguration.shape,
+                    borderRadius: materialConfiguration.borderRadius,
+                    textStyle: materialConfiguration.textStyle,
+                    shadowColor: materialConfiguration.shadowColor,
+                    color:
+                        widget.dialogConfiguration.materialConfiguration.color,
+                    type: widget.dialogConfiguration.materialConfiguration.type,
+                    elevation: materialConfiguration.elevation,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                          bottom: _getDialogBottomPadding(data, size)),
+                      child: Stack(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(
+                                bottom: 10 +
+                                    (widget.dialogConfiguration
+                                                .closeButtonRadius ??
+                                            20) *
+                                        2),
+                            child: _baseFieldContent(flexiable: true),
+                          ),
+                          Positioned.fill(
+                            bottom: 5,
+                            child: Align(
+                              alignment: Alignment.bottomCenter,
+                              child: CircleAvatar(
+                                backgroundColor: widget.dialogConfiguration
+                                    .closeButtonBackgroundColor,
+                                radius: widget
+                                    .dialogConfiguration.closeButtonRadius,
+                                child: IconButton(
+                                  iconSize: widget
+                                      .dialogConfiguration.closeButtonSize,
+                                  icon: Icon(
+                                    widget.dialogConfiguration
+                                            .closeButtonIcon ??
+                                        Icons.close,
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                ),
                               ),
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
   }
 
   void _showModalBottomSheet() {
-    final double bottomPadding = MediaQuery.of(context).viewInsets.bottom;
     showModalBottomSheet(
         context: context,
         backgroundColor: widget.bottomSheetConfiguration.backgroundColor,
@@ -214,19 +264,26 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
             widget.bottomSheetConfiguration.transitionAnimationController,
         useRootNavigator: widget.bottomSheetConfiguration.useRootNavigator,
         builder: (context) {
-          return inherit(Padding(
-            padding: EdgeInsets.only(bottom: bottomPadding),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: widget.bottomSheetConfiguration.maxmiumHeight ??
-                    double.infinity,
-              ),
-              child: AnimatedSize(
-                duration: const Duration(milliseconds: 150),
-                child: _baseFieldContent(),
-              ),
-            ),
-          ));
+          return ValueListenableBuilder<MediaQueryData?>(
+              valueListenable: _mediaQueryDataNotifier,
+              builder: (context, nullableData, child) {
+                final MediaQueryData data =
+                    nullableData ?? MediaQuery.of(context);
+                return inherit(Padding(
+                  padding: EdgeInsets.only(bottom: data.viewInsets.bottom),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight:
+                          widget.bottomSheetConfiguration.maxmiumHeight ??
+                              double.infinity,
+                    ),
+                    child: AnimatedSize(
+                      duration: const Duration(milliseconds: 150),
+                      child: _baseFieldContent(),
+                    ),
+                  ),
+                ));
+              });
         });
   }
 }

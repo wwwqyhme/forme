@@ -91,7 +91,7 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
                 genericState as FormeSearchableState<T>;
             return FormeSearchableController<T>(
               state,
-              child: _MediaQueryHolder(child: child),
+              child: child,
             );
           },
           initialValue: initialValue,
@@ -264,40 +264,5 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
       onMaximumExceed: onMaximumExceed,
       initialValue: initialValue ?? const [],
     );
-  }
-}
-
-class _MediaQueryHolder extends StatefulWidget {
-  final Widget child;
-
-  const _MediaQueryHolder({Key? key, required this.child}) : super(key: key);
-  @override
-  State<StatefulWidget> createState() => _MediaQueryHolderState();
-}
-
-class _MediaQueryHolderState extends State<_MediaQueryHolder>
-    with WidgetsBindingObserver {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance!.addObserver(this);
-  }
-
-  @override
-  void didChangeMetrics() {
-    setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final MediaQueryData data =
-        MediaQueryData.fromWindow(WidgetsBinding.instance!.window);
-    return MediaQuery(data: data, child: widget.child);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance!.removeObserver(this);
-    super.dispose();
   }
 }
