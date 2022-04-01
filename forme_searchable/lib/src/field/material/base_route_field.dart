@@ -6,10 +6,12 @@ import 'base_display_widget.dart';
 import 'base_field_content.dart';
 import 'base_search_fields.dart';
 import 'base_pagination_bar.dart';
+import 'base_searchable_display_widget.dart';
 
 enum Mode {
   bottomSheet,
   dialog,
+  base,
 }
 
 class FormeSearchableBaseRouteField<T extends Object>
@@ -26,9 +28,7 @@ class FormeSearchableBaseRouteField<T extends Object>
   final FormeDialogConfiguration dialogConfiguration;
   final FormeSearchableErrorWidgetBuilder? errorWidgetBuilder;
   final InputDecoration? decoration;
-
-  /// only worked when use default search fields
-  final bool performSearchAfterOpen;
+  final FormeBaseConfiguration baseConfiguration;
 
   final Mode mode;
 
@@ -47,7 +47,7 @@ class FormeSearchableBaseRouteField<T extends Object>
     this.dialogConfiguration = const FormeDialogConfiguration(),
     this.errorWidgetBuilder,
     this.decoration,
-    this.performSearchAfterOpen = true,
+    this.baseConfiguration = const FormeBaseConfiguration(),
   }) : super(key: key);
 
   @override
@@ -61,25 +61,20 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
   FormeSearchableBaseRouteField<T> get widget =>
       super.widget as FormeSearchableBaseRouteField<T>;
 
-  FormeMaterialConfiguration get materialConfiguration =>
-      widget.dialogConfiguration.materialConfiguration;
-
   late final ValueNotifier<MediaQueryData?> _mediaQueryDataNotifier =
       FormeMountedValueNotifier(null);
 
   bool get readOnly => status.readOnly;
 
   final TextEditingController _controller = TextEditingController();
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance!.addObserver(this);
-  }
+  final ValueNotifier<bool> _baseContentEnableNotifier =
+      FormeMountedValueNotifier(false);
 
   @override
   void dispose() {
-    _controller.dispose();
     WidgetsBinding.instance!.removeObserver(this);
+    _controller.dispose();
+    _baseContentEnableNotifier.dispose();
     _mediaQueryDataNotifier.dispose();
     super.dispose();
   }
@@ -91,8 +86,50 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
   }
 
   @override
+  void onQueryCancelled(FormeSearchCondition condition) {
+    super.onQueryCancelled(condition);
+    _baseContentEnableNotifier.value = false;
+  }
+
+  @override
+  void onQueryProcessing(FormeSearchCondition condition) {
+    super.onQueryProcessing(condition);
+    _baseContentEnableNotifier.value = true;
+  }
+
+  @override
+  void onReset() {
+    super.onReset();
+    _baseContentEnableNotifier.value = false;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final delete = status.readOnly ? null : _delete;
+    if (widget.mode == Mode.base) {
+      return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDisplay(),
+            ValueListenableBuilder<bool>(
+                valueListenable: _baseContentEnableNotifier,
+                builder: (context, enable, child) {
+                  return Visibility(
+                      visible: enable,
+                      child: _buildMaterial(
+                        widget.baseConfiguration.materialConfiguration,
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight: widget.baseConfiguration.maximumHeight ??
+                                double.infinity,
+                          ),
+                          child: _build(),
+                        ),
+                      ));
+                }),
+          ]);
+    }
+
     return GestureDetector(
       onTap: status.readOnly
           ? null
@@ -104,16 +141,11 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
                 case Mode.dialog:
                   _showDialog();
                   break;
+                case Mode.base:
+                  break;
               }
             },
-      child: widget.displayBuilder?.call(
-            context,
-          ) ??
-          BaseDisplayWidget<T>(
-              status: status,
-              delete: delete,
-              focusNode: focusNode,
-              displayStringForOption: widget.displayStringForOption),
+      child: _buildDisplay(),
     );
   }
 
@@ -125,18 +157,59 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
     }
   }
 
-  Widget _build({bool flexiable = false}) {
-    return Column(
+  Widget _buildDisplay() {
+    return widget.displayBuilder?.call(
+          context,
+        ) ??
+        (widget.mode == Mode.base
+            ? BaseSearchableDisplayWidget(
+                decoration: widget.decoration,
+                displayStringForOption: widget.displayStringForOption,
+              )
+            : BaseDisplayWidget<T>(
+                status: status,
+                delete: status.readOnly ? null : _delete,
+                focusNode: focusNode,
+                displayStringForOption: widget.displayStringForOption));
+  }
+
+  Widget _build() {
+    final bool closeable = widget.mode == Mode.base;
+    final bool animationEnable = widget.mode == Mode.base
+        ? widget.baseConfiguration.animationEnable
+        : widget.mode == Mode.bottomSheet
+            ? widget.bottomSheetConfiguration.animationEnable
+            : false;
+    final bool flexiable = widget.mode == Mode.dialog;
+    final bool inherit = widget.mode != Mode.base;
+    final bool buildSearchFields = widget.mode != Mode.base;
+    final bool performSearchAfterOpen = widget.mode == Mode.base
+        ? false
+        : widget.mode == Mode.dialog
+            ? widget.dialogConfiguration.performSearchAfterOpen
+            : widget.bottomSheetConfiguration.performSearchAfterOpen;
+    Widget column = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        widget.searchFieldsBuilder?.call(
-              context,
-            ) ??
-            BaseSearchFields<T>(
-              decoration: widget.decoration,
-              performSearchAfterInitState: widget.performSearchAfterOpen,
+        if (closeable)
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () {
+                _baseContentEnableNotifier.value = false;
+              },
             ),
+          ),
+        if (buildSearchFields)
+          widget.searchFieldsBuilder?.call(
+                context,
+              ) ??
+              BaseSearchFields<T>(
+                decoration: widget.decoration,
+                performSearchAfterInitState: performSearchAfterOpen,
+              ),
         widget.paginationBarBuilder?.call(
               context,
             ) ??
@@ -151,9 +224,26 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
           optionWidgetBuilder: widget.optionWidgetBuilder,
           processingWidgetBuilder: widget.processingWidgetBuilder,
           flexiable: flexiable,
-        )
+        ),
       ],
     );
+    if (animationEnable) {
+      final Duration duration = widget.mode == Mode.bottomSheet
+          ? widget.bottomSheetConfiguration.animationDuration
+          : widget.baseConfiguration.animationDuration;
+      final Curve curve = widget.mode == Mode.bottomSheet
+          ? widget.bottomSheetConfiguration.animationCurve
+          : widget.baseConfiguration.animationCurve;
+      column = AnimatedSize(
+          curve: curve,
+          alignment: Alignment.topCenter,
+          duration: duration,
+          child: column);
+    }
+    if (inherit) {
+      return super.inherit(column);
+    }
+    return column;
   }
 
   double _getDialogBottomPadding(MediaQueryData data, Size dialogSize) {
@@ -194,22 +284,9 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
               child: SizedBox(
                 width: size.width,
                 height: size.height,
-                child: inherit(
-                  Material(
-                    animationDuration: materialConfiguration.animationDuration,
-                    clipBehavior: materialConfiguration.clipBehavior,
-                    borderOnForeground:
-                        materialConfiguration.borderOnForeground,
-                    shape:
-                        widget.dialogConfiguration.materialConfiguration.shape,
-                    borderRadius: materialConfiguration.borderRadius,
-                    textStyle: materialConfiguration.textStyle,
-                    shadowColor: materialConfiguration.shadowColor,
-                    color:
-                        widget.dialogConfiguration.materialConfiguration.color,
-                    type: widget.dialogConfiguration.materialConfiguration.type,
-                    elevation: materialConfiguration.elevation,
-                    child: Padding(
+                child: _buildMaterial(
+                    widget.dialogConfiguration.materialConfiguration,
+                    Padding(
                       padding: EdgeInsets.only(
                           bottom: _getDialogBottomPadding(data, size)),
                       child: Stack(
@@ -221,7 +298,7 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
                                                 .closeButtonRadius ??
                                             20) *
                                         2),
-                            child: _build(flexiable: true),
+                            child: _build(),
                           ),
                           Positioned.fill(
                             bottom: 5,
@@ -249,9 +326,7 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                ),
+                    )),
               ),
             );
           },
@@ -280,21 +355,35 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
               builder: (context, nullableData, child) {
                 final MediaQueryData data =
                     nullableData ?? MediaQuery.of(context);
-                return inherit(Padding(
+                return Padding(
                   padding: EdgeInsets.only(bottom: data.viewInsets.bottom),
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
                       maxHeight:
-                          widget.bottomSheetConfiguration.maxmiumHeight ??
+                          widget.bottomSheetConfiguration.maximumHeight ??
                               double.infinity,
                     ),
-                    child: AnimatedSize(
-                      duration: const Duration(milliseconds: 150),
-                      child: _build(),
-                    ),
+                    child: _build(),
                   ),
-                ));
+                );
               });
         });
+  }
+
+  Widget _buildMaterial(
+      FormeMaterialConfiguration configuration, Widget child) {
+    return Material(
+      animationDuration: configuration.animationDuration,
+      clipBehavior: configuration.clipBehavior,
+      borderOnForeground: configuration.borderOnForeground,
+      shape: configuration.shape,
+      borderRadius: configuration.borderRadius,
+      textStyle: configuration.textStyle,
+      shadowColor: configuration.shadowColor,
+      color: configuration.color,
+      type: configuration.type,
+      elevation: configuration.elevation,
+      child: child,
+    );
   }
 }

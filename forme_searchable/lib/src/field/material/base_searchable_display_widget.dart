@@ -31,19 +31,6 @@ class _BaseSearchableDisplayWidgetState<T extends Object>
   @override
   BaseSearchableDisplayWidget<T> get widget =>
       super.widget as BaseSearchableDisplayWidget<T>;
-  final FormeKey formeKey = FormeKey();
-  Map<String, Object?> get _condition =>
-      formeKey.initialized ? formeKey.value : {};
-
-  @override
-  void initState() {
-    super.initState();
-    // if (widget.performSearchAfterInitState) {
-    //   WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-    //     _search();
-    //   });
-    // }
-  }
 
   @override
   void dispose() {
@@ -56,7 +43,7 @@ class _BaseSearchableDisplayWidgetState<T extends Object>
   Widget build(BuildContext context) {
     final TextField textfield = TextField(
       onChanged: (String v) {
-        _search();
+        _search(v);
       },
       decoration: widget.searchFieldDecoration,
       focusNode: focusNode,
@@ -66,7 +53,7 @@ class _BaseSearchableDisplayWidgetState<T extends Object>
       onSubmitted: status.readOnly
           ? null
           : (v) {
-              _search();
+              _search(v);
             },
     );
 
@@ -92,13 +79,17 @@ class _BaseSearchableDisplayWidgetState<T extends Object>
           ),
         ),
     );
-
     final FormeFieldDecorator<List<T>> decorator = FormeInputDecoratorBuilder(
         decoration: widget.decoration,
         emptyChecker: (value, state) {
           return state.value.isEmpty && _controller.text.isEmpty;
         });
-    return decorator.build(context, wrap);
+    return GestureDetector(
+      onTap: () {
+        focusNode.requestFocus();
+      },
+      child: decorator.build(context, wrap),
+    );
   }
 
   @override
@@ -115,11 +106,11 @@ class _BaseSearchableDisplayWidgetState<T extends Object>
     _controller.text = '';
   }
 
-  void _search() {
+  void _search(String v) {
     if (status.readOnly) {
       return;
     }
-    search(FormeSearchCondition(_condition, 1));
+    search(FormeSearchCondition({'query': v}, 1));
   }
 
   void _delete(T option) {

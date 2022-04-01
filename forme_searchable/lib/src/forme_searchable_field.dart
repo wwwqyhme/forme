@@ -1,9 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:forme/forme.dart';
-import 'package:forme_searchable/forme_searchable.dart';
 
+import 'forme_searchable_condition.dart';
 import 'forme_searchable_listener.dart';
 import 'forme_searchable_controller.dart';
+import 'forme_searchable_result.dart';
 import 'forme_searchable_state.dart';
 
 abstract class FormeSearchableField<T extends Object> extends StatefulWidget {
@@ -16,8 +17,6 @@ abstract class FormeSearchableField<T extends Object> extends StatefulWidget {
 abstract class FormeSearchableFieldState<T extends Object>
     extends State<FormeSearchableField<T>> with FormeSearchableListener<T> {
   FormeSearchableController<T>? _controller;
-  FormeSearchablePageResult<T>? _result;
-  FormeSearchablePageResult<T>? _lastNonnullResult;
 
   FormeSearchableStatus<T> get status => _controller!.state.status;
 
@@ -25,23 +24,16 @@ abstract class FormeSearchableFieldState<T extends Object>
   FocusNode get focusNode => _controller!.state.focusNode;
 
   /// get latest query result
-  FormeSearchablePageResult<T>? get result => _result;
-
-  /// get latest nonull result
-  FormeSearchablePageResult<T>? get lastNonnullResult => _lastNonnullResult;
-  bool _isProcessing = false;
+  FormeSearchablePageResult<T>? get result => status.result;
 
   /// whether latest query has result or not
-  bool get hasResult => _result != null;
+  bool get hasResult => status.hasResult;
 
   /// whether a query is in processing
-  bool get isProcessing => _isProcessing;
-
-  Object? _error;
-  StackTrace? _stackTrace;
-
-  Object? get error => _error;
-  StackTrace? get stackTrace => _stackTrace;
+  bool get isProcessing => status.isProcessing;
+  Object? get error => status.error;
+  StackTrace? get stackTrace => status.stackTrace;
+  bool get hasError => status.hasError;
 
   @override
   void didChangeDependencies() {
@@ -55,11 +47,6 @@ abstract class FormeSearchableFieldState<T extends Object>
   void dispose() {
     _controller?.state.removeListener(this);
     super.dispose();
-  }
-
-  @override
-  void onFocusNodeChanged(FocusNode node) {
-    setState(() {});
   }
 
   @override
@@ -88,47 +75,25 @@ abstract class FormeSearchableFieldState<T extends Object>
 
   @override
   @mustCallSuper
+  void onQueryCancelled(FormeSearchCondition condition) {}
+
+  @override
+  @mustCallSuper
   void onQuerySuccess(
-      FormeSearchCondition condition, FormeSearchablePageResult<T> result) {
-    _isProcessing = false;
-    _result = result;
-    _lastNonnullResult = _result;
-    _error = null;
-    _stackTrace = null;
-    onQueryComplete(condition);
-  }
+      FormeSearchCondition condition, FormeSearchablePageResult<T> result) {}
 
   @override
   @mustCallSuper
   void onQueryFail(
-      FormeSearchCondition condition, Object error, StackTrace trace) {
-    _isProcessing = false;
-    _result = null;
-    _error = error;
-    _stackTrace = trace;
-    onQueryComplete(condition);
-  }
+      FormeSearchCondition condition, Object error, StackTrace trace) {}
 
   @override
   @mustCallSuper
-  void onQueryProcessing(FormeSearchCondition condition) {
-    _isProcessing = true;
-    _result = null;
-    _error = null;
-    _stackTrace = null;
-    onQueryComplete(condition);
-  }
+  void onQueryProcessing(FormeSearchCondition condition) {}
 
   @override
   @mustCallSuper
-  void onReset() {
-    _result = null;
-    _lastNonnullResult = null;
-    _error = null;
-    _stackTrace = null;
-  }
-
-  void onQueryComplete(FormeSearchCondition condition) {}
+  void onReset() {}
 
   Widget inherit(Widget child) {
     return FormeSearchableController<T>(_controller!.state, child: child);

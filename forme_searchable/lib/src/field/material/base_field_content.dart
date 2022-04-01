@@ -39,12 +39,31 @@ class _BaseFieldContentState<T extends Object>
     extends FormeSearchableFieldState<T> {
   final ScrollController _scrollController = ScrollController();
   late final ValueNotifier<FormeAsyncOperationState?>
-      _asyncOpertionStateNotifier = ValueNotifier(null);
+      _asyncOpertionStateNotifier;
 
   @override
   BaseFieldContent<T> get widget => super.widget as BaseFieldContent<T>;
 
   bool get readOnly => status.readOnly;
+
+  bool _init = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_init) {
+      _init = true;
+      FormeAsyncOperationState? state;
+      if (isProcessing) {
+        state = FormeAsyncOperationState.processing;
+      } else if (hasResult) {
+        state = FormeAsyncOperationState.success;
+      } else if (hasError) {
+        state = FormeAsyncOperationState.error;
+      }
+      _asyncOpertionStateNotifier = ValueNotifier(state);
+    }
+  }
 
   @override
   void dispose() {

@@ -1,6 +1,7 @@
-import 'package:flutter/widgets.dart';
 import 'package:forme/forme.dart';
-import 'package:forme_searchable/forme_searchable.dart';
+
+import 'forme_searchable_condition.dart';
+import 'forme_searchable_result.dart';
 
 /// ``` Dart
 /// try{
@@ -32,9 +33,6 @@ mixin FormeSearchableListener<T extends Object> {
 
   /// field reset
   void onReset();
-
-  /// when focusNode changed
-  void onFocusNodeChanged(FocusNode node);
 
   /// when [FormeSearchable.queryFilter] not passed
   void onQueryCancelled(FormeSearchCondition condition) {}

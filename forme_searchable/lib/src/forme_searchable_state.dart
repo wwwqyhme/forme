@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
 import 'package:forme/forme.dart';
 
 import 'forme_searchable.dart';
@@ -21,9 +20,14 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
 
   bool get isTimerActive => _timer != null && _timer!.isActive;
 
+  bool _isProcessing = false;
+  FormeSearchablePageResult<T>? _result;
+  Object? _error;
+  StackTrace? _stackTrace;
+
   @override
-  FormeSearchableStatus<T> get status =>
-      FormeSearchableStatus._(super.status, widget.maximum);
+  FormeSearchableStatus<T> get status => FormeSearchableStatus._(super.status,
+      widget.maximum, _isProcessing, _result, _error, _stackTrace);
 
   @override
   void didChange(List<T> newValue) {
@@ -44,15 +48,6 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
   }
 
   @override
-  set focusNode(FocusNode node) {
-    final FocusNode? current = hasFocusNode ? focusNode : null;
-    super.focusNode = node;
-    if (current != focusNode) {
-      _triggerListeners((listener) => listener.onFocusNodeChanged(node));
-    }
-  }
-
-  @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
@@ -68,6 +63,9 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
   void reset() {
     super.reset();
     cancelAllAsyncOperations();
+    _result = null;
+    _error = null;
+    _stackTrace = null;
     _triggerListeners((listener) => listener.onReset());
   }
 
@@ -77,6 +75,10 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
   @override
   void onSuccess(FormeSearchablePageResult<T> result, Object? key) {
     if (mounted && !isTimerActive) {
+      _error = null;
+      _stackTrace = null;
+      _result = result;
+      _isProcessing = false;
       _triggerListeners(
           (listener) => listener.onQuerySuccess(_condition!, result));
     }
@@ -85,6 +87,10 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
   @override
   void onError(Object error, StackTrace stackTrace) {
     if (mounted && !isTimerActive) {
+      _error = error;
+      _stackTrace = stackTrace;
+      _result = null;
+      _isProcessing = false;
       _triggerListeners(
           (listener) => listener.onQueryFail(_condition!, error, stackTrace));
     }
@@ -121,22 +127,27 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
     if (!mounted) {
       return;
     }
+    _error = null;
+    _stackTrace = null;
+    _result = null;
     final bool isOnlyPageChanged = condition.condition == _condition?.condition;
     _condition = condition;
+    _timer?.cancel();
+    final bool cancel =
+        widget.queryFilter != null && !widget.queryFilter!.call(condition);
+    if (cancel) {
+      cancelAllAsyncOperations();
+      _isProcessing = false;
+      _triggerListeners((listener) => listener.onQueryCancelled(_condition!));
+      return;
+    }
     if (isOnlyPageChanged) {
       _triggerListeners((listener) => listener.onPageChangeStart(condition));
     } else {
       _triggerListeners(
           (listener) => listener.onConditionChangeStart(condition));
     }
-    _timer?.cancel();
-    final bool cancel =
-        widget.queryFilter != null && !widget.queryFilter!.call(condition);
-    if (cancel) {
-      cancelAllAsyncOperations();
-      _triggerListeners((listener) => listener.onQueryCancelled(_condition!));
-      return;
-    }
+    _isProcessing = true;
     _triggerListeners((listener) => listener.onQueryProcessing(_condition!));
     if (debounce) {
       _timer = Timer(widget.debounce, () {
@@ -153,8 +164,20 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
 class FormeSearchableStatus<T extends Object>
     extends FormeFieldStatus<List<T>> {
   final int? maximum;
+  final bool isProcessing;
+  final FormeSearchablePageResult<T>? result;
+  final Object? error;
+  final StackTrace? stackTrace;
+
+  bool get hasResult => result != null;
+  bool get hasError => error != null;
+
   FormeSearchableStatus._(
     FormeFieldStatus<List<T>> parent,
     this.maximum,
+    this.isProcessing,
+    this.result,
+    this.error,
+    this.stackTrace,
   ) : super(parent);
 }

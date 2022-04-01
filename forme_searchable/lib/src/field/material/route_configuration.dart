@@ -11,9 +11,16 @@ class FormeBottomSheetConfiguration {
   final bool isDismissible;
   final AnimationController? transitionAnimationController;
   final bool useRootNavigator;
-  final double? maxmiumHeight;
+  final double? maximumHeight;
+  final bool performSearchAfterOpen;
+  final Curve animationCurve;
+  final Duration animationDuration;
+  final bool animationEnable;
 
   const FormeBottomSheetConfiguration({
+    this.animationCurve = Curves.linear,
+    this.animationEnable = true,
+    this.animationDuration = const Duration(milliseconds: 150),
     this.backgroundColor,
     this.elevation,
     this.shape = const RoundedRectangleBorder(
@@ -26,7 +33,8 @@ class FormeBottomSheetConfiguration {
     this.isDismissible = true,
     this.isScrollControlled = true,
     this.useRootNavigator = false,
-    this.maxmiumHeight = 300,
+    this.maximumHeight = 300,
+    this.performSearchAfterOpen = false,
   });
 }
 
@@ -38,6 +46,8 @@ class FormeDialogConfiguration {
   final bool useRootNavigator;
   final Size Function(BuildContext context, MediaQueryData query)? sizeProvider;
   final FormeMaterialConfiguration materialConfiguration;
+
+  final bool performSearchAfterOpen;
 
   final double? closeButtonSize;
   final double? closeButtonRadius;
@@ -56,6 +66,23 @@ class FormeDialogConfiguration {
     this.closeButtonRadius,
     this.closeButtonIcon,
     this.closeButtonBackgroundColor,
+    this.performSearchAfterOpen = true,
+  });
+}
+
+class FormeBaseConfiguration {
+  final double? maximumHeight;
+  final FormeMaterialConfiguration materialConfiguration;
+  final Curve animationCurve;
+  final Duration animationDuration;
+  final bool animationEnable;
+
+  const FormeBaseConfiguration({
+    this.animationCurve = Curves.linear,
+    this.animationEnable = true,
+    this.animationDuration = const Duration(milliseconds: 150),
+    this.maximumHeight = 300,
+    this.materialConfiguration = const FormeMaterialConfiguration(),
   });
 }
 
@@ -74,10 +101,7 @@ class FormeMaterialConfiguration {
   const FormeMaterialConfiguration({
     this.borderOnForeground = true,
     this.clipBehavior = Clip.none,
-    this.shape = const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-          top: Radius.circular(10.0), bottom: Radius.circular(5.0)),
-    ),
+    this.shape,
     this.borderRadius,
     this.textStyle,
     this.shadowColor,
