@@ -1,34 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
+import 'package:forme_searchable/src/field/material/base_search_fields.dart';
 
-import '../../forme_searchable_field.dart';
+import '../../../forme_searchable.dart';
 import 'base_display_widget.dart';
 import 'base_field_content.dart';
 import 'pagination_bar.dart';
-import 'route_configuration.dart';
 
 enum Mode {
   bottomSheet,
   dialog,
 }
 
-typedef FormeSearchableDisplayWidgetBuilder<T extends Object> = Widget Function(
-    BuildContext context,
-    ValueChanged<T>? delete,
-    FocusNode focusNode,
-    FormeFieldStatus<List<T>> status);
-
 class FormeSearchableBaseRouteField<T extends Object>
     extends FormeSearchableField<T> {
   final AutocompleteOptionToString<T> displayStringForOption;
-  final FormeSearchableDisplayWidgetBuilder<T>? displayBuilder;
+  final WidgetBuilder? displayBuilder;
   final FormeSearchableOptionWidgetBuilder<T>? optionWidgetBuilder;
-  final FormeSearchablePaginationBarBuilder? paginationBarBuilder;
+  final WidgetBuilder? paginationBarBuilder;
   final WidgetBuilder? processingWidgetBuilder;
   final WidgetBuilder? emptyContentWidgetBuilder;
-  final FormeSearchablePaginationBarPosition paginationBarPosition;
   final FormePaginationConfiguration? defaultPaginationConfiguration;
-  final FormeSearchableSearchFieldsBuilder? searchFieldsBuilder;
+  final WidgetBuilder? searchFieldsBuilder;
   final FormeBottomSheetConfiguration bottomSheetConfiguration;
   final FormeDialogConfiguration dialogConfiguration;
   final FormeSearchableErrorWidgetBuilder? errorWidgetBuilder;
@@ -44,7 +37,6 @@ class FormeSearchableBaseRouteField<T extends Object>
     this.displayStringForOption = RawAutocomplete.defaultStringForOption,
     this.optionWidgetBuilder,
     this.paginationBarBuilder,
-    this.paginationBarPosition = FormeSearchablePaginationBarPosition.top,
     this.defaultPaginationConfiguration,
     this.searchFieldsBuilder,
     this.bottomSheetConfiguration = const FormeBottomSheetConfiguration(),
@@ -73,6 +65,9 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
   late final ValueNotifier<MediaQueryData?> _mediaQueryDataNotifier =
       FormeMountedValueNotifier(null);
 
+  bool get readOnly => status.readOnly;
+
+  final TextEditingController _controller = TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -81,6 +76,7 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
 
   @override
   void dispose() {
+    _controller.dispose();
     WidgetsBinding.instance!.removeObserver(this);
     _mediaQueryDataNotifier.dispose();
     super.dispose();
@@ -110,9 +106,6 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
             },
       child: widget.displayBuilder?.call(
             context,
-            delete,
-            focusNode,
-            status,
           ) ??
           BaseDisplayWidget<T>(
               status: status,
@@ -130,19 +123,43 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
     }
   }
 
+  Widget _createSearchFields() {
+    if (widget.searchFieldsBuilder != null) {
+      return widget.searchFieldsBuilder!.call(
+        context,
+      );
+    }
+    return BaseSearchFields<T>(decoration: widget.decoration);
+  }
+
+  Widget _createPaginationBar() {
+    if (widget.paginationBarBuilder != null) {
+      return widget.paginationBarBuilder!.call(
+        context,
+      );
+    }
+    return FormeSearchablePaginationBar<T>(
+      configuration: widget.defaultPaginationConfiguration ??
+          const FormePaginationConfiguration(),
+    );
+  }
+
   Widget _baseFieldContent({bool flexiable = false}) {
-    return BaseFieldContent<T>(
-      performSearchAfterInitState: widget.performSearchAfterOpen,
-      emptyContentWidgetBuilder: widget.emptyContentWidgetBuilder,
-      displayStringForOption: widget.displayStringForOption,
-      errorWidgetBuilder: widget.errorWidgetBuilder,
-      optionWidgetBuilder: widget.optionWidgetBuilder,
-      searchFieldsBuilder: widget.searchFieldsBuilder,
-      paginationBarPosition: widget.paginationBarPosition,
-      processingWidgetBuilder: widget.processingWidgetBuilder,
-      paginationBarBuilder: widget.paginationBarBuilder,
-      defaultPaginationConfiguration: widget.defaultPaginationConfiguration,
-      flexiable: flexiable,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _createSearchFields(),
+        _createPaginationBar(),
+        BaseFieldContent<T>(
+          emptyContentWidgetBuilder: widget.emptyContentWidgetBuilder,
+          displayStringForOption: widget.displayStringForOption,
+          errorWidgetBuilder: widget.errorWidgetBuilder,
+          optionWidgetBuilder: widget.optionWidgetBuilder,
+          processingWidgetBuilder: widget.processingWidgetBuilder,
+          flexiable: flexiable,
+        )
+      ],
     );
   }
 

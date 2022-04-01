@@ -18,6 +18,10 @@ mixin FormeSearchableListener<T extends Object> {
   /// in query
   void onQueryProcessing(FormeSearchCondition condition);
 
+  void onPageChangeStart(FormeSearchCondition condition);
+
+  void onConditionChangeStart(FormeSearchCondition condition);
+
   ///
   void onQuerySuccess(
       FormeSearchCondition condition, FormeSearchablePageResult<T> result);

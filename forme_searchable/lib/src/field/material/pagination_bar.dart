@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../forme_searchable_condition.dart';
+import '../../forme_searchable_field.dart';
+import '../../forme_searchable_result.dart';
+import '../../page_info.dart';
+
 class FormePaginationConfiguration {
   final Widget? prev;
   final Widget? next;
@@ -15,35 +20,40 @@ class FormePaginationConfiguration {
   });
 }
 
-class FormeSearchablePaginationBar extends StatefulWidget {
-  final ValueChanged<int>? onPageChanged;
+class FormeSearchablePaginationBar<T extends Object>
+    extends FormeSearchableField<T> {
+  /// build pagination bar
   final FormePaginationConfiguration configuration;
-  final int currentPage;
-  final int totalPage;
 
   const FormeSearchablePaginationBar({
     Key? key,
-    required this.onPageChanged,
-    required this.configuration,
-    required this.currentPage,
-    required this.totalPage,
+    this.configuration = const FormePaginationConfiguration(),
   }) : super(key: key);
-
   @override
-  State<StatefulWidget> createState() => _FormeSearchablePaginationBarState();
+  FormeSearchableFieldState<T> createState() =>
+      _FormeSearchablePaginationBarState<T>();
 }
 
-class _FormeSearchablePaginationBarState
-    extends State<FormeSearchablePaginationBar> {
-  final FocusNode _focusNode = FocusNode();
+class _FormeSearchablePaginationBarState<T extends Object>
+    extends FormeSearchableFieldState<T> {
   late final TextEditingController _controller;
 
+  bool get readOnly => status.readOnly;
+  final FocusNode _focusNode = FocusNode();
   late int _currentPage;
+
+  PageInfo? _pageInfo;
+
+  int get totalPage => _pageInfo?.totalPage ?? 1;
+
+  @override
+  FormeSearchablePaginationBar<T> get widget =>
+      super.widget as FormeSearchablePaginationBar<T>;
 
   @override
   void initState() {
     super.initState();
-    _currentPage = widget.currentPage;
+    _currentPage = _pageInfo?.currentPage ?? 1;
     _controller = TextEditingController(text: '$_currentPage');
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus) {
@@ -60,19 +70,81 @@ class _FormeSearchablePaginationBarState
   }
 
   @override
-  void didUpdateWidget(covariant FormeSearchablePaginationBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentPage != widget.currentPage) {
-      _currentPage = widget.currentPage;
-      _controller.text = '$_currentPage';
-    }
-  }
-
-  @override
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (totalPage <= 1) {
+      return const SizedBox.shrink();
+    }
+    return Row(
+      children: [
+        _prev(),
+        Expanded(
+          child: Center(
+            child: IntrinsicWidth(
+              child: TextFormField(
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.go,
+                focusNode: _focusNode,
+                controller: _controller,
+                readOnly: readOnly,
+                onFieldSubmitted:
+                    readOnly ? null : (value) => _submitInputPage(),
+                inputFormatters: <TextInputFormatter>[
+                  _TextInputFormatter(totalPage),
+                ],
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.only(right: -2),
+                  border: InputBorder.none,
+                  suffixIcon: const SizedBox.shrink(),
+                  suffixIconConstraints: const BoxConstraints.tightFor(),
+                  suffixText: '/$totalPage',
+                  suffixStyle: Theme.of(context).textTheme.subtitle1,
+                ),
+                textAlign: TextAlign.right,
+              ),
+            ),
+          ),
+        ),
+        _next(),
+      ],
+    );
+  }
+
+  @override
+  void onQuerySuccess(
+      FormeSearchCondition condition, FormeSearchablePageResult<T> result) {
+    super.onQuerySuccess(condition, result);
+    setState(() {
+      _pageInfo = PageInfo(condition.page, result.totalPage);
+    });
+  }
+
+  @override
+  void onQueryCancelled(FormeSearchCondition condition) {
+    super.onQueryCancelled(condition);
+    setState(() {
+      _pageInfo = null;
+    });
+  }
+
+  @override
+  void onConditionChangeStart(FormeSearchCondition condition) {
+    super.onConditionChangeStart(condition);
+    setState(() {
+      _pageInfo = null;
+    });
+  }
+
+  @override
+  void onReset() {
+    super.onReset();
+    _pageInfo = null;
   }
 
   void _submitInputPage() {
@@ -81,7 +153,7 @@ class _FormeSearchablePaginationBarState
     if (page == null) {
       _controller.text = '$_currentPage';
     } else {
-      if (page > widget.totalPage || page < 1) {
+      if (page > totalPage || page < 1) {
         _controller.text = '$_currentPage';
       } else {
         _goToPage(page);
@@ -90,7 +162,7 @@ class _FormeSearchablePaginationBarState
   }
 
   void _nextPage() {
-    if (_currentPage == widget.totalPage) {
+    if (_currentPage == totalPage) {
       return;
     }
     _goToPage(_currentPage + 1);
@@ -104,14 +176,19 @@ class _FormeSearchablePaginationBarState
   }
 
   void _goToPage(int page) {
-    _currentPage = page;
+    if (readOnly) {
+      return;
+    }
+    setState(() {
+      _currentPage = page;
+    });
     _controller.text = '$_currentPage';
-    widget.onPageChanged?.call(_currentPage);
+    goToPage(_currentPage);
   }
 
   Widget _prev() {
     final VoidCallback? onTap =
-        widget.onPageChanged == null || _currentPage == 1 ? null : _prevPage;
+        readOnly || _currentPage == 1 ? null : _prevPage;
     if (widget.configuration.prev == null) {
       return IconButton(
           onPressed: onTap,
@@ -126,9 +203,7 @@ class _FormeSearchablePaginationBarState
 
   Widget _next() {
     final VoidCallback? onTap =
-        widget.onPageChanged == null || _currentPage == widget.totalPage
-            ? null
-            : _nextPage;
+        readOnly || _currentPage == totalPage ? null : _nextPage;
     if (widget.configuration.next == null) {
       return IconButton(
           onPressed: onTap,
@@ -138,44 +213,6 @@ class _FormeSearchablePaginationBarState
     return InkWell(
       onTap: onTap,
       child: widget.configuration.prev,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _prev(),
-        Expanded(
-          child: Center(
-            child: IntrinsicWidth(
-              child: TextFormField(
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.go,
-                focusNode: _focusNode,
-                controller: _controller,
-                readOnly: widget.onPageChanged == null,
-                onFieldSubmitted: widget.onPageChanged == null
-                    ? null
-                    : (value) => _submitInputPage(),
-                inputFormatters: <TextInputFormatter>[
-                  _TextInputFormatter(widget.totalPage),
-                ],
-                decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.only(right: -2),
-                  border: InputBorder.none,
-                  suffixIcon: const SizedBox.shrink(),
-                  suffixIconConstraints: const BoxConstraints.tightFor(),
-                  suffixText: '/${widget.totalPage}',
-                  suffixStyle: Theme.of(context).textTheme.subtitle1,
-                ),
-                textAlign: TextAlign.right,
-              ),
-            ),
-          ),
-        ),
-        _next(),
-      ],
     );
   }
 }

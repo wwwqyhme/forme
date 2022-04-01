@@ -117,28 +117,27 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
     search(FormeSearchCondition(_condition?.condition ?? {}, page), false);
   }
 
-  void _cancel() {
-    cancelAllAsyncOperations();
-    _triggerListeners((listener) => listener.onQueryCancelled(_condition!));
-  }
-
-  void _processing() {
-    _triggerListeners((listener) => listener.onQueryProcessing(_condition!));
-  }
-
   void search(FormeSearchCondition condition, [bool debounce = true]) {
     if (!mounted) {
       return;
     }
+    final bool isOnlyPageChanged = condition.condition == _condition?.condition;
     _condition = condition;
+    if (isOnlyPageChanged) {
+      _triggerListeners((listener) => listener.onPageChangeStart(condition));
+    } else {
+      _triggerListeners(
+          (listener) => listener.onConditionChangeStart(condition));
+    }
     _timer?.cancel();
     final bool cancel =
         widget.queryFilter != null && !widget.queryFilter!.call(condition);
     if (cancel) {
-      _cancel();
+      cancelAllAsyncOperations();
+      _triggerListeners((listener) => listener.onQueryCancelled(_condition!));
       return;
     }
-    _processing();
+    _triggerListeners((listener) => listener.onQueryProcessing(_condition!));
     if (debounce) {
       _timer = Timer(widget.debounce, () {
         if (mounted) {

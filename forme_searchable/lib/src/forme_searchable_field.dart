@@ -67,6 +67,12 @@ abstract class FormeSearchableFieldState<T extends Object>
     setState(() {});
   }
 
+  @override
+  void onConditionChangeStart(FormeSearchCondition condition) {}
+
+  @override
+  void onPageChangeStart(FormeSearchCondition condition) {}
+
   void search(FormeSearchCondition condition, [bool debounce = true]) =>
       _controller?.state.search(condition, debounce);
 
@@ -96,7 +102,6 @@ abstract class FormeSearchableFieldState<T extends Object>
   @mustCallSuper
   void onQueryFail(
       FormeSearchCondition condition, Object error, StackTrace trace) {
-    debugPrintStack(stackTrace: trace, label: '$error');
     _isProcessing = false;
     _result = null;
     _error = error;
