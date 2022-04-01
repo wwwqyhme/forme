@@ -6,8 +6,10 @@ import '../../forme_searchable_field.dart';
 
 class BaseSearchFields<T extends Object> extends FormeSearchableField<T> {
   final InputDecoration? decoration;
+  final bool performSearchAfterInitState;
   const BaseSearchFields({
     this.decoration = const InputDecoration(),
+    this.performSearchAfterInitState = true,
     Key? key,
   }) : super(key: key);
   @override
@@ -25,6 +27,17 @@ class _BaseSearchFieldsState<T extends Object>
   final FormeKey formeKey = FormeKey();
   Map<String, Object?> get _condition =>
       formeKey.initialized ? formeKey.value : {};
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.performSearchAfterInitState) {
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        _search();
+      });
+    }
+  }
+
   @override
   void dispose() {
     cancel();

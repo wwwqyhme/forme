@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
-import 'package:forme_searchable/src/field/material/base_search_fields.dart';
 
 import '../../../forme_searchable.dart';
 import 'base_display_widget.dart';
 import 'base_field_content.dart';
-import 'pagination_bar.dart';
+import 'base_search_fields.dart';
+import 'base_pagination_bar.dart';
 
 enum Mode {
   bottomSheet,
@@ -26,6 +26,8 @@ class FormeSearchableBaseRouteField<T extends Object>
   final FormeDialogConfiguration dialogConfiguration;
   final FormeSearchableErrorWidgetBuilder? errorWidgetBuilder;
   final InputDecoration? decoration;
+
+  /// only worked when use default search fields
   final bool performSearchAfterOpen;
 
   final Mode mode;
@@ -123,34 +125,25 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
     }
   }
 
-  Widget _createSearchFields() {
-    if (widget.searchFieldsBuilder != null) {
-      return widget.searchFieldsBuilder!.call(
-        context,
-      );
-    }
-    return BaseSearchFields<T>(decoration: widget.decoration);
-  }
-
-  Widget _createPaginationBar() {
-    if (widget.paginationBarBuilder != null) {
-      return widget.paginationBarBuilder!.call(
-        context,
-      );
-    }
-    return FormeSearchablePaginationBar<T>(
-      configuration: widget.defaultPaginationConfiguration ??
-          const FormePaginationConfiguration(),
-    );
-  }
-
-  Widget _baseFieldContent({bool flexiable = false}) {
+  Widget _build({bool flexiable = false}) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _createSearchFields(),
-        _createPaginationBar(),
+        widget.searchFieldsBuilder?.call(
+              context,
+            ) ??
+            BaseSearchFields<T>(
+              decoration: widget.decoration,
+              performSearchAfterInitState: widget.performSearchAfterOpen,
+            ),
+        widget.paginationBarBuilder?.call(
+              context,
+            ) ??
+            BasePaginationBar<T>(
+              configuration: widget.defaultPaginationConfiguration ??
+                  const FormePaginationConfiguration(),
+            ),
         BaseFieldContent<T>(
           emptyContentWidgetBuilder: widget.emptyContentWidgetBuilder,
           displayStringForOption: widget.displayStringForOption,
@@ -197,7 +190,6 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
             final Size size =
                 widget.dialogConfiguration.sizeProvider?.call(context, data) ??
                     data.size;
-
             return Center(
               child: SizedBox(
                 width: size.width,
@@ -229,7 +221,7 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
                                                 .closeButtonRadius ??
                                             20) *
                                         2),
-                            child: _baseFieldContent(flexiable: true),
+                            child: _build(flexiable: true),
                           ),
                           Positioned.fill(
                             bottom: 5,
@@ -298,7 +290,7 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
                     ),
                     child: AnimatedSize(
                       duration: const Duration(milliseconds: 150),
-                      child: _baseFieldContent(),
+                      child: _build(),
                     ),
                   ),
                 ));

@@ -20,12 +20,11 @@ class FormePaginationConfiguration {
   });
 }
 
-class FormeSearchablePaginationBar<T extends Object>
-    extends FormeSearchableField<T> {
+class BasePaginationBar<T extends Object> extends FormeSearchableField<T> {
   /// build pagination bar
   final FormePaginationConfiguration configuration;
 
-  const FormeSearchablePaginationBar({
+  const BasePaginationBar({
     Key? key,
     this.configuration = const FormePaginationConfiguration(),
   }) : super(key: key);
@@ -47,8 +46,7 @@ class _FormeSearchablePaginationBarState<T extends Object>
   int get totalPage => _pageInfo?.totalPage ?? 1;
 
   @override
-  FormeSearchablePaginationBar<T> get widget =>
-      super.widget as FormeSearchablePaginationBar<T>;
+  BasePaginationBar<T> get widget => super.widget as BasePaginationBar<T>;
 
   @override
   void initState() {

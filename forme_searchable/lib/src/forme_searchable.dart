@@ -5,7 +5,7 @@ import 'package:forme/forme.dart';
 
 import 'field/material/base_field_content.dart';
 import 'field/material/base_route_field.dart';
-import 'field/material/pagination_bar.dart';
+import 'field/material/base_pagination_bar.dart';
 import 'field/material/route_configuration.dart';
 import 'forme_searchable_condition.dart';
 import 'forme_searchable_state.dart';
