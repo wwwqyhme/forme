@@ -61,7 +61,12 @@ class FormeDialogConfiguration {
     this.useSafeArea = true,
     this.useRootNavigator = true,
     this.sizeProvider,
-    this.materialConfiguration = const FormeMaterialConfiguration(),
+    this.materialConfiguration = const FormeMaterialConfiguration(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+            top: Radius.circular(10.0), bottom: Radius.circular(5.0)),
+      ),
+    ),
     this.closeButtonSize,
     this.closeButtonRadius,
     this.closeButtonIcon,

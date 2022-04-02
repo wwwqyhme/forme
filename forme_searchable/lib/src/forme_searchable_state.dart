@@ -32,14 +32,16 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
   @override
   void didChange(List<T> newValue) {
     if (widget.maximum != null && newValue.length > widget.maximum!) {
+      List<T> finalValue;
       if (widget.onMaximumExceed == null) {
-        return;
-      }
-      final List<T> finalValue =
-          widget.onMaximumExceed!(List.of(newValue), widget.maximum!);
-      if (finalValue.length > widget.maximum!) {
-        throw Exception(
-            'length of new value which returned by onMaximumExceed should smaller or equals than maximum');
+        finalValue = newValue.sublist(newValue.length - widget.maximum!);
+      } else {
+        finalValue =
+            widget.onMaximumExceed!(List.of(newValue), widget.maximum!);
+        if (finalValue.length > widget.maximum!) {
+          throw Exception(
+              'length of new value which returned by onMaximumExceed should smaller or equals than maximum');
+        }
       }
       super.didChange(finalValue);
       return;

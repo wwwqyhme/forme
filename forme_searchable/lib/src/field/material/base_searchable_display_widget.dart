@@ -79,8 +79,23 @@ class _BaseSearchableDisplayWidgetState<T extends Object>
           ),
         ),
     );
+
     final FormeFieldDecorator<List<T>> decorator = FormeInputDecoratorBuilder(
-        decoration: widget.decoration,
+        decoration: widget.decoration?.copyWith(
+          suffixIcon: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _controller,
+              builder: (context, value, child) {
+                return value.text.isEmpty
+                    ? const SizedBox.shrink()
+                    : IconButton(
+                        onPressed: () {
+                          _controller.text = '';
+                          _search('');
+                        },
+                        icon: const Icon(Icons.clear),
+                      );
+              }),
+        ),
         emptyChecker: (value, state) {
           return state.value.isEmpty && _controller.text.isEmpty;
         });
@@ -88,7 +103,14 @@ class _BaseSearchableDisplayWidgetState<T extends Object>
       onTap: () {
         focusNode.requestFocus();
       },
-      child: decorator.build(context, wrap),
+      child: decorator.build(
+          context,
+          Padding(
+            padding: status.value.isEmpty
+                ? EdgeInsets.zero
+                : const EdgeInsets.only(top: 5),
+            child: wrap,
+          )),
     );
   }
 

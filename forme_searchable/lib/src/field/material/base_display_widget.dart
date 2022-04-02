@@ -7,6 +7,7 @@ class BaseDisplayWidget<T extends Object> extends StatelessWidget {
   final FocusNode focusNode;
   final AutocompleteOptionToString<T> displayStringForOption;
   final FormeSearchableStatus<T> status;
+  final InputDecoration? decoration;
 
   const BaseDisplayWidget({
     Key? key,
@@ -14,6 +15,7 @@ class BaseDisplayWidget<T extends Object> extends StatelessWidget {
     required this.delete,
     required this.focusNode,
     required this.displayStringForOption,
+    this.decoration,
   }) : super(key: key);
 
   @override
@@ -28,9 +30,10 @@ class BaseDisplayWidget<T extends Object> extends StatelessWidget {
       }).toList(),
     );
     final FormeFieldDecorator<List<T>> decorator = FormeInputDecoratorBuilder(
-        decoration: InputDecoration(
-            errorText: status.validation.error,
-            suffixIcon: const Icon(Icons.search)),
+        decoration: decoration ??
+            InputDecoration(
+                errorText: status.validation.error,
+                suffixIcon: const Icon(Icons.search)),
         maxLength: status.maximum,
         counter: (value) => value.length,
         emptyChecker: (value, state) {

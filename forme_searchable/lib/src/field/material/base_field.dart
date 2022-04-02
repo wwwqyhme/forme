@@ -14,7 +14,7 @@ enum Mode {
   base,
 }
 
-class FormeSearchableBaseRouteField<T extends Object>
+class FormeSearchableBaseField<T extends Object>
     extends FormeSearchableField<T> {
   final AutocompleteOptionToString<T> displayStringForOption;
   final WidgetBuilder? displayBuilder;
@@ -26,13 +26,14 @@ class FormeSearchableBaseRouteField<T extends Object>
   final WidgetBuilder? searchFieldsBuilder;
   final FormeBottomSheetConfiguration bottomSheetConfiguration;
   final FormeDialogConfiguration dialogConfiguration;
+  final FormeBaseConfiguration baseConfiguration;
   final FormeSearchableErrorWidgetBuilder? errorWidgetBuilder;
   final InputDecoration? decoration;
-  final FormeBaseConfiguration baseConfiguration;
+  final InputDecoration? searchFieldDecoration;
 
   final Mode mode;
 
-  const FormeSearchableBaseRouteField({
+  const FormeSearchableBaseField({
     Key? key,
     this.displayBuilder,
     this.emptyContentWidgetBuilder,
@@ -46,20 +47,21 @@ class FormeSearchableBaseRouteField<T extends Object>
     required this.mode,
     this.dialogConfiguration = const FormeDialogConfiguration(),
     this.errorWidgetBuilder,
-    this.decoration,
+    this.decoration = const InputDecoration(),
     this.baseConfiguration = const FormeBaseConfiguration(),
+    this.searchFieldDecoration = const InputDecoration(),
   }) : super(key: key);
 
   @override
   FormeSearchableFieldState<T> createState() =>
-      _FormeSearchableBaseRouteFieldState<T>();
+      _FormeSearchableBaseFieldState<T>();
 }
 
-class _FormeSearchableBaseRouteFieldState<T extends Object>
+class _FormeSearchableBaseFieldState<T extends Object>
     extends FormeSearchableFieldState<T> with WidgetsBindingObserver {
   @override
-  FormeSearchableBaseRouteField<T> get widget =>
-      super.widget as FormeSearchableBaseRouteField<T>;
+  FormeSearchableBaseField<T> get widget =>
+      super.widget as FormeSearchableBaseField<T>;
 
   late final ValueNotifier<MediaQueryData?> _mediaQueryDataNotifier =
       FormeMountedValueNotifier(null);
@@ -167,6 +169,7 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
                 displayStringForOption: widget.displayStringForOption,
               )
             : BaseDisplayWidget<T>(
+                decoration: widget.decoration,
                 status: status,
                 delete: status.readOnly ? null : _delete,
                 focusNode: focusNode,
@@ -207,7 +210,7 @@ class _FormeSearchableBaseRouteFieldState<T extends Object>
                 context,
               ) ??
               BaseSearchFields<T>(
-                decoration: widget.decoration,
+                decoration: widget.searchFieldDecoration,
                 performSearchAfterInitState: performSearchAfterOpen,
               ),
         widget.paginationBarBuilder?.call(
