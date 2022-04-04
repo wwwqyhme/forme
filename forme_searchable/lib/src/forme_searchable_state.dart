@@ -65,10 +65,15 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
   void reset() {
     super.reset();
     cancelAllAsyncOperations();
+    resetQueryStatus();
+    _triggerListeners((listener) => listener.onReset());
+  }
+
+  void resetQueryStatus() {
+    _isProcessing = false;
     _result = null;
     _error = null;
     _stackTrace = null;
-    _triggerListeners((listener) => listener.onReset());
   }
 
   @override

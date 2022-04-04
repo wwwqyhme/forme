@@ -39,6 +39,11 @@ class BaseDisplayWidget<T extends Object> extends StatelessWidget {
         emptyChecker: (value, state) {
           return state.value.isEmpty;
         });
-    return decorator.build(context, wrap);
+    return decorator.build(
+        context,
+        Focus(
+          focusNode: focusNode,
+          child: wrap,
+        ));
   }
 }

@@ -20,6 +20,7 @@ class FormeSearchableBaseField<T extends Object>
   final WidgetBuilder? displayBuilder;
   final FormeSearchableOptionWidgetBuilder<T>? optionWidgetBuilder;
   final WidgetBuilder? paginationBarBuilder;
+  final WidgetBuilder? contentBuilder;
   final WidgetBuilder? processingWidgetBuilder;
   final WidgetBuilder? emptyContentWidgetBuilder;
   final FormePaginationConfiguration? defaultPaginationConfiguration;
@@ -50,6 +51,7 @@ class FormeSearchableBaseField<T extends Object>
     this.decoration = const InputDecoration(),
     this.baseConfiguration = const FormeBaseConfiguration(),
     this.searchFieldDecoration = const InputDecoration(),
+    this.contentBuilder,
   }) : super(key: key);
 
   @override
@@ -72,13 +74,43 @@ class _FormeSearchableBaseFieldState<T extends Object>
   final ValueNotifier<bool> _baseContentEnableNotifier =
       FormeMountedValueNotifier(false);
 
+  Route? _route;
+
+  bool get isDialogRoute => _route != null && _route is DialogRoute;
+  bool get isBottomSheetRoute => _route != null && _route is PopupRoute;
+
+  @override
+  void initState() {
+    super.initState();
+    _baseContentEnableNotifier.addListener(() {
+      if (mounted && !_baseContentEnableNotifier.value) {
+        resetQueryStatus();
+      }
+    });
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance!.removeObserver(this);
     _controller.dispose();
     _baseContentEnableNotifier.dispose();
     _mediaQueryDataNotifier.dispose();
+    _closeRoute();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant FormeSearchableField<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.mode == Mode.base) {
+      _closeRoute();
+    } else {
+      if ((widget.mode == Mode.bottomSheet && isDialogRoute) ||
+          (widget.mode == Mode.dialog && isBottomSheetRoute)) {
+        _closeRoute();
+      }
+      _baseContentEnableNotifier.value = false;
+    }
   }
 
   @override
@@ -138,9 +170,11 @@ class _FormeSearchableBaseFieldState<T extends Object>
           : () {
               switch (widget.mode) {
                 case Mode.bottomSheet:
+                  focusNode.requestFocus();
                   _showModalBottomSheet();
                   break;
                 case Mode.dialog:
+                  focusNode.requestFocus();
                   _showDialog();
                   break;
                 case Mode.base:
@@ -220,14 +254,15 @@ class _FormeSearchableBaseFieldState<T extends Object>
               configuration: widget.defaultPaginationConfiguration ??
                   const FormePaginationConfiguration(),
             ),
-        BaseFieldContent<T>(
-          emptyContentWidgetBuilder: widget.emptyContentWidgetBuilder,
-          displayStringForOption: widget.displayStringForOption,
-          errorWidgetBuilder: widget.errorWidgetBuilder,
-          optionWidgetBuilder: widget.optionWidgetBuilder,
-          processingWidgetBuilder: widget.processingWidgetBuilder,
-          flexiable: flexiable,
-        ),
+        widget.contentBuilder?.call(context) ??
+            BaseFieldContent<T>(
+              emptyContentWidgetBuilder: widget.emptyContentWidgetBuilder,
+              displayStringForOption: widget.displayStringForOption,
+              errorWidgetBuilder: widget.errorWidgetBuilder,
+              optionWidgetBuilder: widget.optionWidgetBuilder,
+              processingWidgetBuilder: widget.processingWidgetBuilder,
+              flexiable: flexiable,
+            ),
       ],
     );
     if (animationEnable) {
@@ -335,7 +370,15 @@ class _FormeSearchableBaseFieldState<T extends Object>
           },
         );
       },
-    );
+    ).then((value) {
+      if (mounted) {
+        resetQueryStatus();
+      }
+    });
+    Navigator.popUntil(context, (route) {
+      _route = route;
+      return true;
+    });
   }
 
   void _showModalBottomSheet() {
@@ -370,7 +413,15 @@ class _FormeSearchableBaseFieldState<T extends Object>
                   ),
                 );
               });
-        });
+        }).then((value) {
+      if (mounted) {
+        resetQueryStatus();
+      }
+    });
+    Navigator.popUntil(context, (route) {
+      _route = route;
+      return true;
+    });
   }
 
   Widget _buildMaterial(
@@ -388,5 +439,17 @@ class _FormeSearchableBaseFieldState<T extends Object>
       elevation: configuration.elevation,
       child: child,
     );
+  }
+
+  void _closeRoute() {
+    if (_route != null && _route!.isActive) {
+      Navigator.popUntil(context, (route) {
+        if (route == _route) {
+          Navigator.pop(context);
+          return true;
+        }
+        return false;
+      });
+    }
   }
 }

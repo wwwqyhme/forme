@@ -136,6 +136,7 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
     FormeSearchableErrorWidgetBuilder? errorWidgetBuilder,
     InputDecoration? decoration = const InputDecoration(),
     InputDecoration? searchFieldDecoration = const InputDecoration(),
+    WidgetBuilder? contentBuilder,
   }) {
     return FormeSearchable<T>.custom(
       readOnly: readOnly,
@@ -160,6 +161,7 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
       debounce: debounce ?? const Duration(milliseconds: 500),
       builder: (context) {
         return FormeSearchableBaseField<T>(
+          contentBuilder: contentBuilder,
           searchFieldDecoration: searchFieldDecoration,
           emptyContentWidgetBuilder: emptyContentWidgetBuilder,
           decoration: decoration,
@@ -219,6 +221,7 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
     FormeSearchableErrorWidgetBuilder? errorWidgetBuilder,
     InputDecoration? decoration = const InputDecoration(),
     InputDecoration? searchFieldDecoration = const InputDecoration(),
+    WidgetBuilder? contentBuilder,
   }) {
     return FormeSearchable<T>.custom(
       readOnly: readOnly,
@@ -243,6 +246,7 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
       debounce: debounce ?? const Duration(milliseconds: 500),
       builder: (context) {
         return FormeSearchableBaseField<T>(
+          contentBuilder: contentBuilder,
           searchFieldDecoration: searchFieldDecoration,
           emptyContentWidgetBuilder: emptyContentWidgetBuilder,
           decoration: decoration,
@@ -301,6 +305,7 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
     FormeSearchableErrorWidgetBuilder? errorWidgetBuilder,
     InputDecoration? decoration = const InputDecoration(),
     FormeBaseConfiguration? baseConfiguration,
+    WidgetBuilder? contentBuilder,
   }) {
     return FormeSearchable<T>.custom(
       readOnly: readOnly,
@@ -325,6 +330,7 @@ class FormeSearchable<T extends Object> extends FormeField<List<T>> {
       debounce: debounce ?? const Duration(milliseconds: 500),
       builder: (context) {
         return FormeSearchableBaseField<T>(
+          contentBuilder: contentBuilder,
           emptyContentWidgetBuilder: emptyContentWidgetBuilder,
           decoration: decoration,
           searchFieldsBuilder: searchFieldsBuilder,

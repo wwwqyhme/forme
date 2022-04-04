@@ -73,6 +73,8 @@ abstract class FormeSearchableFieldState<T extends Object>
     _controller?.state.cancel();
   }
 
+  void resetQueryStatus() => _controller!.state.resetQueryStatus();
+
   @override
   @mustCallSuper
   void onQueryCancelled(FormeSearchCondition condition) {}
