@@ -28,14 +28,15 @@ Widget forme = Forme(
 | --- | --- | --- | --- |
 | key | false | `FormeKey` | a global key, also used to control form |
 | child | true | `Widget` | form content widget|
-| onFieldStatusChanged | false | `FormeFieldStatusChanged` | listen form field's value|read-only|focus|validation|enabled change |
-| initialValue | false | `Map<String,dynamic>` | initialValue , **will override FormField's initialValue** |
+| onFieldStatusChanged | false | `FormeFieldStatusChanged` | listen form field's status change |
+| initialValue | false | `Map<String,Object?>` | initialValue , **will override FormField's initialValue** |
 | onWillPop | false | `WillPopCallback` | Signature for a callback that verifies that it's OK to call Navigator.pop |
 | quietlyValidate | false | `bool` | if this attribute is true , will not display default error text|
 | autovalidateMode| false | `AutovalidateMode` | auto validate form mode |
 | autovalidateByOrder | false | `bool` | whether auto validate form by order |
-| onFieldsRegistered | false | function | listen registered fields  |
-| onFieldsUnregistered | false | function | listen unregistered fields |
+| onFieldsRegistered | false | `function` | listen registered fields  |
+| onFieldsUnregistered | false | `function` | listen unregistered fields |
+| onInitialed | false | `function` | used register visitors |
 
 
 ## FormeField
@@ -45,43 +46,47 @@ Widget forme = Forme(
 | Attribute |  Required  | Type | Description  |
 | --- | --- | --- | --- |
 | name | true | `String` | field's id,**should be unique in form** |
-| builder | true | `FieldContentBuilder` | build field content|
 | readOnly | false | `bool` | whether field should be readOnly,default is `false` |
-| enabled | false | `bool` | whether field is enabled , default is `true` |
+| builder | true | `FormeFieldBuilder` | build field content|
+| enabled | false | `function` | used to compare field's value |
+| comparator | false | `bool` | whether field is enabled , default is `true` |
 | quietlyValidate | true | `bool` | whether validate quietly |
+| initialValue | true | `T` | default value of field , will overwritten by `Forme` initialValue |
 | asyncValidatorDebounce | false | `Duration` | async validate debounce , default is 500ms |
 | autovalidateMode | false | `AutovalidateMode` | autovalidate mode |
 | onStatusChanged | false | `FormeFieldStatusChanged` | listen value|read-only|focus|validation|enabled change |
-| onInitialed | false | `FormeFieldInitialed` | triggered when field initialed |
+| onInitialed | false | `FormeFieldInitialed` | used to register visitors |
 | onSaved | false | `FormeFieldSetter` | triggered when form saved |
 | validator | false | `FormeValidator` | sync validator |
 | asyncValidator | false | `FormeAsyncValidator` | async validator |
 | decorator | false | `FormeFieldDecorator` | used to decorator a field |
-| order | false | int | order of field |
-| requestFocusOnUserInteraction | false | bool | whether request focus when field value changed by user interaction |
+| order | false |  `int` | order of field |
+| requestFocusOnUserInteraction | false | `bool` | whether request focus when field value changed by user interaction |
 | registrable | false | `bool` | whether this field should be registered to Forme |
+| valueUpdater | false | `function` | used to update value in `didUpdateWidget` |
+| validationFilter | false | `function` | used to determine whether perform a validation or not |
 
-## async validate
 
-![https://raw.githubusercontent.com/wwwqyhme/wwwqyhme.github.io/main/forme3/async_validation.gif](https://raw.githubusercontent.com/wwwqyhme/wwwqyhme.github.io/main/forme3/async_validation.gif)
+## Validation
+
+### Async Validation
 
 async validator is supported after Forme 2.5.0 , you can specific an `asyncValidator` on `FormeField` , the unique difference
 between `validator` and `asyncValidator` is `asyncValidator` return a `Future<String>` and `validator` return a `String`
 
-### when to perform an asyncValidator
+#### when to perform an async validation
 
-if `FormeField.autovalidateMode` is `AutovalidateMode.disabled` , asyncValidator will never be performed unless you call `validate` from `FormeFieldController` manually.
+if `FormeField.autovalidateMode` is `AutovalidateMode.disabled` , asyncValidator will never be performed unless you call `validate` on `FormeFieldState` manually.
 
 if you specific both `validator` and `asyncValidator` , `asyncValidator` will only be performed after `validator` return null.
 
-**after successful performed an asyncValidator , asyncValidator will not performed any more until field's value changed**
+if `validationFilter` is specified and not passed. `asyncValidator` will not be performed
 
-### debounce
+#### debounce
 
-you can specific a debounce on `FormeField` , **debounce will not worked when you manually call `validate` on `FormeFieldController`**
+you can specific a debounce on `FormeField` , **debounce will not worked when you manually call `validate` on `FormeFieldState`**
 
-
-### whether validation itself is valid
+#### whether validation itself is valid
 
 in some cases,when an async validation is performing , another validation on same field is performed,in this case ,previous validation is invalid , so if you 
 want to update UI before return validation result in async validator , you need to validate it first,eg:
@@ -100,7 +105,7 @@ asyncValidator:(field,value,isValid){
 }
 ```
 
-## validates
+### FormeValidates
 
 you can use `FormeValidates` to simplify your validators
 
@@ -126,33 +131,35 @@ you can use `FormeValidates` to simplify your validators
 
 when you use validators from `FormeValidates` , you must specific at least one errorText , otherwise errorText is an empty string
 
-## FormeKey|FormeState Methods
+## Methods
 
-### whether form has a name field
+### FormeKey|FormeState
+
+#### whether form has a name field
 
 ``` Dart
 bool hasField = formeKey.hasField(String name);
 ```
 
-### get field by name
+#### get field by name
 
 ``` Dart
 T field = formeKey.field<T extends FormeFieldState>(String name);
 ```
 
-### get form data
+#### get form value
 
 ``` Dart
-Map<String, dynamic> data = formeKey.value;
+Map<String, Object?> data = formeKey.value;
 ```
 
-### set form data
+#### set form value
 
 ``` Dart
-formeKey.data = Map<String,dynamic> data;
+formeKey.value = Map<String,Object?> value;
 ```
 
-### validate
+#### validate
 
 you can use `FormeValidateSnapshot.isValueChanged` to check whether form value is changed duration this validation , 
 if is changed , typically means this validation is invalid , you should not submit your form even though validation is passed
@@ -166,123 +173,139 @@ Future<FormeValidateSnapshot> future = formKey.validate({
 });
 ```
 
-### get validation
+#### get validation
 
 ``` Dart
 FormeValidation validation = formKey.validation;
 ```
 
-### reset form
+#### reset form
 
 ``` Dart
 formeKey.reset();
 ```
 
-### save form
+#### save form
 
 ``` Dart
 formeKey.save();
 ```
 
-### whether validate is quietly
+#### whether validate is quietly
 
 ``` Dart
 bool quietlyValidate = formKey.quietlyValidate;
 ```
 
-### set quietlyValidate
+#### is value changed after initialed
 
 ``` Dart
-formeKey.quieltyValidate = bool quietlyValidate;
+bool isValueChanged = formeKey.isValueChanged
 ```
 
-### is value changed after initialed
-
-``` Dart
-bool isChanged = formeKey.isValueChanged
-```
-
-### get all fields (2.5.2)
+#### get all fields
 
 ``` Dart
 List<FormeFieldState> fields = formeKey.fields;
 ```
 
-## Forme Field Methods
+#### add visitor
 
-### get field's name
+``` Dart
+formeKey.addVisitor(FormeVisitor visitor);
+```
+
+#### remove visitor
+
+``` Dart
+formeKey.removeVisitor(FormeVisitor visitor);
+```
+
+#### rebuild form
+
+rebuild all widgets  in `Forme`
+
+``` Dart
+formeKey.rebuildForm();
+```
+
+### FormeFieldState
+
+#### get field's name
 
 ``` Dart
 String name = field.name
 ```
 
-### whether current field is readOnly
+#### whether current field is readOnly
 
 ``` Dart
 bool readOnly = field.readOnly;
 ```
 
-### set readOnly on field
+#### set readOnly on field
 
 ``` Dart
 field.readOnly = bool readOnly;
 ```
 
-### whether current field is enabled
+#### whether current field is enabled
 
 ``` Dart
 bool enabled = field.enabled;
 ```
 
-### set enabled on field
+#### set enabled on field
 
 ``` Dart
 field.enabled = bool enabled;
 ```
 
-### has focus node
+#### has focus node
 
 ``` Dart
 bool hasFocusNode = field.hasFocusNode;
 ```
 
-### get or create a focusNode
+#### get or create a focusNode
+
+if focusNode is not used to build , check `hasFocusNode` first to avoid create unnecessary FocusNode
 
 ``` Dart
 FocusNode focusNode = field.focusNode;
 ```
 
-### get value
+#### get value
 
 ``` Dart
 T value = field.value;
 ```
 
-### set value
+#### set value
 
 ``` Dart
 field.value = T data;
 ```
 
-### reset field
+#### reset field
 
 ``` Dart
 field.reset();
 ```
 
-### validate field
+#### validate
 
 ``` Dart
 Future<FormeFieldValidateSnapshot> future = field.validate({bool quietly = false});
 ```
 
-### get validation
+#### get validation
 
 ``` Dart
 FormeFieldValidation validation = field.validation;
 ```
 
-### get oldValue
+#### get oldValue
 
 if value changed , you can use this method to get previous value
 
@@ -290,22 +313,76 @@ if value changed , you can use this method to get previous value
 T? value = field.oldValue;
 ```
 
-### is value changed
+#### is value changed
 
 ``` Dart
-bool isChanged = field.isValueChanged
+bool isValueChanged = field.isValueChanged
 ```
 
-### get generic type
+#### get generic type
 
 ``` Dart
 Type type = field.type;
 ```
 
-### whether field value is nullable 
+#### whether field value is nullable 
 
 ``` Dart
 bool isNullable = field.isNullable;
+```
+
+#### get FormeState
+
+``` Dart
+FormeState? form = field.form;
+```
+
+#### get status
+
+``` Dart
+FormeFieldStatus<T> get status = field.status;
+```
+
+#### is custom validation
+
+whether current validation is set via `errorText`
+
+``` Dart
+bool isCustomValidation = field.isCustomValidation;
+```
+
+#### get error text
+
+typically used in display.
+
+if FormeField.quietlyValidate or Forme.quietlyValidate is true , you'll always get null 
+
+``` Dart
+String? errorText = field.errorText;
+```
+
+#### set error text
+
+if `errorText` is null , reset validation.
+
+field will rebuild after this method called. if field has validators , a new validation maybe performed , in this case ,custom validation will be overwritten by new validation. use FormeField.validationFilter to avoid this
+
+**will not worked on disabled fields**
+
+``` Dart
+field.errorText = 'custom error';
+```
+
+#### add visitor
+
+``` Dart
+field.addVisitor(FormeFieldVisitor visitor);
+```
+
+#### remove visitor
+
+``` Dart
+field.removeVisitor(FormeFieldVisitor visitor);
 ```
 
 ## FocusNode
@@ -318,9 +395,19 @@ FocusNode will  be auto created when needed.
 if you want to override default focusNode , you can extends `FormeFieldState` and use `set focusNode` method to do that,
 in this case , you must dispose focusNode by yourself
 
-## listener widgets
+### get focusNode
 
-listener widgets used to build your widgets which depends on status of FormeField or form value , you must used them inside Forme or FormeField
+``` Dart
+final String name = fieldName;
+final FormeFieldState field = formeKey.field(name);
+if(field.hasFocusNode) {///avoid to create uncessary focusnode
+    final FocusNode focusNode = field.focusNode;
+}
+```
+
+## Listeners
+
+listeners is helpful when you  build  widgets which depends on status of FormeField or Forme , you must used them inside in `Forme` or `FormeField`
 
 ### FormeFieldStatusListener
 
@@ -332,7 +419,7 @@ eg:
 Forme(
     child:Column(children:[
         FormeFieldStatusListener(
-            filter:(status) => status.isValueChanged,
+            filter:(status) => status.isValueChanged,/// if you only want to  rebuild when value changed
             name:'name',
             builder:(context,status,child){
                 return Text('current value:${status.value}')
@@ -445,7 +532,7 @@ FormeField<String>(
     builder: (FormeFieldState<String> state) {
         return TextButton(
         onPressed: () {
-            state.didChange('newValue');
+           state.readOnly? null: state.didChange('newValue');
         },
         child: Text(state.value),
         );

@@ -709,7 +709,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   ///
   /// see  [FormeFieldState.isCustomValidation]
   ///
-  /// see  [FormeField.validateFilter]
+  /// see  [FormeField.validationFilter]
   set errorText(String? errorText) {
     if (!enabled) {
       return;
