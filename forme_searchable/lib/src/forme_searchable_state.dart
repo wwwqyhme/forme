@@ -64,16 +64,17 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
   @override
   void reset() {
     super.reset();
-    cancelAllAsyncOperations();
     resetQueryStatus();
     _triggerListeners((listener) => listener.onReset());
   }
 
   void resetQueryStatus() {
+    cancelAllAsyncOperations();
     _isProcessing = false;
     _result = null;
     _error = null;
     _stackTrace = null;
+    _condition = null;
   }
 
   @override
@@ -86,8 +87,9 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
       _stackTrace = null;
       _result = result;
       _isProcessing = false;
+      final FormeSearchCondition condition = _condition!;
       _triggerListeners(
-          (listener) => listener.onQuerySuccess(_condition!, result));
+          (listener) => listener.onQuerySuccess(condition, result));
     }
   }
 
@@ -98,8 +100,9 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
       _stackTrace = stackTrace;
       _result = null;
       _isProcessing = false;
+      final FormeSearchCondition condition = _condition!;
       _triggerListeners(
-          (listener) => listener.onQueryFail(_condition!, error, stackTrace));
+          (listener) => listener.onQueryFail(condition, error, stackTrace));
     }
   }
 
@@ -145,7 +148,7 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
     if (cancel) {
       cancelAllAsyncOperations();
       _isProcessing = false;
-      _triggerListeners((listener) => listener.onQueryCancelled(_condition!));
+      _triggerListeners((listener) => listener.onQueryCancelled(condition));
       return;
     }
     if (isOnlyPageChanged) {
@@ -155,15 +158,15 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
           (listener) => listener.onConditionChangeStart(condition));
     }
     _isProcessing = true;
-    _triggerListeners((listener) => listener.onQueryProcessing(_condition!));
+    _triggerListeners((listener) => listener.onQueryProcessing(condition));
     if (debounce) {
       _timer = Timer(widget.debounce, () {
         if (mounted) {
-          perform(widget.query(_condition!));
+          perform(widget.query(condition));
         }
       });
     } else {
-      perform(widget.query(_condition!));
+      perform(widget.query(condition));
     }
   }
 }

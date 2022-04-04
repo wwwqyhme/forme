@@ -91,6 +91,22 @@ class FormeBaseConfiguration {
   });
 }
 
+class FormeOverlayConfiguration {
+  final double? maximumHeight;
+  final FormeMaterialConfiguration materialConfiguration;
+  final Curve animationCurve;
+  final Duration animationDuration;
+  final bool animationEnable;
+
+  const FormeOverlayConfiguration({
+    this.animationCurve = Curves.linear,
+    this.animationEnable = true,
+    this.animationDuration = const Duration(milliseconds: 150),
+    this.maximumHeight = 300,
+    this.materialConfiguration = const FormeMaterialConfiguration(),
+  });
+}
+
 class FormeMaterialConfiguration {
   final MaterialType type;
   final double elevation;

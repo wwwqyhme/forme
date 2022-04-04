@@ -12,6 +12,7 @@ enum Mode {
   bottomSheet,
   dialog,
   base,
+  overlay,
 }
 
 class FormeSearchableBaseField<T extends Object>
@@ -26,6 +27,7 @@ class FormeSearchableBaseField<T extends Object>
   final FormePaginationConfiguration? defaultPaginationConfiguration;
   final WidgetBuilder? searchFieldsBuilder;
   final FormeBottomSheetConfiguration bottomSheetConfiguration;
+  final FormeOverlayConfiguration overlayConfiguration;
   final FormeDialogConfiguration dialogConfiguration;
   final FormeBaseConfiguration baseConfiguration;
   final FormeSearchableErrorWidgetBuilder? errorWidgetBuilder;
@@ -52,6 +54,7 @@ class FormeSearchableBaseField<T extends Object>
     this.baseConfiguration = const FormeBaseConfiguration(),
     this.searchFieldDecoration = const InputDecoration(),
     this.contentBuilder,
+    this.overlayConfiguration = const FormeOverlayConfiguration(),
   }) : super(key: key);
 
   @override
@@ -73,6 +76,8 @@ class _FormeSearchableBaseFieldState<T extends Object>
   final TextEditingController _controller = TextEditingController();
   final ValueNotifier<bool> _baseContentEnableNotifier =
       FormeMountedValueNotifier(false);
+  final LayerLink _layerLink = LayerLink();
+  OverlayEntry? _entry;
 
   Route? _route;
 
@@ -93,23 +98,18 @@ class _FormeSearchableBaseFieldState<T extends Object>
   void dispose() {
     WidgetsBinding.instance!.removeObserver(this);
     _controller.dispose();
+    _close();
     _baseContentEnableNotifier.dispose();
     _mediaQueryDataNotifier.dispose();
-    _closeRoute();
     super.dispose();
   }
 
   @override
   void didUpdateWidget(covariant FormeSearchableField<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.mode == Mode.base) {
-      _closeRoute();
-    } else {
-      if ((widget.mode == Mode.bottomSheet && isDialogRoute) ||
-          (widget.mode == Mode.dialog && isBottomSheetRoute)) {
-        _closeRoute();
-      }
-      _baseContentEnableNotifier.value = false;
+
+    if ((oldWidget as FormeSearchableBaseField).mode != widget.mode) {
+      _close();
     }
   }
 
@@ -122,23 +122,39 @@ class _FormeSearchableBaseFieldState<T extends Object>
   @override
   void onQueryCancelled(FormeSearchCondition condition) {
     super.onQueryCancelled(condition);
-    _baseContentEnableNotifier.value = false;
+    if (widget.mode == Mode.base) {
+      _baseContentEnableNotifier.value = false;
+    }
+    if (widget.mode == Mode.overlay) {
+      _removeOverlay();
+    }
   }
 
   @override
   void onQueryProcessing(FormeSearchCondition condition) {
     super.onQueryProcessing(condition);
-    _baseContentEnableNotifier.value = true;
+    if (widget.mode == Mode.base) {
+      _baseContentEnableNotifier.value = true;
+    }
+    if (widget.mode == Mode.overlay) {
+      _insertOverlay();
+    }
   }
 
   @override
   void onReset() {
     super.onReset();
-    _baseContentEnableNotifier.value = false;
+    _close();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (widget.mode == Mode.overlay) {
+      return CompositedTransformTarget(
+        link: _layerLink,
+        child: _buildDisplay(),
+      );
+    }
     if (widget.mode == Mode.base) {
       return Column(
           mainAxisSize: MainAxisSize.min,
@@ -179,6 +195,8 @@ class _FormeSearchableBaseFieldState<T extends Object>
                   break;
                 case Mode.base:
                   break;
+                case Mode.overlay:
+                  break;
               }
             },
       child: _buildDisplay(),
@@ -197,7 +215,7 @@ class _FormeSearchableBaseFieldState<T extends Object>
     return widget.displayBuilder?.call(
           context,
         ) ??
-        (widget.mode == Mode.base
+        (widget.mode == Mode.base || widget.mode == Mode.overlay
             ? BaseSearchableDisplayWidget(
                 decoration: widget.decoration,
                 displayStringForOption: widget.displayStringForOption,
@@ -211,20 +229,25 @@ class _FormeSearchableBaseFieldState<T extends Object>
   }
 
   Widget _build() {
-    final bool closeable = widget.mode == Mode.base;
+    final bool closeable =
+        widget.mode == Mode.base || widget.mode == Mode.overlay;
     final bool animationEnable = widget.mode == Mode.base
         ? widget.baseConfiguration.animationEnable
         : widget.mode == Mode.bottomSheet
             ? widget.bottomSheetConfiguration.animationEnable
-            : false;
+            : widget.mode == Mode.overlay
+                ? widget.overlayConfiguration.animationEnable
+                : false;
     final bool flexiable = widget.mode == Mode.dialog;
     final bool inherit = widget.mode != Mode.base;
-    final bool buildSearchFields = widget.mode != Mode.base;
-    final bool performSearchAfterOpen = widget.mode == Mode.base
-        ? false
-        : widget.mode == Mode.dialog
-            ? widget.dialogConfiguration.performSearchAfterOpen
-            : widget.bottomSheetConfiguration.performSearchAfterOpen;
+    final bool buildSearchFields =
+        widget.mode != Mode.base && widget.mode != Mode.overlay;
+    final bool performSearchAfterOpen =
+        (widget.mode == Mode.base || widget.mode == Mode.overlay)
+            ? false
+            : widget.mode == Mode.dialog
+                ? widget.dialogConfiguration.performSearchAfterOpen
+                : widget.bottomSheetConfiguration.performSearchAfterOpen;
     Widget column = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,7 +258,11 @@ class _FormeSearchableBaseFieldState<T extends Object>
             child: IconButton(
               icon: const Icon(Icons.close),
               onPressed: () {
-                _baseContentEnableNotifier.value = false;
+                if (widget.mode == Mode.base) {
+                  _baseContentEnableNotifier.value = false;
+                } else {
+                  _removeOverlay();
+                }
               },
             ),
           ),
@@ -268,10 +295,14 @@ class _FormeSearchableBaseFieldState<T extends Object>
     if (animationEnable) {
       final Duration duration = widget.mode == Mode.bottomSheet
           ? widget.bottomSheetConfiguration.animationDuration
-          : widget.baseConfiguration.animationDuration;
+          : widget.mode == Mode.base
+              ? widget.baseConfiguration.animationDuration
+              : widget.overlayConfiguration.animationDuration;
       final Curve curve = widget.mode == Mode.bottomSheet
           ? widget.bottomSheetConfiguration.animationCurve
-          : widget.baseConfiguration.animationCurve;
+          : widget.mode == Mode.base
+              ? widget.baseConfiguration.animationCurve
+              : widget.overlayConfiguration.animationCurve;
       column = AnimatedSize(
           curve: curve,
           alignment: Alignment.topCenter,
@@ -441,6 +472,18 @@ class _FormeSearchableBaseFieldState<T extends Object>
     );
   }
 
+  void _close() {
+    _removeOverlay();
+    _closeRoute();
+    _baseContentEnableNotifier.value = false;
+  }
+
+  void _removeOverlay() {
+    if (_entry != null && _entry!.mounted) {
+      _entry!.remove();
+    }
+  }
+
   void _closeRoute() {
     if (_route != null && _route!.isActive) {
       Navigator.popUntil(context, (route) {
@@ -451,5 +494,38 @@ class _FormeSearchableBaseFieldState<T extends Object>
         return false;
       });
     }
+  }
+
+  void _insertOverlay() {
+    if (_entry != null && _entry!.mounted) {
+      return;
+    }
+    _entry = OverlayEntry(builder: (context) {
+      return CompositedTransformFollower(
+        showWhenUnlinked: false,
+        targetAnchor: Alignment.bottomLeft,
+        link: _layerLink,
+        child: LayoutBuilder(
+          builder: (context, c) {
+            return Align(
+              alignment: Alignment.topLeft,
+              child: _buildMaterial(
+                widget.overlayConfiguration.materialConfiguration,
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: widget.baseConfiguration.maximumHeight ??
+                        double.infinity,
+                    maxWidth: _layerLink.leaderSize!.width,
+                    minWidth: _layerLink.leaderSize!.width,
+                  ),
+                  child: _build(),
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    });
+    Overlay.of(context)!.insert(_entry!);
   }
 }
