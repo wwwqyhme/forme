@@ -1,6 +1,6 @@
 ## 4.1.0
 
-1. support specific `FocusNode` on `FormeField`
+1. support specify `FocusNode` on `FormeField`
 
 ## 4.0.2
 
@@ -238,7 +238,7 @@ differences:
 
 ## 2.0.3
 
-1. fields add `InputDecoration` and `maxLines` properties , used to quickly specific labelText or others
+1. fields add `InputDecoration` and `maxLines` properties , used to quickly specify labelText or others
 2. add `FormeAsyncAutocompleteChip`
 
 ## 2.0.2

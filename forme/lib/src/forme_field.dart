@@ -128,7 +128,7 @@ class FormeField<T extends Object?> extends StatefulWidget {
 
   /// used to perform an async validation
   ///
-  /// if you specific both asyncValidator and validator , asyncValidator will only worked after validator passed
+  /// if you specify both asyncValidator and validator , asyncValidator will only worked after validator passed
   ///
   /// `isValid` is used to check whether this validation is valid or not
   /// if you want to update ui before you return validation result , you should call `isValid()` first
