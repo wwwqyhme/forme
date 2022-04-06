@@ -261,15 +261,7 @@ bool enabled = field.enabled;
 field.enabled = bool enabled;
 ```
 
-#### has focus node
-
-``` Dart
-bool hasFocusNode = field.hasFocusNode;
-```
-
-#### get or create a focusNode
-
-if focusNode is not used to build , check `hasFocusNode` first to avoid create unnecessary FocusNode
+#### get  focusNode
 
 ``` Dart
 FocusNode focusNode = field.focusNode;
@@ -383,26 +375,6 @@ field.addVisitor(FormeFieldVisitor visitor);
 
 ``` Dart
 field.removeVisitor(FormeFieldVisitor visitor);
-```
-
-## FocusNode
-
-for simplify form control , Forme not support set focus node on field,
-FocusNode will  be auto created when needed.
-
-### custom focus node
-
-if you want to override default focusNode , you can extends `FormeFieldState` and use `set focusNode` method to do that,
-in this case , you must dispose focusNode by yourself
-
-### get focusNode
-
-``` Dart
-final String name = fieldName;
-final FormeFieldState field = formeKey.field(name);
-if(field.hasFocusNode) {///avoid to create uncessary focusnode
-    final FocusNode focusNode = field.focusNode;
-}
 ```
 
 ## Listeners

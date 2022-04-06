@@ -495,6 +495,9 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       const Duration(milliseconds: 500);
 
   FocusNode? _focusNode;
+  FocusNode get _effectiveFocusNode =>
+      widget.focusNode ?? (_focusNode ??= FocusNode());
+
   Timer? _asyncValidatorTimer;
   bool _hasInteractedByUser = false;
   int _validateGen = 0;
@@ -619,39 +622,8 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     return widget.initialValue;
   }
 
-  /// whether field request a focusnode or not
-  bool get hasFocusNode => _focusNode != null;
-
   /// get current widget's focus node
-  ///
-  /// if there's no focus node,will create a new one
-  FocusNode get focusNode {
-    if (_focusNode == null) {
-      focusNode = _DisposeRequiredFocusNode();
-      focusNode.canRequestFocus = enabled;
-    }
-    return _focusNode!;
-  }
-
-  /// **this method should be called by subclass only!**
-  ///
-  /// if current focusNode is not null ,dispose current node & set new focusNode
-  ///
-  /// you need to dispose node you set before before you set another node
-  @protected
-  set focusNode(FocusNode focusNode) {
-    if (_focusNode == focusNode) {
-      return;
-    }
-    if (_focusNode is _DisposeRequiredFocusNode) {
-      _focusNode!.dispose();
-    }
-    _focusNode = focusNode;
-    if (!enabled) {
-      _focusNode!.canRequestFocus = false;
-    }
-    _focusNode!.addListener(_onFocusChangedListener);
-  }
+  FocusNode get focusNode => _effectiveFocusNode;
 
   /// whether value is changed after initialed
   bool get isValueChanged => !isValueEquals(initialValue, value);
@@ -690,7 +662,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   /// request focus if user interacted
   void requestFocusOnUserInteraction() {
     if (_hasInteractedByUser && widget.requestFocusOnUserInteraction) {
-      _focusNode?.requestFocus();
+      _effectiveFocusNode.requestFocus();
     }
   }
 
@@ -801,7 +773,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   void _onFocusChangedListener() {
     final FormeFieldStatus<T> old = _status;
     _status = _status._copyWith(
-      hasFocus: _Optional(_focusNode?.hasFocus ?? false),
+      hasFocus: _Optional(_effectiveFocusNode.hasFocus),
     );
     _onStatusChanged(old, _status);
   }
@@ -822,13 +794,19 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
           ? FormeFieldValidation.waiting
           : FormeFieldValidation.unnecessary,
       value: initialValue,
-      hasFocus: _focusNode?.hasFocus ?? false,
+      hasFocus: _effectiveFocusNode.hasFocus,
     );
   }
 
   @override
   void didUpdateWidget(covariant FormeField<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    if (widget.focusNode != oldWidget.focusNode) {
+      (oldWidget.focusNode ?? _focusNode)
+          ?.removeListener(_onFocusChangedListener);
+      (widget.focusNode ?? _focusNode)?.addListener(_onFocusChangedListener);
+    }
 
     if (widget.registrable) {
       _formeState?._registerField(this);
@@ -887,10 +865,8 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   void dispose() {
     _visitors.clear();
     _asyncValidatorTimer?.cancel();
-    _focusNode?.removeListener(_onFocusChangedListener);
-    if (_focusNode is _DisposeRequiredFocusNode) {
-      _focusNode?.dispose();
-    }
+    _effectiveFocusNode.removeListener(_onFocusChangedListener);
+    _focusNode?.dispose();
     super.dispose();
   }
 
@@ -980,7 +956,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
 
     if (status.isEnabledChanged) {
-      _focusNode?.canRequestFocus = newStatus.enabled;
+      _effectiveFocusNode.canRequestFocus = newStatus.enabled;
     }
 
     if (status.isValueChanged) {
@@ -1140,10 +1116,6 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     return FormeFieldValidation.invalid(errorText);
   }
 }
-
-/// a focusnode created by FormeField itself rather than set by subclass ,
-/// so it's our responsibility to dispose it
-class _DisposeRequiredFocusNode extends FocusNode {}
 
 class FormeFieldChangedStatus<T extends Object?> extends FormeFieldStatus<T> {
   FormeFieldChangedStatus._(

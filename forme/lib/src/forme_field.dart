@@ -193,6 +193,7 @@ class FormeField<T extends Object?> extends StatefulWidget {
   ///}
   /// ```
   final FormeFieldValidationFilter<T>? validationFilter;
+  final FocusNode? focusNode;
 
   Type get fieldType => super.runtimeType;
 
@@ -221,6 +222,7 @@ class FormeField<T extends Object?> extends StatefulWidget {
     this.valueUpdater,
     this.comparator,
     this.validationFilter,
+    this.focusNode,
   })  : autovalidateMode = autovalidateMode ?? AutovalidateMode.disabled,
         super(key: key);
 

@@ -1,3 +1,7 @@
+## 4.1.0
+
+1. support specific `FocusNode` on `FormeField`
+
 ## 4.0.2
 
 1. allow subclass extends `FormeFieldStatus` & `FormeFieldChangedStatus`
