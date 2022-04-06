@@ -495,6 +495,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
       const Duration(milliseconds: 500);
 
   FocusNode? _focusNode;
+  FocusNode? get _currentFocusNode => widget.focusNode ?? _focusNode;
   FocusNode get _effectiveFocusNode =>
       widget.focusNode ?? (_focusNode ??= FocusNode());
 
@@ -622,7 +623,10 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     return widget.initialValue;
   }
 
-  /// get current widget's focus node
+  /// whether field has a focusnode
+  bool get hasFocusNode => _currentFocusNode != null;
+
+  /// get current widget's focus node or create a new one
   FocusNode get focusNode => _effectiveFocusNode;
 
   /// whether value is changed after initialed
@@ -662,7 +666,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   /// request focus if user interacted
   void requestFocusOnUserInteraction() {
     if (_hasInteractedByUser && widget.requestFocusOnUserInteraction) {
-      _effectiveFocusNode.requestFocus();
+      _currentFocusNode?.requestFocus();
     }
   }
 
@@ -773,7 +777,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   void _onFocusChangedListener() {
     final FormeFieldStatus<T> old = _status;
     _status = _status._copyWith(
-      hasFocus: _Optional(_effectiveFocusNode.hasFocus),
+      hasFocus: _Optional(_currentFocusNode?.hasFocus ?? false),
     );
     _onStatusChanged(old, _status);
   }
@@ -794,7 +798,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
           ? FormeFieldValidation.waiting
           : FormeFieldValidation.unnecessary,
       value: initialValue,
-      hasFocus: _effectiveFocusNode.hasFocus,
+      hasFocus: _currentFocusNode?.hasFocus ?? false,
     );
   }
 
@@ -865,7 +869,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   void dispose() {
     _visitors.clear();
     _asyncValidatorTimer?.cancel();
-    _effectiveFocusNode.removeListener(_onFocusChangedListener);
+    _currentFocusNode?.removeListener(_onFocusChangedListener);
     _focusNode?.dispose();
     super.dispose();
   }
@@ -956,7 +960,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
 
     if (status.isEnabledChanged) {
-      _effectiveFocusNode.canRequestFocus = newStatus.enabled;
+      _currentFocusNode?.canRequestFocus = newStatus.enabled;
     }
 
     if (status.isValueChanged) {

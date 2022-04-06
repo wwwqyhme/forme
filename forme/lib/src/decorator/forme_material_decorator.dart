@@ -74,7 +74,8 @@ class _FormeInputDecoratorState<T>
     final InputDecoration _decoration =
         widget.decoration ?? const InputDecoration();
     final bool quietly = Forme.of(context)?.quietlyValidate ?? false;
-    final bool isFocused = state.focusNode.hasFocus;
+    final bool isFocused =
+        state.hasFocusNode ? state.focusNode.hasFocus : false;
 
     if (widget.emptyChecker == null &&
         (widget.counter == null || widget.maxLength == null)) {
