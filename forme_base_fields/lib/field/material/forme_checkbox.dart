@@ -38,7 +38,9 @@ class FormeCheckbox extends FormeField<bool?> {
     bool enabled = true,
     FormeFieldValueUpdater<bool?>? valueUpdater,
     FormeFieldValidationFilter<bool?>? validationFilter,
+    FocusNode? focusNode,
   }) : super(
+          focusNode: focusNode,
           validationFilter: validationFilter,
           valueUpdater: valueUpdater,
           enabled: enabled,

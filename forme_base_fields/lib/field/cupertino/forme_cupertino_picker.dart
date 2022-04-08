@@ -35,7 +35,9 @@ class FormeCupertinoPicker extends FormeField<int> {
     bool enabled = true,
     FormeFieldValueUpdater<int>? valueUpdater,
     FormeFieldValidationFilter<int>? validationFilter,
+    FocusNode? focusNode,
   }) : super(
+          focusNode: focusNode,
           validationFilter: validationFilter,
           valueUpdater: valueUpdater,
           enabled: enabled,

@@ -45,7 +45,9 @@ class FormeRangeSlider extends FormeField<RangeValues> {
     bool enabled = true,
     FormeFieldValueUpdater<RangeValues>? valueUpdater,
     FormeFieldValidationFilter<RangeValues>? validationFilter,
+    FocusNode? focusNode,
   }) : super(
+            focusNode: focusNode,
             validationFilter: validationFilter,
             valueUpdater: valueUpdater,
             enabled: enabled,

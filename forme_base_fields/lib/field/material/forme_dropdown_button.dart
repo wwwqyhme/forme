@@ -94,7 +94,9 @@ class FormeDropdownButton<T extends Object> extends FormeField<T?> {
     this.useTempValueDuringBeforeValueChangedChecking = true,
     FormeFieldValueUpdater<T?>? valueUpdater,
     FormeFieldValidationFilter<T?>? validationFilter,
+    FocusNode? focusNode,
   }) : super(
+          focusNode: focusNode,
           validationFilter: validationFilter,
           valueUpdater: valueUpdater,
           enabled: enabled,

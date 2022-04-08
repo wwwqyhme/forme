@@ -102,7 +102,9 @@ class FormeCupertinoTimerField extends FormeField<Duration?> {
     double? height = 216,
     FormeFieldValueUpdater<Duration?>? valueUpdater,
     FormeFieldValidationFilter<Duration?>? validationFilter,
+    FocusNode? focusNode,
   }) : super(
+          focusNode: focusNode,
           validationFilter: validationFilter,
           valueUpdater: valueUpdater,
           registrable: registrable,

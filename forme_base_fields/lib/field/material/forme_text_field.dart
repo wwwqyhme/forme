@@ -82,7 +82,9 @@ class FormeTextField extends FormeField<String> {
     bool registrable = true,
     this.updateValueWhenComposing = false,
     FormeFieldValidationFilter<String>? validationFilter,
+    FocusNode? focusNode,
   }) : super(
+          focusNode: focusNode,
           validationFilter: validationFilter,
           enabled: enabled,
           registrable: registrable,

@@ -107,7 +107,9 @@ class FormeCupertinoDateTimeField extends FormeField<DateTime?> {
     bool enableIMEPersonalizedLearning = true,
     FormeFieldValueUpdater<DateTime?>? valueUpdater,
     FormeFieldValidationFilter<DateTime?>? validationFilter,
+    FocusNode? focusNode,
   }) : super(
+          focusNode: focusNode,
           validationFilter: validationFilter,
           valueUpdater: valueUpdater,
           registrable: registrable,

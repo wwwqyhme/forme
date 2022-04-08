@@ -25,7 +25,9 @@ class FormeCupertinoSwitch extends FormeField<bool> {
     bool registrable = true,
     bool enabled = true,
     FormeFieldValidationFilter<bool>? validationFilter,
+    FocusNode? focusNode,
   }) : super(
+          focusNode: focusNode,
           validationFilter: validationFilter,
           enabled: enabled,
           registrable: registrable,

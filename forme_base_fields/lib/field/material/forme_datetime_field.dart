@@ -95,7 +95,9 @@ class FormeDateTimeField extends FormeField<DateTime?> {
     TransitionBuilder? timePickerBuilder,
     FormeFieldValueUpdater<DateTime?>? valueUpdater,
     FormeFieldValidationFilter<DateTime?>? validationFilter,
+    FocusNode? focusNode,
   }) : super(
+          focusNode: focusNode,
           validationFilter: validationFilter,
           valueUpdater: valueUpdater,
           enabled: enabled,

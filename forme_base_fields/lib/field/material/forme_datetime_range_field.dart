@@ -90,7 +90,9 @@ class FormeDateTimeRangeField extends FormeField<DateTimeRange?> {
     bool registrable = true,
     FormeFieldValueUpdater<DateTimeRange?>? valueUpdater,
     FormeFieldValidationFilter<DateTimeRange?>? validationFilter,
+    FocusNode? focusNode,
   }) : super(
+          focusNode: focusNode,
           validationFilter: validationFilter,
           valueUpdater: valueUpdater,
           enabled: enabled,

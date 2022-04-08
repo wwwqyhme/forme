@@ -33,7 +33,9 @@ class FormeCupertinoSegmentedControl<T extends Object> extends FormeField<T?> {
     bool enabled = true,
     FormeFieldValueUpdater<T?>? valueUpdater,
     FormeFieldValidationFilter<T?>? validationFilter,
+    FocusNode? focusNode,
   }) : super(
+            focusNode: focusNode,
             validationFilter: validationFilter,
             valueUpdater: valueUpdater,
             enabled: enabled,

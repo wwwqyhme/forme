@@ -86,7 +86,9 @@ class FormeCupertinoNumberField extends FormeField<num?> {
     bool enableIMEPersonalizedLearning = true,
     FormeFieldValueUpdater<num?>? valueUpdater,
     FormeFieldValidationFilter<num?>? validationFilter,
+    FocusNode? focusNode,
   }) : super(
+          focusNode: focusNode,
           validationFilter: validationFilter,
           valueUpdater: valueUpdater,
           registrable: registrable,

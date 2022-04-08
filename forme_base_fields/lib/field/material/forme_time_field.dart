@@ -78,7 +78,9 @@ class FormeTimeField extends FormeField<TimeOfDay?> {
     FormeFieldDecorator<TimeOfDay?>? decorator,
     bool registrable = true,
     FormeFieldValidationFilter<TimeOfDay?>? validationFilter,
+    FocusNode? focusNode,
   }) : super(
+          focusNode: focusNode,
           validationFilter: validationFilter,
           enabled: enabled,
           registrable: registrable,

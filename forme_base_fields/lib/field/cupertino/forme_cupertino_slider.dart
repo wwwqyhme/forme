@@ -32,7 +32,9 @@ class FormeCupertinoSlider extends FormeField<double> {
     bool enabled = true,
     FormeFieldValueUpdater<double>? valueUpdater,
     FormeFieldValidationFilter<double>? validationFilter,
+    FocusNode? focusNode,
   }) : super(
+          focusNode: focusNode,
           validationFilter: validationFilter,
           valueUpdater: valueUpdater,
           enabled: enabled,

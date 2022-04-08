@@ -105,7 +105,9 @@ class FormeListTile<T extends Object> extends FormeField<List<T>> {
     FormeFieldValueUpdater<List<T>>? valueUpdater,
     FormeValueComparator<List<T>>? comparator,
     FormeFieldValidationFilter<List<T>>? validationFilter,
+    FocusNode? focusNode,
   }) : super(
+            focusNode: focusNode,
             validationFilter: validationFilter,
             comparator: comparator,
             valueUpdater: valueUpdater,

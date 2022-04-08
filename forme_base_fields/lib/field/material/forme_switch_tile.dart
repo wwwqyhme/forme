@@ -41,7 +41,9 @@ class FormeSwitchTile extends FormeField<bool> {
     bool selected = false,
     bool enabled = true,
     FormeFieldValidationFilter<bool>? validationFilter,
+    FocusNode? focusNode,
   }) : super(
+          focusNode: focusNode,
           validationFilter: validationFilter,
           enabled: enabled,
           registrable: registrable,
