@@ -132,8 +132,8 @@ class _FormeSearchablePaginationBarState<T extends Object>
   }
 
   @override
-  void onConditionChangeStart(FormeSearchCondition condition) {
-    super.onConditionChangeStart(condition);
+  void onConditionChanged(FormeSearchCondition condition) {
+    super.onConditionChanged(condition);
     setState(() {
       _pageInfo = null;
     });

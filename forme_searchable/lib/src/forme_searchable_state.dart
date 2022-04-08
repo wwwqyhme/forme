@@ -130,7 +130,7 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
   }
 
   void goToPage(int page) {
-    search(FormeSearchCondition(_condition?.condition ?? {}, page), false);
+    search(FormeSearchCondition(_condition?.filter ?? {}, page), false);
   }
 
   void search(FormeSearchCondition condition, [bool debounce = true]) {
@@ -140,7 +140,8 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
     _error = null;
     _stackTrace = null;
     _result = null;
-    final bool isOnlyPageChanged = condition.condition == _condition?.condition;
+    final bool isPageChanged = condition.page != _condition?.page;
+    final bool isFilterChanged = condition.filter != _condition?.filter;
     _condition = condition;
     _timer?.cancel();
     final bool cancel =
@@ -151,12 +152,19 @@ class FormeSearchableState<T extends Object> extends FormeFieldState<List<T>>
       _triggerListeners((listener) => listener.onQueryCancelled(condition));
       return;
     }
-    if (isOnlyPageChanged) {
-      _triggerListeners((listener) => listener.onPageChangeStart(condition));
-    } else {
-      _triggerListeners(
-          (listener) => listener.onConditionChangeStart(condition));
+
+    if (isPageChanged || isFilterChanged) {
+      _triggerListeners((listener) => listener.onConditionChanged(condition));
     }
+
+    if (isPageChanged) {
+      _triggerListeners((listener) => listener.onPageChanged(condition));
+    }
+
+    if (isFilterChanged) {
+      _triggerListeners((listener) => listener.onFilterChanged(condition));
+    }
+
     _isProcessing = true;
     _triggerListeners((listener) => listener.onQueryProcessing(condition));
     if (debounce) {

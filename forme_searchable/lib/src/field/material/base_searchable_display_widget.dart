@@ -58,6 +58,7 @@ class _BaseSearchableDisplayWidgetState<T extends Object>
     );
 
     final Wrap wrap = Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
       spacing: 10,
       children: status.value.map<Widget>((e) {
         return InputChip(

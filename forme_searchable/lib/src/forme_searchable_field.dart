@@ -55,10 +55,13 @@ abstract class FormeSearchableFieldState<T extends Object>
   }
 
   @override
-  void onConditionChangeStart(FormeSearchCondition condition) {}
+  void onConditionChanged(FormeSearchCondition condition) {}
 
   @override
-  void onPageChangeStart(FormeSearchCondition condition) {}
+  void onPageChanged(FormeSearchCondition condition) {}
+
+  @override
+  void onFilterChanged(FormeSearchCondition condition) {}
 
   void search(FormeSearchCondition condition, [bool debounce = true]) =>
       _controller?.state.search(condition, debounce);

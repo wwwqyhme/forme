@@ -2,13 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 class FormeSearchCondition {
-  final Map<String, Object?> condition;
+  final Map<String, Object?> filter;
   final int page;
 
-  FormeSearchCondition(this.condition, this.page);
+  FormeSearchCondition(this.filter, this.page);
 
-  T? getCondition<T>(String name) {
-    final Object? o = condition[name];
+  T? getFilter<T>(String name) {
+    final Object? o = filter[name];
     if (o == null) {
       return null;
     }
@@ -16,11 +16,11 @@ class FormeSearchCondition {
   }
 
   @override
-  int get hashCode => hashValues(condition, page);
+  int get hashCode => hashValues(filter, page);
 
   @override
   bool operator ==(Object other) =>
       other is FormeSearchCondition &&
       other.page == page &&
-      mapEquals(other.condition, condition);
+      mapEquals(other.filter, filter);
 }
