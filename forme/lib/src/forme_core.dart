@@ -496,8 +496,14 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
 
   FocusNode? _focusNode;
   FocusNode? get _currentFocusNode => widget.focusNode ?? _focusNode;
-  FocusNode get _effectiveFocusNode =>
-      widget.focusNode ?? (_focusNode ??= FocusNode());
+  FocusNode get _effectiveFocusNode {
+    if (_currentFocusNode != null) {
+      return _currentFocusNode!;
+    }
+    _focusNode = FocusNode();
+    _focusNode!.addListener(_onFocusChangedListener);
+    return _focusNode!;
+  }
 
   Timer? _asyncValidatorTimer;
   bool _hasInteractedByUser = false;
@@ -791,6 +797,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   @protected
   @mustCallSuper
   void initStatus() {
+    _currentFocusNode?.addListener(_onFocusChangedListener);
     _status = FormeFieldStatus<T>._(
       enabled: widget.enabled,
       readOnly: widget.readOnly || !widget.enabled,

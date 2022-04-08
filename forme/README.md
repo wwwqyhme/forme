@@ -65,26 +65,27 @@ Widget forme = Forme(
 | registrable | false | `bool` | whether this field should be registered to Forme |
 | valueUpdater | false | `function` | used to update value in `didUpdateWidget` |
 | validationFilter | false | `function` | used to determine whether perform a validation or not |
+| focusNode | false | `FocusNode` | FocusNode |
 
 
 ## Validation
 
 ### Async Validation
 
-async validator is supported after Forme 2.5.0 , you can specific an `asyncValidator` on `FormeField` , the unique difference
+async validator is supported after Forme 2.5.0 , you can specify an `asyncValidator` on `FormeField` , the unique difference
 between `validator` and `asyncValidator` is `asyncValidator` return a `Future<String>` and `validator` return a `String`
 
 #### when to perform an async validation
 
 if `FormeField.autovalidateMode` is `AutovalidateMode.disabled` , asyncValidator will never be performed unless you call `validate` on `FormeFieldState` manually.
 
-if you specific both `validator` and `asyncValidator` , `asyncValidator` will only be performed after `validator` return null.
+if you specify both `validator` and `asyncValidator` , `asyncValidator` will only be performed after `validator` return null.
 
 if `validationFilter` is specified and not passed. `asyncValidator` will not be performed
 
 #### debounce
 
-you can specific a debounce on `FormeField` , **debounce will not worked when you manually call `validate` on `FormeFieldState`**
+you can specify a debounce on `FormeField` , **debounce will not worked when you manually call `validate` on `FormeFieldState`**
 
 #### whether validation itself is valid
 
@@ -129,7 +130,7 @@ you can use `FormeValidates` to simplify your validators
 | `any`  | `T` | any validators is valid  |  every validators is invalid |
 | `all`  | `T` | all validators is valid  |  any validators is invalid |
 
-when you use validators from `FormeValidates` , you must specific at least one errorText , otherwise errorText is an empty string
+when you use validators from `FormeValidates` , you must specify at least one errorText , otherwise errorText is an empty string
 
 ## Methods
 

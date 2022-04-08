@@ -1,3 +1,7 @@
+## 4.1.1
+
+1. bug fix:`onStatusChanged` not triggered when focus changed
+
 ## 4.1.0
 
 1. support specify `FocusNode` on `FormeField`
