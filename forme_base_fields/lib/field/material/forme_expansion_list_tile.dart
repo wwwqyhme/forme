@@ -126,11 +126,33 @@ class FormeExpansionItemControl<T extends Object> {
 
   factory FormeExpansionItemControl.checkbox({
     required T data,
+    Color? activeColor,
+    MaterialStateProperty<Color?>? fillColor,
+    Color? checkColor,
+    Color? focusColor,
+    Color? hoverColor,
+    MaterialStateProperty<Color?>? overlayColor,
+    double? splashRadius,
+    MaterialTapTargetSize? materialTapTargetSize,
+    VisualDensity? visualDensity,
+    OutlinedBorder? shape,
+    BorderSide? side,
   }) {
     return FormeExpansionItemControl<T>(
         data: data,
         builder: (context, data, isSelected, toggle) {
           return Checkbox(
+            activeColor: activeColor,
+            fillColor: fillColor,
+            checkColor: checkColor,
+            focusColor: focusColor,
+            hoverColor: hoverColor,
+            overlayColor: overlayColor,
+            splashRadius: splashRadius,
+            materialTapTargetSize: materialTapTargetSize,
+            visualDensity: visualDensity,
+            shape: shape,
+            side: side,
             value: isSelected,
             onChanged: toggle == null
                 ? null
@@ -590,6 +612,12 @@ class _SelectableTreeState<T extends Object> extends State<_SelectableTree<T>> {
     if (!node.hasData) {
       return;
     }
+    if (widget.expandAllChildrenWhenParentToggledOnUserInteraction) {
+      _expandedState[node.id] = true;
+      for (final _Node<T> node in node.allChildren) {
+        _expandedState[node.id] = true;
+      }
+    }
     if (_isSelected(node)) {
       _unselect(node, unselectAllChildren: true);
     } else {
@@ -599,12 +627,6 @@ class _SelectableTreeState<T extends Object> extends State<_SelectableTree<T>> {
             widget.selectAllChildrenWhenParentSelectedOnUserInteraction,
         selectParents: widget.selectParentsWhenChildSelectedOnUserInteraction,
       );
-    }
-    if (widget.expandAllChildrenWhenParentToggledOnUserInteraction) {
-      _expandedState[node.id] = true;
-      for (final _Node<T> node in node.allChildren) {
-        _expandedState[node.id] = true;
-      }
     }
   }
 
