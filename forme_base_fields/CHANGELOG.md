@@ -1,3 +1,7 @@
+# 2.2.0 
+
+add `FormeExpansionListTile` field
+
 ## 2.1.0
 
 upgrade Forme to 4.1.0

@@ -15,6 +15,7 @@ export 'field/material/forme_choice_chip.dart';
 export 'field/material/forme_datetime_field.dart';
 export 'field/material/forme_datetime_range_field.dart';
 export 'field/material/forme_dropdown_button.dart';
+export 'field/material/forme_expansion_list_tile.dart';
 export 'field/material/forme_filter_chip.dart';
 export 'field/material/forme_list_tile.dart';
 export 'field/material/forme_number_field.dart';
