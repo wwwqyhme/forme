@@ -165,25 +165,25 @@ class FormeExpansionItemControl<T extends Object> {
 }
 
 class _ExpansionItem<T extends Object> extends FormeExpansionListTileItem<T> {
-  _ExpansionItem(
-      {this.childrenPadding,
-      required this.children,
-      required Widget title,
-      Widget? subtitle,
-      Widget? secondary,
-      ListTileControlAffinity? controlAffinity,
-      bool readOnly = false,
-      this.control,
-      EdgeInsetsGeometry? padding,
-      this.expandedAlignment,
-      this.expandedCrossAxisAlignment,
-      this.backgroundColor,
-      this.collapsedBackgroundColor,
-      this.textColor,
-      this.collapsedIconColor,
-      this.collapsedTextColor,
-      this.iconColor})
-      : super._(
+  _ExpansionItem({
+    this.childrenPadding,
+    required this.children,
+    required Widget title,
+    Widget? subtitle,
+    Widget? secondary,
+    ListTileControlAffinity? controlAffinity,
+    bool readOnly = false,
+    this.control,
+    EdgeInsetsGeometry? padding,
+    this.expandedAlignment,
+    this.expandedCrossAxisAlignment,
+    this.backgroundColor,
+    this.collapsedBackgroundColor,
+    this.textColor,
+    this.collapsedIconColor,
+    this.collapsedTextColor,
+    this.iconColor,
+  }) : super._(
           controlAffinity: controlAffinity,
           title: title,
           secondary: secondary,
@@ -252,6 +252,9 @@ class _DataItem<T extends Object> extends FormeExpansionListTileItem<T> {
         );
 }
 
+/// an expansion tree
+///
+/// **NOT SUPPORT** change items after init
 class FormeExpansionListTile<T extends Object> extends FormeField<List<T>> {
   final List<FormeExpansionListTileItem<T>> items;
 
@@ -352,8 +355,11 @@ class FormeExpansionListTile<T extends Object> extends FormeField<List<T>> {
                       readOnly: genericState.readOnly,
                       expanded: expanded,
                       onValueChanged: (values) {
-                        final List<T> selected =
-                            values.map((e) => e.selected).toList();
+                        final List<T> selected = values
+                            .map(state._getValue)
+                            .where((element) => element != null)
+                            .map((e) => e!)
+                            .toList();
                         state._didChange(selected);
                       },
                     )),
@@ -368,6 +374,16 @@ class FormeExpansionListTileState<T extends Object>
     extends FormeFieldState<List<T>> {
   final GlobalKey<_SelectableTreeState<T>> _globalKey = GlobalKey();
 
+  @override
+  void initStatus() {
+    super.initStatus();
+    if (initialValue.isNotEmpty) {
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        select(initialValue);
+      });
+    }
+  }
+
   /// get node
   FormeExpansionNode<T>? getNode(T data) {
     final _Node<T>? node = _tree._tree.getNodeByData(data);
@@ -375,6 +391,15 @@ class FormeExpansionListTileState<T extends Object>
       return null;
     }
     return FormeExpansionNode._(node, _globalKey);
+  }
+
+  void insertNode(
+      FormeExpansionNode<T>? parent, FormeExpansionListTileItem<T> item) {
+    _tree._insertNode(parent?._node, item);
+  }
+
+  T? _getValue(int id) {
+    return _tree._tree.getNode(id)?.data;
   }
 
   void select(
@@ -387,6 +412,14 @@ class FormeExpansionListTileState<T extends Object>
         selectAllChildren: selectAllChildren, selectParents: selectParents);
   }
 
+  void expandAll() {
+    _tree._expandAll();
+  }
+
+  void collapseAll() {
+    _tree._collapseAll();
+  }
+
   @override
   void didChange(List<T> newValue) {
     super.didChange(value);
@@ -397,6 +430,7 @@ class FormeExpansionListTileState<T extends Object>
   void reset() {
     super.reset();
     _tree._reset();
+    select(initialValue);
   }
 
   void _didChange(List<T> newValue) {
@@ -449,6 +483,11 @@ class FormeExpansionNode<T extends Object> {
     _tree._unselect(_node, unselectAllChildren: unselectAllChildren);
   }
 
+  /// remove this node from tree
+  void remove() {
+    _tree._remove(_node);
+  }
+
   _SelectableTreeState<T> get _tree => _key.currentState!;
 }
 
@@ -459,7 +498,7 @@ class _SelectableTree<T extends Object> extends StatefulWidget {
   final bool selectParentsWhenChildSelectedOnUserInteraction;
   final bool selectAllChildrenWhenParentSelectedOnUserInteraction;
   final bool expandAllChildrenWhenParentToggledOnUserInteraction;
-  final ValueChanged<List<_SelectedValue<T>>> onValueChanged;
+  final ValueChanged<List<int>> onValueChanged;
 
   const _SelectableTree({
     Key? key,
@@ -479,15 +518,18 @@ class _SelectableTreeState<T extends Object> extends State<_SelectableTree<T>> {
   late _Tree<T> _tree;
   int nodeId = 0;
 
-  List<_SelectedValue<T>> _values = [];
+  List<int> _values = [];
 
   bool get readOnly => widget.readOnly;
 
   final Map<int, bool> _expandedState = {};
 
+  late final List<FormeExpansionListTileItem<T>> _items;
+
   @override
   void initState() {
     super.initState();
+    _items = widget.items;
     _buildTree();
   }
 
@@ -506,10 +548,86 @@ class _SelectableTreeState<T extends Object> extends State<_SelectableTree<T>> {
 
   bool _isExpanded(_Node<T> node) => _expandedState[node.id] ?? widget.expanded;
 
+  void _remove(_Node<T> node) {
+    for (final _Node<T> child in _tree.children) {
+      _removeNode(node, child);
+    }
+    final List<int> values = List.of(_values);
+    final List<int> removedNodes =
+        (node.allChildren..add(node)).map((e) => e.id).toList();
+    _expandedState.removeWhere(
+      (key, value) {
+        return removedNodes.contains(key);
+      },
+    );
+    setState(() {
+      _values = values..removeWhere(removedNodes.contains);
+    });
+    widget.onValueChanged(_values);
+  }
+
+  void _removeNode(_Node<T> toRemove, _Node<T> parent) {
+    bool removed = false;
+    parent.children.removeWhere((element) {
+      if (element == toRemove) {
+        removed = true;
+        return true;
+      }
+      return false;
+    });
+    if (!removed) {
+      for (final _Node<T> child in parent.children) {
+        _removeNode(toRemove, child);
+      }
+    }
+  }
+
+  void _insertNode(_Node<T>? parent, FormeExpansionListTileItem<T> item) {
+    setState(() {
+      if (parent == null) {
+        _tree.children.add(_buildNode(item, null));
+      } else {
+        parent.children.add(_buildNode(item, parent));
+      }
+    });
+  }
+
+  void _expandAll() {
+    _visitNode(
+      (value) {
+        if (value.isExpansionNode) {
+          _expandedState[value.id] = true;
+        }
+      },
+    );
+    setState(() {});
+  }
+
+  void _collapseAll() {
+    _visitNode(
+      (value) {
+        if (value.isExpansionNode) {
+          _expandedState[value.id] = false;
+        }
+      },
+    );
+    setState(() {});
+  }
+
+  void _visitNode(ValueChanged<_Node<T>> visitor) {
+    for (final _Node<T> node in _tree.children) {
+      visitor(node);
+      node.allChildren.forEach(visitor);
+    }
+  }
+
   void _expand(
     _Node<T> node, {
     bool expandAllChildren = false,
   }) {
+    if (!node.isExpansionNode) {
+      return;
+    }
     _expandedState[node.id] = true;
     final List<_Node<T>> parents = _tree.getParents(node);
     for (final _Node<T> parent in parents) {
@@ -517,13 +635,18 @@ class _SelectableTreeState<T extends Object> extends State<_SelectableTree<T>> {
     }
     if (expandAllChildren) {
       for (final _Node<T> element in node.allChildren) {
-        _expandedState[element.id] = true;
+        if (element.isExpansionNode) {
+          _expandedState[element.id] = true;
+        }
       }
     }
     setState(() {});
   }
 
   void _collapse(_Node<T> node) {
+    if (!node.isExpansionNode) {
+      return;
+    }
     setState(() {
       _expandedState[node.id] = false;
     });
@@ -531,6 +654,7 @@ class _SelectableTreeState<T extends Object> extends State<_SelectableTree<T>> {
 
   void _reset() {
     setState(() {
+      _buildTree();
       _expandedState.clear();
       _values = [];
     });
@@ -541,7 +665,7 @@ class _SelectableTreeState<T extends Object> extends State<_SelectableTree<T>> {
     bool selectParents = false,
     bool selectAllChildren = false,
   }) {
-    final List<_SelectedValue<T>> values = List.of(_values);
+    final List<int> values = List.of(_values);
     final List<_Node<T>> needSelectNodes = [];
     if (selectParents) {
       needSelectNodes.addAll(_tree.getParents(node).toList());
@@ -551,11 +675,10 @@ class _SelectableTreeState<T extends Object> extends State<_SelectableTree<T>> {
       needSelectNodes.addAll(node.allChildren.toList());
     }
     for (final _Node<T> needSelectNode in needSelectNodes) {
-      if (!needSelectNode.hasData ||
-          values.any((element) => element.id == needSelectNode.id)) {
+      if (!needSelectNode.hasData || values.contains(needSelectNode.id)) {
         continue;
       }
-      values.add(_SelectedValue<T>(needSelectNode.data!, needSelectNode.id));
+      values.add(needSelectNode.id);
     }
     setState(() {
       _values = values;
@@ -567,12 +690,12 @@ class _SelectableTreeState<T extends Object> extends State<_SelectableTree<T>> {
     _Node<T> node, {
     bool unselectAllChildren = false,
   }) {
-    final List<_SelectedValue<T>> values = List.of(_values);
+    final List<int> values = List.of(_values);
     final List<int> nodeIds = List.of([node.id]);
     if (unselectAllChildren) {
       nodeIds.addAll(node.allChildren.map((e) => e.id));
     }
-    values.removeWhere((element) => nodeIds.contains(element.id));
+    values.removeWhere(nodeIds.contains);
     setState(() {
       _values = values;
     });
@@ -595,12 +718,12 @@ class _SelectableTreeState<T extends Object> extends State<_SelectableTree<T>> {
         collector.addAll(node.allChildren);
       }
     }
-    final List<_SelectedValue<T>> newValues = [];
+    final List<int> newValues = [];
     for (final _Node<T> node in collector) {
-      if (!node.hasData || newValues.any((element) => element.id == node.id)) {
+      if (!node.hasData || newValues.contains(node.id)) {
         continue;
       }
-      newValues.add(_SelectedValue<T>(node.data!, node.id));
+      newValues.add(node.id);
     }
     setState(() {
       _values = newValues;
@@ -612,12 +735,6 @@ class _SelectableTreeState<T extends Object> extends State<_SelectableTree<T>> {
     if (!node.hasData) {
       return;
     }
-    if (widget.expandAllChildrenWhenParentToggledOnUserInteraction) {
-      _expandedState[node.id] = true;
-      for (final _Node<T> node in node.allChildren) {
-        _expandedState[node.id] = true;
-      }
-    }
     if (_isSelected(node)) {
       _unselect(node, unselectAllChildren: true);
     } else {
@@ -627,6 +744,15 @@ class _SelectableTreeState<T extends Object> extends State<_SelectableTree<T>> {
             widget.selectAllChildrenWhenParentSelectedOnUserInteraction,
         selectParents: widget.selectParentsWhenChildSelectedOnUserInteraction,
       );
+    }
+    if (node.isExpansionNode &&
+        widget.expandAllChildrenWhenParentToggledOnUserInteraction) {
+      _expandedState[node.id] = true;
+      for (final _Node<T> node in node.allChildren) {
+        if (node.isExpansionNode) {
+          _expandedState[node.id] = true;
+        }
+      }
     }
   }
 
@@ -698,7 +824,7 @@ class _SelectableTreeState<T extends Object> extends State<_SelectableTree<T>> {
 
   void _buildTree() {
     nodeId = 0;
-    _tree = _Tree<T>(widget.items.map((e) => _buildNode(e, null)).toList());
+    _tree = _Tree<T>(_items.map((e) => _buildNode(e, null)).toList());
   }
 
   _Node<T> _buildNode(FormeExpansionListTileItem<T> item, _Node<T>? parent) {
@@ -719,7 +845,7 @@ class _SelectableTreeState<T extends Object> extends State<_SelectableTree<T>> {
   }
 
   bool _isSelected(_Node<T> node) {
-    return _values.any((element) => element.id == node.id);
+    return _values.contains(node.id);
   }
 
   Widget _createExpansionListTile(_Node<T> node) {
@@ -816,13 +942,6 @@ class _Tree<T extends Object> {
     }
     return parents;
   }
-}
-
-class _SelectedValue<T extends Object> {
-  final T selected;
-  final int id;
-
-  _SelectedValue(this.selected, this.id);
 }
 
 class _Node<T extends Object> {

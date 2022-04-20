@@ -29,6 +29,7 @@
 | FormeCupertinoSlider|  double | false |
 | FormeCupertinoSwitch| bool | false |
 | FormeCupertinoTimerField| Duration | true |
+| FormeExpansionListTile | List&lt; T&gt; | false |
 
 
 
