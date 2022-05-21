@@ -399,7 +399,7 @@ class FormeState extends State<Forme> {
     if (!_states.contains(state)) {
       _states.add(state);
       if (_newRegisteredStates.isEmpty) {
-        SchedulerBinding.instance!.endOfFrame.then((_) {
+        SchedulerBinding.instance.endOfFrame.then((_) {
           if (_needValidate) {
             _validateForm();
           }
@@ -415,7 +415,7 @@ class FormeState extends State<Forme> {
   void _unregisterField(FormeFieldState state) {
     if (_states.remove(state)) {
       if (_newUnregisteredStates.isEmpty) {
-        SchedulerBinding.instance!.endOfFrame.then((_) {
+        SchedulerBinding.instance.endOfFrame.then((_) {
           if (mounted) {
             if (_needValidate) {
               _validateForm();
@@ -975,7 +975,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
     }
 
     if (onlyAfterFrameCompleted) {
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         task();
       });
     } else {
