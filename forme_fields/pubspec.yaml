@@ -1,6 +1,6 @@
 name: forme_fields
 description: extra fields for Forme ,depends on third part widgets
-version: 2.0.1
+version: 2.0.2
 homepage: https://github.com/wwwqyhme/forme_fields
 
 environment:
@@ -13,7 +13,7 @@ dependencies:
     sdk: flutter
   flutter_rating_bar: ^4.0.0
   pin_code_fields: ^7.3.0
-  forme: ^4.0.1
+  forme: ^4.1.2
 
 dev_dependencies:
   flutter_test:

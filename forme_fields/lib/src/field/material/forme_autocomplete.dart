@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:forme/forme.dart';
 
@@ -320,7 +319,7 @@ class AutocompleteOptions<T extends Object> extends StatelessWidget {
                   final bool highlight =
                       AutocompleteHighlightedOption.of(context) == index;
                   if (highlight) {
-                    SchedulerBinding.instance!
+                    Ambiguates.schedulerBinding
                         .addPostFrameCallback((Duration timeStamp) {
                       Scrollable.ensureVisible(context, alignment: 0.5);
                     });

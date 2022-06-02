@@ -160,7 +160,7 @@ class FormeAsyncInputChip<T extends Object> extends FormeField<List<T>> {
               },
               optionsViewBuilder: (BuildContext context,
                   AutocompleteOnSelected<T> onSelected, Iterable<T> options) {
-                WidgetsBinding.instance!.addPostFrameCallback((timestamp) {
+                Ambiguates.schedulerBinding.addPostFrameCallback((timestamp) {
                   state._optionsViewVisibleStateNotifier.value = true;
                 });
 
