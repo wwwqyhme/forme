@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forme/forme.dart';
 
 const Duration _kExpand = Duration(milliseconds: 200);
 
@@ -204,7 +205,7 @@ class _ExpansionTileState extends State<ExpansionTile>
   void didUpdateWidget(covariant ExpansionTile oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (_isExpanded != widget.initiallyExpanded) {
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      Ambiguates.schedulerBinding.addPostFrameCallback((timeStamp) {
         _setExpanded(widget.initiallyExpanded);
       });
     }

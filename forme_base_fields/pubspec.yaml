@@ -1,6 +1,6 @@
 name: forme_base_fields
 description: base fields for Forme
-version: 2.2.0
+version: 2.2.1
 homepage: https://github.com/wwwqyhme/forme
 
 environment:
@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  forme: ^4.1.0   
+  forme: ^4.1.2  
 
 dev_dependencies:
   flutter_test:
