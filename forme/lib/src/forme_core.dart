@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
 import 'forme_field.dart';
 import 'forme_field_scope.dart';
 import 'forme_visitor.dart';
+import 'ambiguates.dart';
 import 'validate/forme_field_validate_snapshot.dart';
 import 'validate/forme_field_validation_context.dart';
 import 'validate/forme_validation.dart';
@@ -399,7 +399,7 @@ class FormeState extends State<Forme> {
     if (!_states.contains(state)) {
       _states.add(state);
       if (_newRegisteredStates.isEmpty) {
-        SchedulerBinding.instance.endOfFrame.then((_) {
+        Ambiguates.schedulerBinding.endOfFrame.then((_) {
           if (_needValidate) {
             _validateForm();
           }
@@ -415,7 +415,7 @@ class FormeState extends State<Forme> {
   void _unregisterField(FormeFieldState state) {
     if (_states.remove(state)) {
       if (_newUnregisteredStates.isEmpty) {
-        SchedulerBinding.instance.endOfFrame.then((_) {
+        Ambiguates.schedulerBinding.endOfFrame.then((_) {
           if (mounted) {
             if (_needValidate) {
               _validateForm();

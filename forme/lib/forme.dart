@@ -6,3 +6,4 @@ export 'src/forme_value_listenable.dart';
 export 'src/validate/validates.dart';
 export 'src/forme_visitor.dart';
 export 'src/visitors/visitors.dart';
+export 'src/ambiguates.dart';

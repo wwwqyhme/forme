@@ -1,3 +1,7 @@
+## 4.1.2
+
+1. remove `SchedulerBinding` runtime warnings
+
 ## 4.1.1
 
 1. bug fix:`onStatusChanged` not triggered when focus changed
