@@ -1,7 +1,10 @@
 export 'decorator/decoator.dart';
 export 'fields/checkbox.dart';
 export 'fields/combo_box.dart';
+export 'fields/date_picker.dart';
+export 'fields/fluent_time_of_day.dart';
 export 'fields/rating_bar.dart';
 export 'fields/slider.dart';
 export 'fields/switch.dart';
 export 'fields/text_box.dart';
+export 'fields/time_picker.dart';
