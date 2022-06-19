@@ -1,3 +1,7 @@
+## 4.1.3 
+
+1. export 'FormeDecoratorState'
+
 ## 4.1.2
 
 1. remove `SchedulerBinding` runtime warnings
