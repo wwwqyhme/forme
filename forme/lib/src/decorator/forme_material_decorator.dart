@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../forme.dart';
-import 'forme_decorator_state.dart';
 
 class FormeInputDecoratorBuilder<T> implements FormeFieldDecorator<T> {
   const FormeInputDecoratorBuilder({
