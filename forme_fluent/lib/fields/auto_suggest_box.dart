@@ -1,0 +1,101 @@
+import 'dart:ui';
+
+import 'package:fluent_ui/fluent_ui.dart';
+import 'package:forme/forme.dart';
+
+class FormeFluentAutoSuggestBox extends FormeField<String> {
+  FormeFluentAutoSuggestBox({
+    String? initialValue,
+    required String name,
+    bool readOnly = false,
+    Key? key,
+    int? order,
+    bool quietlyValidate = false,
+    FormeFieldDecorator<String>? decorator,
+    Duration? asyncValidatorDebounce,
+    AutovalidateMode? autovalidateMode,
+    FormeFieldStatusChanged<String>? onStatusChanged,
+    FormeFieldInitialed<String>? onInitialed,
+    FormeFieldSetter<String>? onSaved,
+    FormeValidator<String>? validator,
+    FormeAsyncValidator<String>? asyncValidator,
+    bool registrable = true,
+    bool enabled = true,
+    FormeFieldValueUpdater<String>? valueUpdater,
+    FormeFieldValidationFilter<String>? validationFilter,
+    FocusNode? focusNode,
+    bool requestFocusOnUserInteraction = true,
+    required List<String> items,
+    Widget? leadingIcon,
+    Widget? trailingIcon,
+    bool clearButtonEnabled = true,
+    String? placeholder,
+    TextStyle? placeholderStyle,
+    TextStyle? style,
+    BoxDecoration? decoration,
+    BoxDecoration? foregroundDecoration,
+    Color? highlightColor,
+    double cursorWidth = 1.5,
+    double? cursorHeight,
+    Radius? cursorRadius,
+    Color? cursorColor,
+    bool? showCursor,
+    BoxHeightStyle selectionHeightStyle = BoxHeightStyle.tight,
+    BoxWidthStyle selectionWidthStyle = BoxWidthStyle.tight,
+    Brightness? keyboardAppearance,
+    EdgeInsets scrollPadding = const EdgeInsets.all(20.0),
+    ValueChanged<String>? onSelected,
+  }) : super(
+          requestFocusOnUserInteraction: requestFocusOnUserInteraction,
+          focusNode: focusNode,
+          validationFilter: validationFilter,
+          valueUpdater: valueUpdater,
+          enabled: enabled,
+          registrable: registrable,
+          order: order,
+          quietlyValidate: quietlyValidate,
+          asyncValidatorDebounce: asyncValidatorDebounce,
+          autovalidateMode: autovalidateMode,
+          onStatusChanged: onStatusChanged,
+          onInitialed: onInitialed,
+          onSaved: onSaved,
+          validator: validator,
+          asyncValidator: asyncValidator,
+          key: key,
+          readOnly: readOnly,
+          name: name,
+          initialValue: initialValue ?? '',
+          decorator: decorator,
+          builder: (state) {
+            final bool readOnly = state.readOnly;
+            return AutoSuggestBox(
+              items: items,
+              onSelected: onSelected,
+              leadingIcon: leadingIcon,
+              trailingIcon: trailingIcon,
+              clearButtonEnabled: clearButtonEnabled,
+              placeholder: placeholder,
+              placeholderStyle: placeholderStyle,
+              style: style,
+              decoration: decoration,
+              foregroundDecoration: foregroundDecoration,
+              highlightColor: highlightColor,
+              cursorWidth: cursorWidth,
+              cursorHeight: cursorHeight,
+              cursorRadius: cursorRadius,
+              cursorColor: cursorColor,
+              showCursor: showCursor,
+              selectionHeightStyle: selectionHeightStyle,
+              selectionWidthStyle: selectionWidthStyle,
+              keyboardAppearance: keyboardAppearance,
+              scrollPadding: scrollPadding,
+              onChanged: readOnly
+                  ? null
+                  : (v, reason) {
+                      state.didChange(v);
+                      state.requestFocusOnUserInteraction();
+                    },
+            );
+          },
+        );
+}

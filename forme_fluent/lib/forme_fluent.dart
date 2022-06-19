@@ -1,4 +1,5 @@
 export 'decorator/decoator.dart';
+export 'fields/auto_suggest_box.dart';
 export 'fields/checkbox.dart';
 export 'fields/combo_box.dart';
 export 'fields/date_picker.dart';

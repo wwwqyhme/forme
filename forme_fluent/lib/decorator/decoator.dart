@@ -8,6 +8,7 @@ class FormeFluentInputDecoratorBuilder<T> implements FormeFieldDecorator<T> {
   final Widget? helper;
   final TextStyle? textStyle;
   final Widget Function(Widget child)? wrapper;
+  final String? label;
 
   const FormeFluentInputDecoratorBuilder({
     this.wrapper,
@@ -19,6 +20,7 @@ class FormeFluentInputDecoratorBuilder<T> implements FormeFieldDecorator<T> {
     ),
     this.helper,
     this.textStyle,
+    this.label,
   });
 
   @override
@@ -31,6 +33,7 @@ class FormeFluentInputDecoratorBuilder<T> implements FormeFieldDecorator<T> {
       padding: padding,
       wrapper: wrapper,
       textStyle: textStyle,
+      label: label,
       child: child,
     );
   }
@@ -44,6 +47,7 @@ class FormeFluentInputDecorator<T> extends StatefulWidget {
     this.wrapper,
     required this.child,
     this.textStyle,
+    this.label,
   }) : super(key: key);
 
   final EdgeInsetsGeometry padding;
@@ -51,6 +55,7 @@ class FormeFluentInputDecorator<T> extends StatefulWidget {
   final Widget child;
   final Widget Function(Widget child)? wrapper;
   final TextStyle? textStyle;
+  final String? label;
 
   @override
   State<StatefulWidget> createState() => _FormeFluentInputDecoratorState<T>();
@@ -60,8 +65,14 @@ class _FormeFluentInputDecoratorState<T>
     extends FormeDecoratorState<T, FormeFluentInputDecorator<T>> {
   @override
   Widget build(BuildContext context) {
-    final Widget child =
+    Widget child =
         widget.wrapper == null ? widget.child : widget.wrapper!(widget.child);
+    if (widget.label != null) {
+      child = InfoLabel(
+        label: widget.label!,
+        child: child,
+      );
+    }
     if (isQuietlyValidate) {
       return FormRow(
         textStyle: widget.textStyle,
