@@ -1,0 +1,18 @@
+name: forme_fluent
+description: form fields for Fluent UI
+version: 1.0.0
+homepage: https://github.com/wwwqyhme/forme
+
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  fluent_ui: ^4.0.0-pre.0
+  flutter_test:
+    sdk: flutter
+  forme: ^4.1.3
