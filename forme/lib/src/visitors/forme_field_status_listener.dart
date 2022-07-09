@@ -23,8 +23,7 @@ import 'forme_field_visitor_state.dart';
 /// no need to care about order of fields
 ///
 /// **this widget must used inside in  [Forme] or [FormeField]**
-class FormeFieldStatusListener<T extends Object?>
-    extends FormeFieldVisitorWidget {
+class FormeFieldStatusListener<T> extends FormeFieldVisitorWidget {
   final bool Function(FormeFieldChangedStatus<T> status)? filter;
   final Widget? child;
   final Widget Function(
@@ -45,7 +44,7 @@ class FormeFieldStatusListener<T extends Object?>
   State<StatefulWidget> createState() => _FormeFieldStatusListenerState<T>();
 }
 
-class _FormeFieldStatusListenerState<T extends Object?>
+class _FormeFieldStatusListenerState<T>
     extends FormeFieldVisitorState<FormeFieldStatusListener<T>, T> {
   FormeFieldStatus<T>? status;
   @override

@@ -28,8 +28,8 @@ class _FormeValidationListenerState
   }
 
   @override
-  void onFieldStatusChanged(FormeState form, FormeFieldState<Object?> field,
-      FormeFieldChangedStatus<Object?> newStatus) {
+  void onFieldStatusChanged(FormeState form, FormeFieldState<dynamic> field,
+      FormeFieldChangedStatus<dynamic> newStatus) {
     if (newStatus.isValidationChanged) {
       setState(() {
         value = form.validation;
@@ -39,7 +39,7 @@ class _FormeValidationListenerState
 
   @override
   void onFieldsRegistered(
-      FormeState form, List<FormeFieldState<Object?>> fields) {
+      FormeState form, List<FormeFieldState<dynamic>> fields) {
     setState(() {
       value = form.validation;
     });

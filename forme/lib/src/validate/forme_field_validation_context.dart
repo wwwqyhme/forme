@@ -1,6 +1,6 @@
 import 'package:forme/forme.dart';
 
-class FormeFieldValidationContext<T extends Object?> {
+class FormeFieldValidationContext<T> {
   /// current validate field
   final FormeFieldState<T> field;
 

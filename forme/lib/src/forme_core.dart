@@ -29,12 +29,11 @@ class FormeKey extends LabeledGlobalKey<FormeState> {
       (throw Exception(
           'current state is null , did you put this key on Forme?'));
 
-  Map<String, Object?> get value => _state.value;
+  Map<String, dynamic> get value => _state.value;
 
   FormeValidation get validation => _state.validation;
 
-  T field<T extends FormeFieldState<Object?>>(String name) =>
-      _state.field<T>(name);
+  T field<T extends FormeFieldState>(String name) => _state.field<T>(name);
 
   bool hasField(String name) => _state.hasField(name);
 
@@ -55,7 +54,7 @@ class FormeKey extends LabeledGlobalKey<FormeState> {
 
   void save() => _state.save();
 
-  set value(Map<String, Object?> data) => _state.value = data;
+  set value(Map<String, dynamic> data) => _state.value = data;
 
   bool get quietlyValidate => _state.quietlyValidate;
 
@@ -71,13 +70,13 @@ class FormeKey extends LabeledGlobalKey<FormeState> {
 /// build your form !
 class Forme extends StatefulWidget {
   /// listen form focus changed
-  final FormeFieldStatusChanged<Object?>? onFieldStatusChanged;
+  final FormeFieldStatusChanged? onFieldStatusChanged;
 
   /// form content
   final Widget child;
 
   /// map initial value
-  final Map<String, Object?> initialValue;
+  final Map<String, dynamic> initialValue;
 
   final WillPopCallback? onWillPop;
 
@@ -112,7 +111,7 @@ class Forme extends StatefulWidget {
     FormeKey? key,
     this.onFieldStatusChanged,
     required this.child,
-    this.initialValue = const <String, Object?>{},
+    this.initialValue = const <String, dynamic>{},
     this.onWillPop,
     this.quietlyValidate = false,
     AutovalidateMode? autovalidateMode,
@@ -136,7 +135,7 @@ class FormeState extends State<Forme> {
   final List<FormeVisitor> _visitors = [];
 
   /// get initialValue
-  Map<String, Object?> get initialValue => widget.initialValue;
+  Map<String, dynamic> get initialValue => widget.initialValue;
   AutovalidateMode get autovalidateMode => widget.autovalidateMode;
 
   int _gen = 0;
@@ -167,14 +166,14 @@ class FormeState extends State<Forme> {
   /// get form value
   ///
   /// will not contains value of disabled fields
-  Map<String, Object?> get value {
-    final Map<String, Object?> map = <String, Object?>{};
+  Map<String, dynamic> get value {
+    final Map<String, dynamic> map = <String, dynamic>{};
     for (final FormeFieldState element in _states) {
       if (!element.enabled) {
         continue;
       }
       final String name = element.name;
-      final Object? value = element.value;
+      final dynamic value = element.value;
       map[name] = value;
     }
     return map;
@@ -183,7 +182,7 @@ class FormeState extends State<Forme> {
   /// get field by name
   ///
   /// throw an exception if field not found
-  T field<T extends FormeFieldState<Object?>>(String name) {
+  T field<T extends FormeFieldState>(String name) {
     final T? field = _findField(name);
     if (field == null) {
       throw Exception('no field can be found by name :$name');
@@ -224,14 +223,14 @@ class FormeState extends State<Forme> {
     if (validateByOrder) {
       return _validateByOrderManually(states, quietly);
     }
-    final List<FormeFieldValidateSnapshot<Object?>> value = await Future.wait(
+    final List<FormeFieldValidateSnapshot> value = await Future.wait(
         states.map((state) => state.validate(quietly: quietly)),
         eagerError: true);
     return FormeValidateSnapshot(value);
   }
 
   /// set form value
-  set value(Map<String, Object?> data) => data.forEach((key, Object? value) {
+  set value(Map<String, dynamic> data) => data.forEach((key, dynamic value) {
         field(key).value = value;
       });
 
@@ -270,7 +269,7 @@ class FormeState extends State<Forme> {
     });
   }
 
-  T? _findField<T extends FormeFieldState<Object?>>(String name) {
+  T? _findField<T extends FormeFieldState>(String name) {
     for (final FormeFieldState state in _states) {
       if (state.name == name) {
         return state as T;
@@ -330,7 +329,7 @@ class FormeState extends State<Forme> {
     }
   }
 
-  Object? _getInitialValue(String name, Object? value) {
+  dynamic _getInitialValue(String name, dynamic value) {
     if (widget.initialValue.containsKey(name)) {
       return widget.initialValue[name];
     }
@@ -488,7 +487,7 @@ class _FormeScope extends InheritedWidget {
   }
 }
 
-class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
+class FormeFieldState<T> extends State<FormeField<T>> {
   final List<FormeFieldVisitor<T>> _visitors = [];
 
   final Duration _defaultAsyncValidatorDebounce =
@@ -621,7 +620,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   ///
   /// **[Forme.initialValue] has higher priority than field's initialValue**
   T get initialValue {
-    Object? initialValue =
+    dynamic initialValue =
         _formeState?._getInitialValue(name, widget.initialValue);
     if (initialValue != null) {
       return initialValue as T;
@@ -1128,7 +1127,7 @@ class FormeFieldState<T extends Object?> extends State<FormeField<T>> {
   }
 }
 
-class FormeFieldChangedStatus<T extends Object?> extends FormeFieldStatus<T> {
+class FormeFieldChangedStatus<T> extends FormeFieldStatus<T> {
   FormeFieldChangedStatus._(
     FormeFieldStatus<T> newStatus,
     this.isEnabledChanged,
@@ -1159,7 +1158,7 @@ class FormeFieldChangedStatus<T extends Object?> extends FormeFieldStatus<T> {
   final bool isFocusChanged;
 }
 
-class FormeFieldStatus<T extends Object?> {
+class FormeFieldStatus<T> {
   final bool enabled;
   final bool readOnly;
   final FormeFieldValidation validation;

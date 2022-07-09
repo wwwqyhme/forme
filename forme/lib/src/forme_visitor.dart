@@ -18,7 +18,7 @@ mixin FormeVisitor {
   );
 }
 
-mixin FormeFieldVisitor<T extends Object?> {
+mixin FormeFieldVisitor<T> {
   void onRegistered(
     FormeState form,
     FormeFieldState<T> field,

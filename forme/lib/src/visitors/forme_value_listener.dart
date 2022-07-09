@@ -6,7 +6,7 @@ import 'forme_visitor_state.dart';
 /// used to listen form value
 class FormeValueListener extends StatefulWidget {
   final Widget Function(
-      BuildContext context, Map<String, Object?> value, Widget? child) builder;
+      BuildContext context, Map<String, dynamic> value, Widget? child) builder;
   final Widget? child;
 
   const FormeValueListener({
@@ -19,7 +19,7 @@ class FormeValueListener extends StatefulWidget {
 }
 
 class _FormeValueListenerState extends FormeVisitorState<FormeValueListener> {
-  late Map<String, Object?> value;
+  late Map<String, dynamic> value;
 
   @override
   Widget build(BuildContext context) {
@@ -27,8 +27,8 @@ class _FormeValueListenerState extends FormeVisitorState<FormeValueListener> {
   }
 
   @override
-  void onFieldStatusChanged(FormeState form, FormeFieldState<Object?> field,
-      FormeFieldChangedStatus<Object?> newStatus) {
+  void onFieldStatusChanged(FormeState form, FormeFieldState<dynamic> field,
+      FormeFieldChangedStatus<dynamic> newStatus) {
     if (newStatus.isValueChanged) {
       setState(() {
         value = form.value;
@@ -38,7 +38,7 @@ class _FormeValueListenerState extends FormeVisitorState<FormeValueListener> {
 
   @override
   void onFieldsRegistered(
-      FormeState form, List<FormeFieldState<Object?>> fields) {
+      FormeState form, List<FormeFieldState<dynamic>> fields) {
     setState(() {
       value = form.value;
     });

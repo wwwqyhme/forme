@@ -30,13 +30,13 @@ class _FormeIsValueChangeState
 
   @override
   void onFieldsRegistered(
-      FormeState form, List<FormeFieldState<Object?>> fields) {
+      FormeState form, List<FormeFieldState<dynamic>> fields) {
     checkIsValueChanged(form);
   }
 
   @override
-  void onFieldStatusChanged(FormeState form, FormeFieldState<Object?> field,
-      FormeFieldChangedStatus<Object?> newStatus) {
+  void onFieldStatusChanged(FormeState form, FormeFieldState<dynamic> field,
+      FormeFieldChangedStatus<dynamic> newStatus) {
     if (newStatus.isValueChanged) {
       checkIsValueChanged(form);
     }

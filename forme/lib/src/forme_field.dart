@@ -14,13 +14,11 @@ typedef FormeAsyncValidator<T> = Future<String?> Function(
 typedef FormeValidator<T> = String? Function(FormeFieldState<T> field, T value);
 typedef FormeFieldSetter<T> = void Function(FormeFieldState<T> field, T value);
 typedef FormeFieldInitialed<T> = void Function(FormeFieldState<T> field);
-typedef FormeFieldBuilder<T extends Object?> = Widget Function(
-    FormeFieldState<T> state);
-typedef FormeFieldValueUpdater<T extends Object?> = T Function(
+typedef FormeFieldBuilder<T> = Widget Function(FormeFieldState<T> state);
+typedef FormeFieldValueUpdater<T> = T Function(
     FormeField<T> oldWidget, FormeField<T> widget, T oldValue);
-typedef FormeValueComparator<T extends Object?> = bool Function(
-    T oldValue, T newValue);
-typedef FormeFieldValidationFilter<T extends Object?> = bool Function(
+typedef FormeValueComparator<T> = bool Function(T oldValue, T newValue);
+typedef FormeFieldValidationFilter<T> = bool Function(
     FormeFieldValidationContext<T> context);
 
 @immutable
@@ -46,7 +44,7 @@ class FormeFieldType extends Type {
   }
 }
 
-class FormeField<T extends Object?> extends StatefulWidget {
+class FormeField<T> extends StatefulWidget {
   final String name;
   final bool readOnly;
   final FormeFieldBuilder<T> builder;

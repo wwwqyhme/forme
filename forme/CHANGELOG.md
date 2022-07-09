@@ -1,3 +1,8 @@
+## 4.2.0
+
+1. update `Object?` to `dynamic` 
+
+
 ## 4.1.3+1
 
 1. remove unnecessary imports

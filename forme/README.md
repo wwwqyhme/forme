@@ -1,6 +1,6 @@
 ## Web Demo
 
-https://www.qyh.me/forme3/
+https://www.qyh.me/forme3/index.html
 
 ## Simple Usage
 
@@ -29,7 +29,7 @@ Widget forme = Forme(
 | key | false | `FormeKey` | a global key, also used to control form |
 | child | true | `Widget` | form content widget|
 | onFieldStatusChanged | false | `FormeFieldStatusChanged` | listen form field's status change |
-| initialValue | false | `Map<String,Object?>` | initialValue , **will override FormField's initialValue** |
+| initialValue | false | `Map<String,dynamic>` | initialValue , **will override FormField's initialValue** |
 | onWillPop | false | `WillPopCallback` | Signature for a callback that verifies that it's OK to call Navigator.pop |
 | quietlyValidate | false | `bool` | if this attribute is true , will not display default error text|
 | autovalidateMode| false | `AutovalidateMode` | auto validate form mode |
@@ -151,13 +151,13 @@ T field = formeKey.field<T extends FormeFieldState>(String name);
 #### get form value
 
 ``` Dart
-Map<String, Object?> data = formeKey.value;
+Map<String, dynamic> data = formeKey.value;
 ```
 
 #### set form value
 
 ``` Dart
-formeKey.value = Map<String,Object?> value;
+formeKey.value = Map<String,dynamic> value;
 ```
 
 #### validate

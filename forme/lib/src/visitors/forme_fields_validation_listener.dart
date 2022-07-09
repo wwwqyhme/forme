@@ -56,8 +56,8 @@ class _FormeFieldsValidationListenerState
   }
 
   @override
-  void onFieldStatusChanged(FormeState form, FormeFieldState<Object?> field,
-      FormeFieldChangedStatus<Object?> newStatus) {
+  void onFieldStatusChanged(FormeState form, FormeFieldState<dynamic> field,
+      FormeFieldChangedStatus<dynamic> newStatus) {
     if (widget.names.contains(field.name) && newStatus.isValidationChanged) {
       updateValidation(form);
     }
@@ -65,7 +65,7 @@ class _FormeFieldsValidationListenerState
 
   @override
   void onFieldsRegistered(
-      FormeState form, List<FormeFieldState<Object?>> fields) {
+      FormeState form, List<FormeFieldState<dynamic>> fields) {
     if (fields.any((element) => widget.names.contains(element.name))) {
       updateValidation(form);
     }

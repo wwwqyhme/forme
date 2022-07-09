@@ -13,9 +13,8 @@ abstract class FormeFieldVisitorWidget extends StatefulWidget {
   }) : super(key: key);
 }
 
-abstract class FormeFieldVisitorState<T extends FormeFieldVisitorWidget,
-        E extends Object?> extends State<T>
-    with FormeFieldVisitor<E>, FormeVisitor {
+abstract class FormeFieldVisitorState<T extends FormeFieldVisitorWidget, E>
+    extends State<T> with FormeFieldVisitor<E>, FormeVisitor {
   FormeState? _form;
   FormeFieldState<E>? _field;
 
@@ -59,8 +58,8 @@ abstract class FormeFieldVisitorState<T extends FormeFieldVisitorWidget,
   }
 
   @override
-  void onFieldStatusChanged(FormeState form, FormeFieldState<Object?> field,
-      FormeFieldChangedStatus<Object?> status) {
+  void onFieldStatusChanged(FormeState form, FormeFieldState<dynamic> field,
+      FormeFieldChangedStatus<dynamic> status) {
     if (field.name == widget.name) {
       onStatusChanged(form, field as FormeFieldState<E>,
           status as FormeFieldChangedStatus<E>);
@@ -69,8 +68,8 @@ abstract class FormeFieldVisitorState<T extends FormeFieldVisitorWidget,
 
   @override
   void onFieldsRegistered(
-      FormeState form, List<FormeFieldState<Object?>> fields) {
-    final Iterable<FormeFieldState<Object?>> iterable =
+      FormeState form, List<FormeFieldState<dynamic>> fields) {
+    final Iterable<FormeFieldState<dynamic>> iterable =
         fields.where((element) => element.name == widget.name);
     if (iterable.isNotEmpty) {
       onRegistered(form, iterable.first as FormeFieldState<E>);
@@ -79,8 +78,8 @@ abstract class FormeFieldVisitorState<T extends FormeFieldVisitorWidget,
 
   @override
   void onFieldsUnregistered(
-      FormeState form, List<FormeFieldState<Object?>> fields) {
-    final Iterable<FormeFieldState<Object?>> iterable =
+      FormeState form, List<FormeFieldState<dynamic>> fields) {
+    final Iterable<FormeFieldState<dynamic>> iterable =
         fields.where((element) => element.name == widget.name);
     if (iterable.isNotEmpty) {
       onUnregistered(form, iterable.first as FormeFieldState<E>);
