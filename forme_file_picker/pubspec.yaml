@@ -1,6 +1,6 @@
 name: forme_file_picker
 description: image picker for Forme , support drag & drop
-version: 2.0.2
+version: 2.1.0
 homepage: https://github.com/wwwqyhme/forme_file_picker
 
 environment:
@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  forme: ^4.1.2
+  forme: ^4.2.0
 
 dev_dependencies:
   flutter_test:
