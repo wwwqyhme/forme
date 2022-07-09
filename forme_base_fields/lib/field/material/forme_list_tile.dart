@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:forme/forme.dart';
 
-class FormeListTileItem<T> {
+class FormeListTileItem<T extends Object> {
   final Widget title;
   final bool readOnly;
   final bool visible;
@@ -36,7 +36,7 @@ class FormeListTileItem<T> {
 
 enum FormeListTileType { checkbox, switchs }
 
-class FormeListTile<T> extends FormeField<List<T>> {
+class FormeListTile<T extends Object> extends FormeField<List<T>> {
   final List<FormeListTileItem<T>> items;
 
   FormeListTile({

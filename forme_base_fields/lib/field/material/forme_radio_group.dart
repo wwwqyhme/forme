@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 import 'forme_list_tile.dart';
 
-class FormeRadioGroup<T> extends FormeField<T?> {
+class FormeRadioGroup<T extends Object> extends FormeField<T?> {
   final List<FormeListTileItem<T>> items;
 
   FormeRadioGroup({
