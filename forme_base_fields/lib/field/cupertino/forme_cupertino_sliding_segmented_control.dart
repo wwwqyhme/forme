@@ -1,8 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:forme/forme.dart';
 
-class FormeCupertinoSlidingSegmentedControl<T extends Object>
-    extends FormeField<T?> {
+class FormeCupertinoSlidingSegmentedControl<T> extends FormeField<T?> {
   final Map<T, Widget> children;
 
   FormeCupertinoSlidingSegmentedControl({

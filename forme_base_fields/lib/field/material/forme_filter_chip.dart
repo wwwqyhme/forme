@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 import 'forme_choice_chip.dart';
 
-class FormeFilterChip<T extends Object> extends FormeField<List<T>> {
+class FormeFilterChip<T> extends FormeField<List<T>> {
   final List<FormeChipItem<T>> items;
   final int? maxSelectedCount;
 

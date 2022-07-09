@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
-class FormeChoiceChip<T extends Object> extends FormeField<T?> {
+class FormeChoiceChip<T> extends FormeField<T?> {
   final List<FormeChipItem<T>> items;
 
   FormeChoiceChip({
@@ -128,7 +128,7 @@ class FormeChoiceChip<T extends Object> extends FormeField<T?> {
         );
 }
 
-class FormeChipItem<T extends Object> {
+class FormeChipItem<T> {
   final Widget label;
   final Widget? avatar;
   final T data;

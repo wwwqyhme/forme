@@ -1,3 +1,7 @@
+# 2.3.0
+
+upgrade Forme to 4.2.0
+
 # 2.2.1
 
 upgrade Forme to 4.1.2

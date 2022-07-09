@@ -34,7 +34,7 @@ import 'package:forme/forme.dart';
 typedef BeforeValueChanged<T> = Future<bool> Function(
     FormeFieldState<T> field, T value, bool Function() isValid);
 
-class FormeDropdownButton<T extends Object> extends FormeField<T?> {
+class FormeDropdownButton<T> extends FormeField<T?> {
   final List<DropdownMenuItem<T>> items;
 
   /// if dropdown is changing to a new value , this param is used to check whether new value can be changed or not
@@ -167,7 +167,7 @@ class FormeDropdownButton<T extends Object> extends FormeField<T?> {
   _FormDropdownButtonState<T> createState() => _FormDropdownButtonState();
 }
 
-class _FormDropdownButtonState<T extends Object> extends FormeFieldState<T?> {
+class _FormDropdownButtonState<T> extends FormeFieldState<T?> {
   int _gen = 0;
   T? _tempValue;
 

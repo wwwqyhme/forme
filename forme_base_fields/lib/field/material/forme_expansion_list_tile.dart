@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 import 'expansion_list_tile.dart' as e;
 
-typedef FormeExpansionListTileControlBuilder<T extends Object> = Widget
-    Function(
+typedef FormeExpansionListTileControlBuilder<T> = Widget Function(
   BuildContext context,
   T data,
   bool isSelected,
   VoidCallback? toggle,
 );
 
-class FormeExpansionListTileItem<T extends Object> {
+class FormeExpansionListTileItem<T> {
   final Widget title;
   final bool readOnly;
   final EdgeInsetsGeometry padding;
@@ -115,7 +114,7 @@ class FormeExpansionListTileItem<T extends Object> {
   }
 }
 
-class FormeExpansionItemControl<T extends Object> {
+class FormeExpansionItemControl<T> {
   final T data;
   final FormeExpansionListTileControlBuilder<T> builder;
 
@@ -164,7 +163,7 @@ class FormeExpansionItemControl<T extends Object> {
   }
 }
 
-class _ExpansionItem<T extends Object> extends FormeExpansionListTileItem<T> {
+class _ExpansionItem<T> extends FormeExpansionListTileItem<T> {
   _ExpansionItem({
     this.childrenPadding,
     required this.children,
@@ -206,7 +205,7 @@ class _ExpansionItem<T extends Object> extends FormeExpansionListTileItem<T> {
   bool get hasChildren => children.isNotEmpty;
 }
 
-class _DataItem<T extends Object> extends FormeExpansionListTileItem<T> {
+class _DataItem<T> extends FormeExpansionListTileItem<T> {
   final FormeExpansionItemControl<T> control;
   final ListTileStyle? style;
   final Color? selectedColor;
@@ -255,7 +254,7 @@ class _DataItem<T extends Object> extends FormeExpansionListTileItem<T> {
 /// an expansion tree
 ///
 /// **NOT SUPPORT** change items after init
-class FormeExpansionListTile<T extends Object> extends FormeField<List<T>> {
+class FormeExpansionListTile<T> extends FormeField<List<T>> {
   final List<FormeExpansionListTileItem<T>> items;
 
   FormeExpansionListTile({
@@ -370,8 +369,7 @@ class FormeExpansionListTile<T extends Object> extends FormeField<List<T>> {
   FormeFieldState<List<T>> createState() => FormeExpansionListTileState<T>();
 }
 
-class FormeExpansionListTileState<T extends Object>
-    extends FormeFieldState<List<T>> {
+class FormeExpansionListTileState<T> extends FormeFieldState<List<T>> {
   final GlobalKey<_SelectableTreeState<T>> _globalKey = GlobalKey();
 
   @override
@@ -440,7 +438,7 @@ class FormeExpansionListTileState<T extends Object>
   _SelectableTreeState<T> get _tree => _globalKey.currentState!;
 }
 
-class FormeExpansionNode<T extends Object> {
+class FormeExpansionNode<T> {
   final _Node<T> _node;
   final GlobalKey<_SelectableTreeState<T>> _key;
 
@@ -491,7 +489,7 @@ class FormeExpansionNode<T extends Object> {
   _SelectableTreeState<T> get _tree => _key.currentState!;
 }
 
-class _SelectableTree<T extends Object> extends StatefulWidget {
+class _SelectableTree<T> extends StatefulWidget {
   final List<FormeExpansionListTileItem<T>> items;
   final bool readOnly;
   final bool expanded;
@@ -514,7 +512,7 @@ class _SelectableTree<T extends Object> extends StatefulWidget {
   State<StatefulWidget> createState() => _SelectableTreeState<T>();
 }
 
-class _SelectableTreeState<T extends Object> extends State<_SelectableTree<T>> {
+class _SelectableTreeState<T> extends State<_SelectableTree<T>> {
   late _Tree<T> _tree;
   int nodeId = 0;
 
@@ -882,7 +880,7 @@ class _SelectableTreeState<T extends Object> extends State<_SelectableTree<T>> {
   }
 }
 
-class _Tree<T extends Object> {
+class _Tree<T> {
   final List<_Node<T>> children;
 
   _Tree(this.children);
@@ -944,7 +942,7 @@ class _Tree<T extends Object> {
   }
 }
 
-class _Node<T extends Object> {
+class _Node<T> {
   final int id;
   final _Node<T>? parent;
   final FormeExpansionListTileItem<T> item;
