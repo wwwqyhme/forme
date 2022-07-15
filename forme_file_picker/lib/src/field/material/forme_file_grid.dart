@@ -5,11 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
 import 'draggable_grid_view.dart';
-import 'forme_file.dart';
-import 'thumbnail.dart';
 
 typedef FilePickerBuilder = Widget Function(
-  FormeFilePickerState field,
+  FormeFileGridState field,
 );
 
 typedef GridItemBuilder = Widget Function(
@@ -20,7 +18,7 @@ typedef GridItemBuilder = Widget Function(
   bool enable,
 );
 
-class FormeFilePicker extends FormeField<List<FormeFile>> {
+class FormeFileGrid extends FormeField<List<FormeFile>> {
   final int? maximum;
 
   /// color of remove icon default is [Colors.redAccent]
@@ -42,7 +40,7 @@ class FormeFilePicker extends FormeField<List<FormeFile>> {
   ///
   /// **if you only check removable by index , the file at index can still be removed after sort by drag , use [draggable] disable drag conditonal**
   ///
-  /// **you call still remove this image by [FormeFilePickerState]**
+  /// **you call still remove this image by [FormeFileGridState]**
   final bool Function(FormeFile image, int index)? removable;
 
   final IconData? gridItemRemoveIcon;
@@ -54,11 +52,13 @@ class FormeFilePicker extends FormeField<List<FormeFile>> {
   final Widget? pickImageFromGalleryOnBottomSheet;
   final Widget? cancelOnBottomSheet;
 
-  /// builder display widget  when image loading failed
+  /// builder display widget  when thumbnail create failed or image loading failed
+  ///
+  ///retry will be null if  image loading failed
   final Widget Function(
       BuildContext context,
       FormeFile item,
-      VoidCallback retry,
+      VoidCallback? retry,
       Object error,
       StackTrace? stackTrace)? imageLoadingErrorBuilder;
 
@@ -90,10 +90,10 @@ class FormeFilePicker extends FormeField<List<FormeFile>> {
   /// should not be null if [supportCamera] is true
   final Future<List<FormeFile>> Function(int? max)? pickFromCamera;
 
-  /// parameter max is not a restriction but just tell you how many images can be inserted.
+  /// parameter max is not a restriction but just tell you how many files can be inserted.
   final Future<List<FormeFile>> Function(int? max) pickFromGallery;
 
-  FormeFilePicker({
+  FormeFileGrid({
     Duration? animateDuration,
     this.maximum,
     FilePickerBuilder? filePickerBuilder,
@@ -176,8 +176,8 @@ class FormeFilePicker extends FormeField<List<FormeFile>> {
             name: name,
             initialValue: initialValue ?? <FormeFile>[],
             builder: (genericState) {
-              final FormeFilePickerState state =
-                  genericState as FormeFilePickerState;
+              final FormeFileGridState state =
+                  genericState as FormeFileGridState;
               return DraggableGridView<_Item<FormeFile>>(
                 scrollController: scrollController,
                 physics: physics ?? const NeverScrollableScrollPhysics(),
@@ -221,12 +221,12 @@ class FormeFilePicker extends FormeField<List<FormeFile>> {
             });
 
   @override
-  FormeFieldState<List<FormeFile>> createState() => FormeFilePickerState();
+  FormeFieldState<List<FormeFile>> createState() => FormeFileGridState();
 }
 
-class FormeFilePickerState extends FormeFieldState<List<FormeFile>> {
+class FormeFileGridState extends FormeFieldState<List<FormeFile>> {
   @override
-  FormeFilePicker get widget => super.widget as FormeFilePicker;
+  FormeFileGrid get widget => super.widget as FormeFileGrid;
 
   late GridController<_Item<FormeFile>> _gridController;
 
@@ -245,7 +245,7 @@ class FormeFilePickerState extends FormeFieldState<List<FormeFile>> {
     });
   }
 
-  /// when you have your own [DragTarget] and want to accept data from [FormeFilePicker]
+  /// when you have your own [DragTarget] and want to accept data from [FormeFileGrid]
   /// you can use this method in [DragTarget.onWillAccept]
   bool canAccept(dynamic data) => _gridController.canAccept(data);
 
@@ -254,8 +254,8 @@ class FormeFilePickerState extends FormeFieldState<List<FormeFile>> {
   ValueListenable<bool> get draggingListenable =>
       FormeValueListenableDelegate(_draggingNotifer);
 
-  List<_Item<FormeFile>> _convert(List<FormeFile> images) {
-    List<_Item<FormeFile>> items = images.map((e) => _Item(e)).toList();
+  List<_Item<FormeFile>> _convert(List<FormeFile> files) {
+    List<_Item<FormeFile>> items = files.map((e) => _Item(e)).toList();
     if (widget.maximum != null && items.length > widget.maximum!) {
       items = items.sublist(0, widget.maximum);
     }
@@ -324,8 +324,8 @@ class FormeFilePickerState extends FormeFieldState<List<FormeFile>> {
     _gridController.removeData(data, commit);
   }
 
-  Widget _errorBuilder(BuildContext context, FormeFile item, VoidCallback retry,
-      Object error, StackTrace? trace) {
+  Widget _errorBuilder(BuildContext context, FormeFile item,
+      VoidCallback? retry, Object error, StackTrace? trace) {
     return widget.imageLoadingErrorBuilder
             ?.call(context, item, retry, error, trace) ??
         Container(
@@ -349,13 +349,49 @@ class FormeFilePickerState extends FormeFieldState<List<FormeFile>> {
         );
   }
 
+  Widget _thumbnail(ImageProvider provider, FormeFile item) {
+    return Image(
+      image: provider,
+      fit: widget.imageFit,
+      width: double.infinity,
+      height: double.infinity,
+      errorBuilder: (context, error, stackTrace) {
+        return _errorBuilder(context, item, null, error, stackTrace);
+      },
+    );
+  }
+
   Widget _defaultGridItem(ValueChanged<int> remove, FormeFile item, int index,
       bool readOnly, bool enable) {
-    final Widget thumbnail = Thumbnail(
-        file: item,
-        fit: widget.imageFit,
-        imageLoadingBuilder: _loadingBuilder,
-        imageLoadingErrorBuilder: _errorBuilder);
+    Widget thumbnail;
+    if (item._cache != null) {
+      thumbnail = _thumbnail(item._cache!, item);
+    } else {
+      thumbnail = Builder(builder: (builderContext) {
+        return FutureBuilder<ImageProvider>(
+          future: item._thumbnail,
+          builder: (context, builder) {
+            if (builder.connectionState == ConnectionState.waiting) {
+              return _loadingBuilder(context, item);
+            } else {
+              if (builder.hasError) {
+                return _errorBuilder(context, item, () {
+                  if (mounted) {
+                    item._future = null;
+                    (builderContext as Element).markNeedsBuild();
+                  }
+                }, builder.error!, builder.stackTrace);
+              }
+              if (builder.hasData) {
+                item._cache = builder.data;
+                return _thumbnail(builder.data!, item);
+              }
+            }
+            return const SizedBox.shrink();
+          },
+        );
+      });
+    }
 
     final bool showGridItemRemoveIcon = widget.showGridItemRemoveIcon &&
         (widget.removable == null || widget.removable!(item, index));
@@ -395,8 +431,8 @@ class FormeFilePickerState extends FormeFieldState<List<FormeFile>> {
     );
   }
 
-  void insertPickedImages(List<FormeFile> images) {
-    if (!mounted || images.isEmpty) {
+  void insertFiles(List<FormeFile> files) {
+    if (!mounted || files.isEmpty) {
       return;
     }
 
@@ -410,7 +446,7 @@ class FormeFilePickerState extends FormeFieldState<List<FormeFile>> {
       return;
     }
     final Iterable<FormeFile> needInserts =
-        images.where((element) => !currentValue.contains(element)).toList();
+        files.where((element) => !currentValue.contains(element)).toList();
     if (needInserts.isEmpty) {
       return;
     }
@@ -431,8 +467,8 @@ class FormeFilePickerState extends FormeFieldState<List<FormeFile>> {
     if (readOnly || (maxNum != null && maxNum < 1)) {
       return;
     }
-    final List<FormeFile> images = await widget.pickFromGallery(maxNum);
-    insertPickedImages(images);
+    final List<FormeFile> files = await widget.pickFromGallery(maxNum);
+    insertFiles(files);
   }
 
   Future _pickFromCamera() async {
@@ -442,11 +478,11 @@ class FormeFilePickerState extends FormeFieldState<List<FormeFile>> {
         (maxNum != null && maxNum < 1)) {
       return;
     }
-    final List<FormeFile> images = await widget.pickFromCamera!(maxNum);
-    insertPickedImages(images);
+    final List<FormeFile> files = await widget.pickFromCamera!(maxNum);
+    insertFiles(files);
   }
 
-  Widget _defaultFilePicker(FormeFilePickerState field) {
+  Widget _defaultFilePicker(FormeFileGridState field) {
     return GestureDetector(
       onTap: readOnly
           ? null
@@ -575,4 +611,14 @@ class _Item<T> {
   bool operator ==(Object other) {
     return other is _Item<T> && other.value == value;
   }
+}
+
+abstract class FormeFile {
+  Future<ImageProvider> get makeThumbnail;
+
+  Future<ImageProvider> get _thumbnail => _future ??= makeThumbnail;
+
+  /// cached thumbnail feature
+  Future<ImageProvider>? _future;
+  ImageProvider? _cache;
 }

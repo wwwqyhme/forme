@@ -1,10 +1,14 @@
-## FormeImagePicker 
+## FormeFileGrid
 
 **this package only provide move,sort,display your picked images. you must implement image picker via image_picker or other packages by yourself**
 
 ### example
 
-https://www.qyh.me/forme3/#/FormeImagePicker
+https://www.qyh.me/forme3/index.html
+
+### screenshot
+
+![forme_file_grid](https://raw.githubusercontent.com/wwwqyhme/forme/main/forme_file_picker/forme_file_grid.gif)
 
 ### Usage 
 

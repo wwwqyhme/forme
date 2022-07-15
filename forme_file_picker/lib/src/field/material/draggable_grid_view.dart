@@ -108,17 +108,9 @@ class _DraggableGridViewState<T> extends State<DraggableGridView<T>> {
           widget.builder,
           _effectiveController.value[index],
           widget.draggableConfiguration,
-          (v) {
-            if (mounted && _effectiveController._animateItems != null) {
-              setState(() {
-                _effectiveController.value =
-                    List.of(_effectiveController._animateItems!);
-              });
-            }
-          },
+          widget.onAccept,
           widget.slideCurve,
           widget.reOrderable,
-          key: _effectiveController._keys.putIfAbsent(index, () => GlobalKey()),
         );
       },
     );
@@ -142,7 +134,6 @@ class _CompleteCallback {
 
 class GridController<T> extends ValueNotifier<List<T>> {
   final Map<int, _DraggableController> _controllers = {};
-  final Map<int, Key> _keys = {};
   final List<_CompleteCallback> _completeCallbacks = [];
   final Map<int, int> _animateMap = {};
   List<T>? _animateItems;
@@ -197,27 +188,13 @@ class GridController<T> extends ValueNotifier<List<T>> {
   }
 
   @override
-  set value(List<T> newValues) {
+  set value(List<T> newValue) {
     _clearAnimations();
-    final List<T> oldValues = value;
-    final Map<int, Key> keyMap = {};
-    for (int i = 0; i < newValues.length; i++) {
-      final T newValue = newValues[i];
-      final int index = oldValues.indexOf(newValue);
-      if (index == -1) {
-        keyMap[i] = GlobalKey();
-      } else {
-        keyMap[i] = _keys[index]!;
-      }
-    }
-    _keys
-      ..clear()
-      ..addAll(keyMap);
-    super.value = newValues;
+    _animateItems = null;
+    super.value = newValue;
   }
 
   void _clearAnimations() {
-    _animateItems = null;
     _animateMap.clear();
     _completeCallbacks.clear();
     for (final _DraggableController element in _controllers.values) {
@@ -344,17 +321,16 @@ class DraggableGridItem<T> extends StatefulWidget {
   final Curve? slideCurve;
   final bool reOrderable;
   DraggableGridItem(
-      this.duration,
-      this.controller,
-      this.gridController,
-      this.builder,
-      this.item,
-      this.draggableConfiguration,
-      this.onAccept,
-      this.slideCurve,
-      this.reOrderable,
-      {Key? key})
-      : super(key: key);
+    this.duration,
+    this.controller,
+    this.gridController,
+    this.builder,
+    this.item,
+    this.draggableConfiguration,
+    this.onAccept,
+    this.slideCurve,
+    this.reOrderable,
+  ) : super(key: controller.key);
 
   @override
   State<StatefulWidget> createState() => _DraggableItemState<T>();
@@ -366,50 +342,22 @@ class _DraggableItemState<T> extends State<DraggableGridItem<T>>
   @override
   void initState() {
     super.initState();
-    widget.controller.addListener(_onAnimationChanged);
-  }
-
-  void _onAnimationChanged() {
-    if (mounted) {
-      setState(() {
-        _animateInfo = widget.controller.value;
-      });
-    }
+    widget.controller.addListener(() {
+      if (mounted) {
+        setState(() {
+          _animateInfo = widget.controller.value;
+        });
+      }
+    });
   }
 
   void onAnimateEnd() {
-    if (_animateInfo != null) {
-      widget.gridController._onAnimateEnd(_animateInfo!.gen);
-    }
+    widget.gridController._onAnimateEnd(_animateInfo!.gen);
   }
 
   @override
   void dispose() {
     super.dispose();
-  }
-
-  void _onAccept() {
-    if (widget.gridController._animateItems != null) {
-      widget.onAccept?.call(widget.gridController._animateItems!);
-    }
-  }
-
-  void _onDragCompleted(int index) {
-    final bool accepted = widget.gridController._accepted;
-    if (accepted) {
-      _onAccept();
-      return;
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant DraggableGridItem<T> oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller != widget.controller) {
-      oldWidget.controller.removeListener(_onAnimationChanged);
-      widget.controller.addListener(_onAnimationChanged);
-      _animateInfo = null;
-    }
   }
 
   @override
@@ -420,21 +368,37 @@ class _DraggableItemState<T> extends State<DraggableGridItem<T>>
       }
       widget.controller.context = context;
     });
-
     final Widget child =
         widget.builder(context, widget.item, widget.controller.index);
+
+    final Widget transition = _animateInfo != null
+        ? AnimatedSlide(
+            offset: _animateInfo!.offset,
+            onEnd: onAnimateEnd,
+            duration: widget.duration,
+            curve: widget.slideCurve ?? Curves.linear,
+            child: child,
+          )
+        : const SizedBox.shrink();
+
     if (!widget.draggableConfiguration
         .draggable(widget.item, widget.controller.index)) {
-      return child;
+      return transition;
     }
 
-    final Widget animatedSlide = AnimatedSlide(
-      offset: _animateInfo?.offset ?? Offset.zero,
-      onEnd: onAnimateEnd,
-      duration: widget.duration,
-      curve: widget.slideCurve ?? Curves.linear,
-      child: child,
-    );
+    void _onAccept() {
+      if (widget.gridController._animateItems != null) {
+        widget.onAccept?.call(widget.gridController._animateItems!);
+      }
+    }
+
+    void _onDragCompleted(int index) {
+      final bool accepted = widget.gridController._accepted;
+      if (accepted) {
+        _onAccept();
+        return;
+      }
+    }
 
     return DragTarget<_DraggableController>(
       onWillAccept: (data) {
@@ -495,7 +459,7 @@ class _DraggableItemState<T> extends State<DraggableGridItem<T>>
               widget.draggableConfiguration.onDragEnd
                   ?.call(widget.controller.index);
             },
-            child: animatedSlide,
+            child: transition,
           );
         });
       },
@@ -506,6 +470,8 @@ class _DraggableItemState<T> extends State<DraggableGridItem<T>>
 class _DraggableController extends ValueNotifier<_AnimateInfo?> {
   /// grid item index
   final int index;
+
+  final Key key = UniqueKey();
 
   int? _currentIndex;
   int? _animatedIndex;
@@ -537,11 +503,6 @@ class _AnimateInfo {
       o is _AnimateInfo && gen == o.gen && offset == o.offset;
   @override
   int get hashCode => Object.hash(offset, gen);
-
-  @override
-  String toString() {
-    return '$offset..$gen';
-  }
 }
 
 class DraggableConfiguration<T> {
