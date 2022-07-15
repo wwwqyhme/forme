@@ -1,25 +1,26 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
 import 'draggable_grid_view.dart';
+import 'forme_file.dart';
+import 'thumbnail.dart';
 
-typedef ImagePickerBuilder = Widget Function(
-  FormeImagePickerState field,
+typedef FilePickerBuilder = Widget Function(
+  FormeFilePickerState field,
 );
 
 typedef GridItemBuilder = Widget Function(
   ValueChanged<int> removeByUserInteractive,
-  FormeImage item,
+  FormeFile item,
   int index,
   bool readOnly,
   bool enable,
 );
 
-class FormeImagePicker extends FormeField<List<FormeImage>> {
+class FormeFilePicker extends FormeField<List<FormeFile>> {
   final int? maximum;
 
   /// color of remove icon default is [Colors.redAccent]
@@ -28,12 +29,12 @@ class FormeImagePicker extends FormeField<List<FormeImage>> {
   /// padding of grid item , default is top:12 right:12
   final EdgeInsetsGeometry? gridItemPadding;
 
-  final Color? imagePickerColor;
-  final Color? imagePickerDisabledColor;
-  final Widget? imagePickerChild;
+  final Color? filePickerColor;
+  final Color? filePickerDisabledColor;
+  final Widget? filePickerChild;
 
   /// whether show image picker when readOnly or disabled, default is true
-  final bool showImagePickerWhenReadOnly;
+  final bool showFilePickerWhenReadOnly;
 
   final bool showGridItemRemoveIcon;
 
@@ -41,8 +42,8 @@ class FormeImagePicker extends FormeField<List<FormeImage>> {
   ///
   /// **if you only check removable by index , the file at index can still be removed after sort by drag , use [draggable] disable drag conditonal**
   ///
-  /// **you call still remove this image by [FormeImagePickerState]**
-  final bool Function(FormeImage image, int index)? removable;
+  /// **you call still remove this image by [FormeFilePickerState]**
+  final bool Function(FormeFile image, int index)? removable;
 
   final IconData? gridItemRemoveIcon;
 
@@ -54,13 +55,17 @@ class FormeImagePicker extends FormeField<List<FormeImage>> {
   final Widget? cancelOnBottomSheet;
 
   /// builder display widget  when image loading failed
-  final Widget Function(BuildContext context, FormeImage item, Object error,
+  final Widget Function(
+      BuildContext context,
+      FormeFile item,
+      VoidCallback retry,
+      Object error,
       StackTrace? stackTrace)? imageLoadingErrorBuilder;
 
   /// builder display widget  when image is loading
   final Widget Function(
     BuildContext context,
-    FormeImage item,
+    FormeFile item,
   )? imageLoadingBuilder;
 
   /// image fit , default is [BoxFit.cover]
@@ -69,12 +74,12 @@ class FormeImagePicker extends FormeField<List<FormeImage>> {
   /// whether item is draggable , default  every item is draggable
   ///
   /// **if you only check draggable by index , the file at index can still be draggable after sort by drag **
-  final bool Function(FormeImage item, int index)? draggable;
+  final bool Function(FormeFile item, int index)? draggable;
   final Duration? longPressDelayStartDrag;
   final Widget Function(
-          BuildContext context, FormeImage item, int index, Widget child)?
+          BuildContext context, FormeFile item, int index, Widget child)?
       childWhenDraggingBuilder;
-  final Widget Function(BuildContext context, FormeImage item, int index,
+  final Widget Function(BuildContext context, FormeFile item, int index,
       Widget child, Size? size)? feedbackBuilder;
 
   /// whether reOrderable on drag
@@ -83,41 +88,41 @@ class FormeImagePicker extends FormeField<List<FormeImage>> {
   final bool supportCamera;
 
   /// should not be null if [supportCamera] is true
-  final Future<List<FormeImage>> Function(int? max)? pickFromCamera;
+  final Future<List<FormeFile>> Function(int? max)? pickFromCamera;
 
   /// parameter max is not a restriction but just tell you how many images can be inserted.
-  final Future<List<FormeImage>> Function(int? max) pickFromGallery;
+  final Future<List<FormeFile>> Function(int? max) pickFromGallery;
 
-  FormeImagePicker({
+  FormeFilePicker({
     Duration? animateDuration,
     this.maximum,
-    ImagePickerBuilder? imagePickerBuilder,
+    FilePickerBuilder? filePickerBuilder,
     GridItemBuilder? gridItemBuilder,
     required SliverGridDelegate gridDelegate,
-    List<FormeImage>? initialValue,
+    List<FormeFile>? initialValue,
     required String name,
     bool readOnly = false,
     Key? key,
     InputDecoration? decoration,
-    FormeFieldDecorator<List<FormeImage>>? decorator,
+    FormeFieldDecorator<List<FormeFile>>? decorator,
     int? order,
     bool quietlyValidate = false,
     Duration? asyncValidatorDebounce,
     AutovalidateMode? autovalidateMode,
-    FormeFieldStatusChanged<List<FormeImage>>? onStatusChanged,
-    FormeFieldInitialed<List<FormeImage>>? onInitialed,
-    FormeFieldSetter<List<FormeImage>>? onSaved,
-    FormeValidator<List<FormeImage>>? validator,
-    FormeAsyncValidator<List<FormeImage>>? asyncValidator,
+    FormeFieldStatusChanged<List<FormeFile>>? onStatusChanged,
+    FormeFieldInitialed<List<FormeFile>>? onInitialed,
+    FormeFieldSetter<List<FormeFile>>? onSaved,
+    FormeValidator<List<FormeFile>>? validator,
+    FormeAsyncValidator<List<FormeFile>>? asyncValidator,
     bool requestFocusOnUserInteraction = true,
     bool registrable = true,
     bool enabled = true,
     this.gridItemRemoveIconColor,
     this.gridItemPadding,
-    this.showImagePickerWhenReadOnly = true,
-    this.imagePickerColor,
-    this.imagePickerDisabledColor,
-    this.imagePickerChild,
+    this.showFilePickerWhenReadOnly = true,
+    this.filePickerColor,
+    this.filePickerDisabledColor,
+    this.filePickerChild,
     this.gridItemRemoveIcon,
     this.showGridItemRemoveIcon = true,
     this.gridItemRemoveIconSize = 24,
@@ -141,8 +146,8 @@ class FormeImagePicker extends FormeField<List<FormeImage>> {
     this.supportCamera = false,
     this.pickFromCamera,
     this.imageLoadingBuilder,
-    FormeFieldValidationFilter<List<FormeImage>>? validationFilter,
-    FormeValueComparator<List<FormeImage>>? comparator,
+    FormeFieldValidationFilter<List<FormeFile>>? validationFilter,
+    FormeValueComparator<List<FormeFile>>? comparator,
   }) : super(
             comparator: comparator,
             validationFilter: validationFilter,
@@ -169,11 +174,11 @@ class FormeImagePicker extends FormeField<List<FormeImage>> {
                       )),
             readOnly: readOnly,
             name: name,
-            initialValue: initialValue ?? <FormeImage>[],
+            initialValue: initialValue ?? <FormeFile>[],
             builder: (genericState) {
-              final FormeImagePickerState state =
-                  genericState as FormeImagePickerState;
-              return DraggableGridView<_Item<FormeImage>>(
+              final FormeFilePickerState state =
+                  genericState as FormeFilePickerState;
+              return DraggableGridView<_Item<FormeFile>>(
                 scrollController: scrollController,
                 physics: physics ?? const NeverScrollableScrollPhysics(),
                 shrinkWrap: shrinkWrap,
@@ -192,7 +197,7 @@ class FormeImagePicker extends FormeField<List<FormeImage>> {
                   }
                   Widget child;
                   if (item.value == null) {
-                    child = (imagePickerBuilder ?? state._defaultImagePicker)
+                    child = (filePickerBuilder ?? state._defaultFilePicker)
                         .call(state);
                   } else {
                     child = (gridItemBuilder ?? state._defaultGridItem).call(
@@ -216,14 +221,14 @@ class FormeImagePicker extends FormeField<List<FormeImage>> {
             });
 
   @override
-  FormeFieldState<List<FormeImage>> createState() => FormeImagePickerState();
+  FormeFieldState<List<FormeFile>> createState() => FormeFilePickerState();
 }
 
-class FormeImagePickerState extends FormeFieldState<List<FormeImage>> {
+class FormeFilePickerState extends FormeFieldState<List<FormeFile>> {
   @override
-  FormeImagePicker get widget => super.widget as FormeImagePicker;
+  FormeFilePicker get widget => super.widget as FormeFilePicker;
 
-  late GridController<_Item<FormeImage>> _gridController;
+  late GridController<_Item<FormeFile>> _gridController;
 
   late final ValueNotifier<bool> _draggingNotifer =
       FormeMountedValueNotifier(false);
@@ -240,7 +245,7 @@ class FormeImagePickerState extends FormeFieldState<List<FormeImage>> {
     });
   }
 
-  /// when you have your own [DragTarget] and want to accept data from [FormeImagePicker]
+  /// when you have your own [DragTarget] and want to accept data from [FormeFilePicker]
   /// you can use this method in [DragTarget.onWillAccept]
   bool canAccept(dynamic data) => _gridController.canAccept(data);
 
@@ -249,15 +254,15 @@ class FormeImagePickerState extends FormeFieldState<List<FormeImage>> {
   ValueListenable<bool> get draggingListenable =>
       FormeValueListenableDelegate(_draggingNotifer);
 
-  List<_Item<FormeImage>> _convert(List<FormeImage> images) {
-    List<_Item<FormeImage>> items = images.map((e) => _Item(e)).toList();
+  List<_Item<FormeFile>> _convert(List<FormeFile> images) {
+    List<_Item<FormeFile>> items = images.map((e) => _Item(e)).toList();
     if (widget.maximum != null && items.length > widget.maximum!) {
       items = items.sublist(0, widget.maximum);
     }
 
-    final bool showImagePicker =
-        (!readOnly && enabled) || widget.showImagePickerWhenReadOnly;
-    if (showImagePicker &&
+    final bool showFilePicker =
+        (!readOnly && enabled) || widget.showFilePickerWhenReadOnly;
+    if (showFilePicker &&
         (widget.maximum == null || items.length < widget.maximum!)) {
       items.add(_Item.empty());
     }
@@ -272,7 +277,7 @@ class FormeImagePickerState extends FormeFieldState<List<FormeImage>> {
   }
 
   @override
-  void onStatusChanged(FormeFieldChangedStatus<List<FormeImage>> status) {
+  void onStatusChanged(FormeFieldChangedStatus<List<FormeFile>> status) {
     super.onStatusChanged(status);
     if (status.isValueChanged) {
       _gridController.value = _convert(status.value);
@@ -319,55 +324,38 @@ class FormeImagePickerState extends FormeFieldState<List<FormeImage>> {
     _gridController.removeData(data, commit);
   }
 
-  Widget _errorBuilder(
-      BuildContext context, FormeImage item, Object error, StackTrace? trace) {
-    return widget.imageLoadingErrorBuilder?.call(context, item, error, trace) ??
+  Widget _errorBuilder(BuildContext context, FormeFile item, VoidCallback retry,
+      Object error, StackTrace? trace) {
+    return widget.imageLoadingErrorBuilder
+            ?.call(context, item, retry, error, trace) ??
+        Container(
+          color: Colors.black.withOpacity(0.4),
+          child: Center(
+              child: IconButton(
+            onPressed: retry,
+            icon: const Icon(Icons.broken_image_rounded),
+            color: Theme.of(context).errorColor,
+          )),
+        );
+  }
+
+  Widget _loadingBuilder(
+    BuildContext context,
+    FormeFile item,
+  ) {
+    return widget.imageLoadingBuilder?.call(context, item) ??
         const Center(
-            child: Icon(
-          Icons.broken_image_rounded,
-        ));
+          child: CircularProgressIndicator(),
+        );
   }
 
-  Image _image(ImageProvider provider, FormeImage item) {
-    return Image(
-      image: provider,
-      fit: widget.imageFit,
-      width: double.infinity,
-      height: double.infinity,
-      errorBuilder: (context, error, stackTrace) {
-        item._broken = true;
-        return _errorBuilder(context, item, error, stackTrace);
-      },
-    );
-  }
-
-  Widget _defaultGridItem(ValueChanged<int> remove, FormeImage item, int index,
+  Widget _defaultGridItem(ValueChanged<int> remove, FormeFile item, int index,
       bool readOnly, bool enable) {
-    Widget image;
-    if (item.cache != null) {
-      image = _image(item.cache!, item);
-    } else {
-      image = FutureBuilder<ImageProvider>(
-        future: item.image,
-        builder: (context, builder) {
-          if (builder.connectionState == ConnectionState.waiting) {
-            if (widget.imageLoadingBuilder != null) {
-              return widget.imageLoadingBuilder!(context, item);
-            }
-          } else {
-            if (builder.hasError) {
-              return _errorBuilder(
-                  context, item, builder.error!, builder.stackTrace);
-            }
-            if (builder.hasData) {
-              item._cache = builder.data;
-              return _image(builder.data!, item);
-            }
-          }
-          return const SizedBox.shrink();
-        },
-      );
-    }
+    final Widget thumbnail = Thumbnail(
+        file: item,
+        fit: widget.imageFit,
+        imageLoadingBuilder: _loadingBuilder,
+        imageLoadingErrorBuilder: _errorBuilder);
 
     final bool showGridItemRemoveIcon = widget.showGridItemRemoveIcon &&
         (widget.removable == null || widget.removable!(item, index));
@@ -382,7 +370,7 @@ class FormeImagePickerState extends FormeFieldState<List<FormeImage>> {
                       right: readOnly ? 0 : widget.gridItemRemoveIconSize / 2,
                     )
                   : EdgeInsets.zero),
-          child: image,
+          child: thumbnail,
         ),
         if (!readOnly && showGridItemRemoveIcon)
           Positioned(
@@ -407,12 +395,12 @@ class FormeImagePickerState extends FormeFieldState<List<FormeImage>> {
     );
   }
 
-  void insertPickedImages(List<FormeImage> images) {
+  void insertPickedImages(List<FormeFile> images) {
     if (!mounted || images.isEmpty) {
       return;
     }
 
-    final List<FormeImage> currentValue =
+    final List<FormeFile> currentValue =
         (_gridController.currentItems ?? _gridController.value)
             .where((element) => element.value != null)
             .map((e) => e.value!)
@@ -421,13 +409,13 @@ class FormeImagePickerState extends FormeFieldState<List<FormeImage>> {
     if (widget.maximum != null && num >= widget.maximum!) {
       return;
     }
-    final Iterable<FormeImage> needInserts =
+    final Iterable<FormeFile> needInserts =
         images.where((element) => !currentValue.contains(element)).toList();
     if (needInserts.isEmpty) {
       return;
     }
-    final List<FormeImage> list = [];
-    for (final FormeImage item in needInserts) {
+    final List<FormeFile> list = [];
+    for (final FormeFile item in needInserts) {
       if (!list.contains(item)) {
         list.add(item);
       }
@@ -443,7 +431,7 @@ class FormeImagePickerState extends FormeFieldState<List<FormeImage>> {
     if (readOnly || (maxNum != null && maxNum < 1)) {
       return;
     }
-    final List<FormeImage> images = await widget.pickFromGallery(maxNum);
+    final List<FormeFile> images = await widget.pickFromGallery(maxNum);
     insertPickedImages(images);
   }
 
@@ -454,16 +442,12 @@ class FormeImagePickerState extends FormeFieldState<List<FormeImage>> {
         (maxNum != null && maxNum < 1)) {
       return;
     }
-    final List<FormeImage> images = await widget.pickFromCamera!(maxNum);
+    final List<FormeFile> images = await widget.pickFromCamera!(maxNum);
     insertPickedImages(images);
   }
 
-  Widget _defaultImagePicker(FormeImagePickerState field) {
-    return InkWell(
-      highlightColor: Colors.transparent,
-      splashFactory: NoSplash.splashFactory,
-      hoverColor: Colors.transparent,
-      focusColor: Colors.transparent,
+  Widget _defaultFilePicker(FormeFilePickerState field) {
+    return GestureDetector(
       onTap: readOnly
           ? null
           : () {
@@ -533,18 +517,17 @@ class FormeImagePickerState extends FormeFieldState<List<FormeImage>> {
                 : EdgeInsets.zero),
         child: Container(
           color: readOnly
-              ? widget.imagePickerDisabledColor ??
+              ? widget.filePickerDisabledColor ??
                   Theme.of(context).disabledColor
-              : widget.imagePickerColor ?? Colors.grey.withOpacity(0.3),
-          child:
-              widget.imagePickerChild ?? const Center(child: Icon(Icons.add)),
+              : widget.filePickerColor ?? Colors.grey.withOpacity(0.3),
+          child: widget.filePickerChild ?? const Center(child: Icon(Icons.add)),
         ),
       ),
     );
   }
 
-  DraggableConfiguration<_Item<FormeImage>> _draggableConfiguration() {
-    return DraggableConfiguration<_Item<FormeImage>>(
+  DraggableConfiguration<_Item<FormeFile>> _draggableConfiguration() {
+    return DraggableConfiguration<_Item<FormeFile>>(
       draggable: (item, index) {
         if (item.value == null) {
           return false;
@@ -573,37 +556,23 @@ class FormeImagePickerState extends FormeFieldState<List<FormeImage>> {
     );
   }
 
-  void _onAccept(List<_Item<FormeImage>> value) {
+  void _onAccept(List<_Item<FormeFile>> value) {
     _gridController.value = value;
   }
 }
 
-abstract class FormeImage {
-  Future<ImageProvider> get image;
-  bool? _broken;
-  ImageProvider? _cache;
-
-  ///  typically this `image` is not a real image or can not be decoded by current platform
-  ///
-  /// return null if image not decoded
-  bool? get isBroken => _broken;
-
-  /// cached imageprovider after successful load from [image]
-  ImageProvider? get cache => _cache;
-
-  /// get file name
-  String? get name;
-
-  /// get image bytes,used to save to a file
-  ///
-  /// there's no need to implementing this method in your custom `FormeImage`
-  Future<Uint8List>? readAsBytes();
-}
-
+@immutable
 class _Item<T> {
   final T? value;
-
   const _Item(this.value);
 
   _Item.empty() : value = null;
+
+  @override
+  int get hashCode => value.hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    return other is _Item<T> && other.value == value;
+  }
 }
