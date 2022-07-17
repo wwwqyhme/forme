@@ -1,6 +1,6 @@
 name: forme_file_picker
 description: image picker for Forme , support drag & drop
-version: 3.0.0
+version: 3.0.0-beta.1
 homepage: https://github.com/wwwqyhme/forme/forme_file_picker
 
 environment:

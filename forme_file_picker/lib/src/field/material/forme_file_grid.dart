@@ -5,18 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
 import 'draggable_grid_view.dart';
+import 'forme_upload_controller.dart';
+import 'upload_stack.dart';
 
 typedef FilePickerBuilder = Widget Function(
   FormeFileGridState field,
 );
 
-typedef GridItemBuilder = Widget Function(
-  ValueChanged<int> removeByUserInteractive,
-  FormeFile item,
-  int index,
-  bool readOnly,
-  bool enable,
-);
+typedef OnFileUploadSuccess = void Function(FormeFile file, Object? result);
+typedef ONFileUploadFail = void Function(
+    FormeFile file, Object error, StackTrace? stackTrace);
 
 class FormeFileGrid extends FormeField<List<FormeFile>> {
   final int? maximum;
@@ -33,6 +31,7 @@ class FormeFileGrid extends FormeField<List<FormeFile>> {
 
   /// whether show image picker when readOnly or disabled, default is true
   final bool showFilePickerWhenReadOnly;
+  final bool disableFilePicker;
 
   final bool showGridItemRemoveIcon;
 
@@ -93,11 +92,13 @@ class FormeFileGrid extends FormeField<List<FormeFile>> {
   /// parameter max is not a restriction but just tell you how many files can be inserted.
   final Future<List<FormeFile>> Function(int? max) pickFromGallery;
 
+  final OnFileUploadSuccess? onUploadSuccess;
+  final ONFileUploadFail? onUploadFail;
+
   FormeFileGrid({
     Duration? animateDuration,
     this.maximum,
     FilePickerBuilder? filePickerBuilder,
-    GridItemBuilder? gridItemBuilder,
     required SliverGridDelegate gridDelegate,
     List<FormeFile>? initialValue,
     required String name,
@@ -120,6 +121,7 @@ class FormeFileGrid extends FormeField<List<FormeFile>> {
     this.gridItemRemoveIconColor,
     this.gridItemPadding,
     this.showFilePickerWhenReadOnly = true,
+    this.disableFilePicker = false,
     this.filePickerColor,
     this.filePickerDisabledColor,
     this.filePickerChild,
@@ -148,6 +150,9 @@ class FormeFileGrid extends FormeField<List<FormeFile>> {
     this.imageLoadingBuilder,
     FormeFieldValidationFilter<List<FormeFile>>? validationFilter,
     FormeValueComparator<List<FormeFile>>? comparator,
+    ValueChanged<FormeFile>? onGridItemTap,
+    this.onUploadSuccess,
+    this.onUploadFail,
   }) : super(
             comparator: comparator,
             validationFilter: validationFilter,
@@ -200,17 +205,13 @@ class FormeFileGrid extends FormeField<List<FormeFile>> {
                     child = (filePickerBuilder ?? state._defaultFilePicker)
                         .call(state);
                   } else {
-                    child = (gridItemBuilder ?? state._defaultGridItem).call(
-                      (int index) {
-                        if (readOnly) {
-                          return;
-                        }
-                        state._removeByUserInteractive(index);
-                      },
-                      item.value!,
-                      index,
-                      state.readOnly,
-                      state.enabled,
+                    child = GestureDetector(
+                      onTap: onGridItemTap == null
+                          ? null
+                          : () {
+                              onGridItemTap.call(item.value!);
+                            },
+                      child: state._gridItem.call(item.value!, index),
                     );
                   }
                   return child;
@@ -260,8 +261,8 @@ class FormeFileGridState extends FormeFieldState<List<FormeFile>> {
       items = items.sublist(0, widget.maximum);
     }
 
-    final bool showFilePicker =
-        (!readOnly && enabled) || widget.showFilePickerWhenReadOnly;
+    final bool showFilePicker = !widget.disableFilePicker &&
+        ((!readOnly && enabled) || widget.showFilePickerWhenReadOnly);
     if (showFilePicker &&
         (widget.maximum == null || items.length < widget.maximum!)) {
       items.add(_Item.empty());
@@ -281,10 +282,18 @@ class FormeFileGridState extends FormeFieldState<List<FormeFile>> {
     super.onStatusChanged(status);
     if (status.isValueChanged) {
       _gridController.value = _convert(status.value);
+      if (oldValue != null) {
+        final List<FormeFile> removed = oldValue!
+            .where((element) => !status.value.contains(element))
+            .toList();
+        for (final FormeFile file in removed) {
+          file._uploadController?.cancel();
+        }
+      }
     }
   }
 
-  void _removeByUserInteractive(int index) {
+  void _removeByUserInteractive(FormeFile item, int index) {
     if (!mounted) {
       return;
     }
@@ -324,6 +333,45 @@ class FormeFileGridState extends FormeFieldState<List<FormeFile>> {
     _gridController.removeData(data, commit);
   }
 
+  /// upload all uploadable file
+  void upload([List<FormeFile>? files]) {
+    for (final FormeFile element in _find(files)) {
+      _createFileUploadController(element).upload();
+    }
+  }
+
+  void retryUpload([List<FormeFile>? files]) {
+    for (final FormeFile element in _find(files)) {
+      _createFileUploadController(element).retry();
+    }
+  }
+
+  void cancelUpload([List<FormeFile>? files]) {
+    for (final FormeFile element in _find(files)) {
+      _createFileUploadController(element).cancel();
+    }
+  }
+
+  FormeFileUploadController _createFileUploadController(FormeFile file) {
+    return file._createUploadController(
+        widget.onUploadSuccess == null
+            ? null
+            : (result) {
+                widget.onUploadSuccess?.call(file, result);
+              },
+        widget.onUploadFail == null
+            ? null
+            : (error, trace) {
+                widget.onUploadFail?.call(file, error, trace);
+              });
+  }
+
+  List<FormeFile> _find(List<FormeFile>? files) {
+    return files == null
+        ? value
+        : value.where((element) => files.contains(element)).toList();
+  }
+
   Widget _errorBuilder(BuildContext context, FormeFile item,
       VoidCallback? retry, Object error, StackTrace? trace) {
     return widget.imageLoadingErrorBuilder
@@ -355,14 +403,45 @@ class FormeFileGridState extends FormeFieldState<List<FormeFile>> {
       fit: widget.imageFit,
       width: double.infinity,
       height: double.infinity,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          return Stack(
+            children: [
+              child,
+              if (item.uploadable)
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black.withOpacity(0.1),
+                  ),
+                ),
+              if (item.uploadable)
+                UploadStack(
+                  autoUpload: item.autoUpload,
+                  controller: _createFileUploadController(item),
+                ),
+            ],
+          );
+        }
+        return Center(
+          child: CircularProgressIndicator(
+            value: loadingProgress.expectedTotalBytes != null
+                ? loadingProgress.cumulativeBytesLoaded /
+                    loadingProgress.expectedTotalBytes!
+                : null,
+          ),
+        );
+      },
       errorBuilder: (context, error, stackTrace) {
         return _errorBuilder(context, item, null, error, stackTrace);
       },
     );
   }
 
-  Widget _defaultGridItem(ValueChanged<int> remove, FormeFile item, int index,
-      bool readOnly, bool enable) {
+  Widget _gridItem(
+    FormeFile item,
+    int index,
+  ) {
+    final bool readOnly = this.readOnly;
     Widget thumbnail;
     if (item._cache != null) {
       thumbnail = _thumbnail(item._cache!, item);
@@ -423,7 +502,7 @@ class FormeFileGridState extends FormeFieldState<List<FormeFile>> {
                 size: widget.gridItemRemoveIconSize,
               ),
               onTap: () {
-                remove(index);
+                _removeByUserInteractive(item, index);
               },
             ),
           )
@@ -615,10 +694,38 @@ class _Item<T> {
 
 abstract class FormeFile {
   Future<ImageProvider> get makeThumbnail;
-
   Future<ImageProvider> get _thumbnail => _future ??= makeThumbnail;
+
+  bool get uploadable => false;
+  bool get autoUpload => false;
+
+  bool get isUploading =>
+      uploadable && (_uploadController?.isUploading ?? false);
+  bool get isUploadSuccess =>
+      uploadable && (_uploadController?.isUploadSuccess ?? false);
+  Object? get uploadResult => _uploadController?.uploadResult;
+  bool get isUploadError =>
+      uploadable && (_uploadController?.isUploadError ?? false);
+  Object? get uploadError => _uploadController?.error;
+  StackTrace? get uploadErrorStackTrace => _uploadController?.stackTrace;
+
+  Future<Object?> upload() => throw UnimplementedError();
+  void cancelUpload() {}
+
+  /// notify file upload progress
+  void progress(Widget? widget) {
+    _uploadController?.progress(widget);
+  }
 
   /// cached thumbnail feature
   Future<ImageProvider>? _future;
   ImageProvider? _cache;
+
+  FormeFileUploadController? _uploadController;
+  FormeFileUploadController _createUploadController(
+      Function(Object? result)? onUploadSuccess,
+      Function(Object error, StackTrace? trace)? onUploadFail) {
+    return _uploadController ??= FormeFileUploadController(
+        upload, cancelUpload, onUploadSuccess, onUploadFail);
+  }
 }

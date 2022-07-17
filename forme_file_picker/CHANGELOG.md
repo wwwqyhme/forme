@@ -1,3 +1,8 @@
+## 3.0.0
+
+1. rename `FormeImagePicker` to `FormeFileGrid`
+2. support upload
+
 ## 2.1.0
 
 1. upgrade Forme to 4.2.0
