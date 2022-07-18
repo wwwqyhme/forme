@@ -11,7 +11,6 @@ import 'upload_stack.dart';
 typedef FilePickerBuilder = Widget Function(
   FormeFileGridState field,
 );
-
 typedef OnFileUploadSuccess = void Function(FormeFile file, Object? result);
 typedef ONFileUploadFail = void Function(
     FormeFile file, Object error, StackTrace? stackTrace);
@@ -77,6 +76,9 @@ class FormeFileGrid extends FormeField<List<FormeFile>> {
   final Widget Function(BuildContext context, FormeFile item, int index,
       Widget child, Size? size)? feedbackBuilder;
 
+  /// use [FormeFileGridState.insertFiles] to insert your picked files
+  final void Function(FormeFileGridState state, int? maximum) pickFiles;
+
   /// whether reOrderable on drag
   final bool reOrderable;
 
@@ -135,6 +137,7 @@ class FormeFileGrid extends FormeField<List<FormeFile>> {
     ValueChanged<FormeFile>? onGridItemTap,
     this.onUploadSuccess,
     this.onUploadFail,
+    required this.pickFiles,
   }) : super(
             comparator: comparator,
             validationFilter: validationFilter,
@@ -508,6 +511,7 @@ class FormeFileGridState extends FormeFieldState<List<FormeFile>> {
     if (canInsertNums != null && canInsertNums <= 0) {
       return;
     }
+
     List<FormeFile> needInserts =
         files.where((element) => !currentValue.contains(element)).toList();
     if (needInserts.isEmpty) {
@@ -532,7 +536,11 @@ class FormeFileGridState extends FormeFieldState<List<FormeFile>> {
 
   Widget _defaultFilePicker(FormeFileGridState field) {
     return GestureDetector(
-      onTap: readOnly ? null : () {},
+      onTap: readOnly
+          ? null
+          : () {
+              widget.pickFiles.call(this, _maxInsetableNum);
+            },
       child: Padding(
         padding: widget.gridItemPadding ??
             (widget.showGridItemRemoveIcon
@@ -604,8 +612,8 @@ class _Item<T> {
 }
 
 abstract class FormeFile {
-  Future<ImageProvider> get makeThumbnail;
-  Future<ImageProvider> get _thumbnail => _future ??= makeThumbnail;
+  Future<ImageProvider> get thumbnail;
+  Future<ImageProvider> get _thumbnail => _future ??= thumbnail;
 
   bool get uploadable => false;
   bool get autoUpload => false;
