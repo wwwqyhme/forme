@@ -47,10 +47,6 @@ class FormeFileGrid extends FormeField<List<FormeFile>> {
   /// grid item remove icon size , default is 24
   final double gridItemRemoveIconSize;
 
-  final Widget? pickImageFromCameraOnBottomSheet;
-  final Widget? pickImageFromGalleryOnBottomSheet;
-  final Widget? cancelOnBottomSheet;
-
   /// builder display widget  when thumbnail create failed or image loading failed
   ///
   ///retry will be null if  image loading failed
@@ -83,14 +79,6 @@ class FormeFileGrid extends FormeField<List<FormeFile>> {
 
   /// whether reOrderable on drag
   final bool reOrderable;
-
-  final bool supportCamera;
-
-  /// should not be null if [supportCamera] is true
-  final Future<List<FormeFile>> Function(int? max)? pickFromCamera;
-
-  /// parameter max is not a restriction but just tell you how many files can be inserted.
-  final Future<List<FormeFile>> Function(int? max) pickFromGallery;
 
   final OnFileUploadSuccess? onUploadSuccess;
   final ONFileUploadFail? onUploadFail;
@@ -128,9 +116,6 @@ class FormeFileGrid extends FormeField<List<FormeFile>> {
     this.gridItemRemoveIcon,
     this.showGridItemRemoveIcon = true,
     this.gridItemRemoveIconSize = 24,
-    this.pickImageFromCameraOnBottomSheet,
-    this.pickImageFromGalleryOnBottomSheet,
-    this.cancelOnBottomSheet,
     Curve? slideCurve,
     this.imageLoadingErrorBuilder,
     this.imageFit = BoxFit.cover,
@@ -144,9 +129,6 @@ class FormeFileGrid extends FormeField<List<FormeFile>> {
     bool shrinkWrap = true,
     ScrollController? scrollController,
     ScrollPhysics? physics,
-    required this.pickFromGallery,
-    this.supportCamera = false,
-    this.pickFromCamera,
     this.imageLoadingBuilder,
     FormeFieldValidationFilter<List<FormeFile>>? validationFilter,
     FormeValueComparator<List<FormeFile>>? comparator,
@@ -521,14 +503,21 @@ class FormeFileGridState extends FormeFieldState<List<FormeFile>> {
             .map((e) => e.value!)
             .toList();
     final int num = currentValue.length;
-    if (widget.maximum != null && num >= widget.maximum!) {
+    final int? canInsertNums =
+        widget.maximum == null ? null : widget.maximum! - num;
+    if (canInsertNums != null && canInsertNums <= 0) {
       return;
     }
-    final Iterable<FormeFile> needInserts =
+    List<FormeFile> needInserts =
         files.where((element) => !currentValue.contains(element)).toList();
     if (needInserts.isEmpty) {
       return;
     }
+
+    if (canInsertNums != null && canInsertNums < needInserts.length) {
+      needInserts = needInserts.sublist(0, canInsertNums);
+    }
+
     final List<FormeFile> list = [];
     for (final FormeFile item in needInserts) {
       if (!list.contains(item)) {
@@ -541,87 +530,9 @@ class FormeFileGridState extends FormeFieldState<List<FormeFile>> {
   int? get _maxInsetableNum =>
       widget.maximum == null ? null : widget.maximum! - value.length;
 
-  Future _pickFromGallery() async {
-    final int? maxNum = _maxInsetableNum;
-    if (readOnly || (maxNum != null && maxNum < 1)) {
-      return;
-    }
-    final List<FormeFile> files = await widget.pickFromGallery(maxNum);
-    insertFiles(files);
-  }
-
-  Future _pickFromCamera() async {
-    final int? maxNum = _maxInsetableNum;
-    if (readOnly ||
-        widget.pickFromCamera == null ||
-        (maxNum != null && maxNum < 1)) {
-      return;
-    }
-    final List<FormeFile> files = await widget.pickFromCamera!(maxNum);
-    insertFiles(files);
-  }
-
   Widget _defaultFilePicker(FormeFileGridState field) {
     return GestureDetector(
-      onTap: readOnly
-          ? null
-          : () {
-              if (widget.supportCamera) {
-                showModalBottomSheet<dynamic>(
-                  shape: const RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(10.0)),
-                  ),
-                  context: context,
-                  builder: (context) {
-                    return Wrap(
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            Navigator.pop(context);
-                            _pickFromCamera();
-                          },
-                          child: widget.pickImageFromCameraOnBottomSheet ??
-                              const ListTile(
-                                title: Center(
-                                    child: Text('Pick Image from Camera')),
-                              ),
-                        ),
-                        const Divider(),
-                        InkWell(
-                          onTap: () {
-                            Navigator.pop(context);
-                            _pickFromGallery();
-                          },
-                          child: widget.pickImageFromGalleryOnBottomSheet ??
-                              const ListTile(
-                                title: Center(
-                                    child: Text('Pick Image from Gallery')),
-                              ),
-                        ),
-                        Divider(
-                          color: Colors.grey.withOpacity(0.1),
-                          thickness: 10,
-                        ),
-                        InkWell(
-                          onTap: () {
-                            Navigator.pop(context);
-                          },
-                          child: widget.cancelOnBottomSheet ??
-                              const ListTile(
-                                title: Center(
-                                  child: Text('Cancel'),
-                                ),
-                              ),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              } else {
-                _pickFromGallery();
-              }
-            },
+      onTap: readOnly ? null : () {},
       child: Padding(
         padding: widget.gridItemPadding ??
             (widget.showGridItemRemoveIcon
