@@ -39,7 +39,6 @@ class FormeFluentTextBox extends FormeField<String> {
     StrutStyle? strutStyle,
     TextAlign textAlign = TextAlign.start,
     TextAlignVertical? textAlignVertical,
-    TextDirection? textDirection,
     bool? showCursor,
     String obscuringCharacter = '•',
     bool autocorrect = true,
@@ -57,7 +56,6 @@ class FormeFluentTextBox extends FormeField<String> {
     Brightness? keyboardAppearance,
     EdgeInsets scrollPadding = const EdgeInsets.all(20),
     DragStartBehavior dragStartBehavior = DragStartBehavior.start,
-    MouseCursor? mouseCursor,
     ScrollPhysics? scrollPhysics,
     Iterable<String>? autofillHints,
     bool enableInteractiveSelection = true,
@@ -67,7 +65,6 @@ class FormeFluentTextBox extends FormeField<String> {
     GestureTapCallback? onTap,
     ValueChanged<String>? onSubmitted,
     ScrollController? scrollController,
-    TextSelectionControls? textSelectionControls,
     Duration? asyncValidatorDebounce,
     AutovalidateMode? autovalidateMode,
     FormeFieldStatusChanged<String>? onStatusChanged,
@@ -75,7 +72,6 @@ class FormeFluentTextBox extends FormeField<String> {
     FormeFieldSetter<String>? onSaved,
     FormeValidator<String>? validator,
     FormeAsyncValidator<String>? asyncValidator,
-    bool enableIMEPersonalizedLearning = true,
     FormeFieldDecorator<String>? decorator,
     bool registrable = true,
     this.updateValueWhenComposing = false,
@@ -99,7 +95,6 @@ class FormeFluentTextBox extends FormeField<String> {
     Color? highlightColor,
     double? minHeight,
     ButtonThemeData? iconButtonThemeData,
-    bool scribbleEnabled = true,
   }) : super(
           focusNode: focusNode,
           validationFilter: validationFilter,
@@ -126,7 +121,6 @@ class FormeFluentTextBox extends FormeField<String> {
                 baseState as FormeFluentTextBoxState;
 
             return TextBox(
-              scribbleEnabled: scribbleEnabled,
               iconButtonThemeData: iconButtonThemeData,
               minHeight: minHeight,
               foregroundDecoration: foregroundDecoration,
@@ -145,7 +139,6 @@ class FormeFluentTextBox extends FormeField<String> {
               outsidePrefix: outsidePrefix,
               outsidePrefixMode: outsidePrefixMode,
               outsideSuffix: outsideSuffix,
-              enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
               focusNode: state.focusNode,
               controller: state.textEditingController,
               decoration: decoration,
@@ -163,7 +156,6 @@ class FormeFluentTextBox extends FormeField<String> {
               strutStyle: strutStyle,
               textAlign: textAlign,
               textAlignVertical: textAlignVertical,
-              textDirection: textDirection,
               showCursor: showCursor,
               obscuringCharacter: obscuringCharacter,
               autocorrect: autocorrect,
@@ -180,7 +172,6 @@ class FormeFluentTextBox extends FormeField<String> {
               keyboardAppearance: keyboardAppearance,
               scrollPadding: scrollPadding,
               dragStartBehavior: dragStartBehavior,
-              mouseCursor: mouseCursor,
               scrollPhysics: scrollPhysics,
               autofillHints: readOnly ? null : autofillHints,
               autofocus: autofocus,
@@ -193,7 +184,6 @@ class FormeFluentTextBox extends FormeField<String> {
               keyboardType: keyboardType,
               maxLength: maxLength,
               scrollController: scrollController,
-              selectionControls: textSelectionControls,
             );
           },
         );

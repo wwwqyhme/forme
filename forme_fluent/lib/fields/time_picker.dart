@@ -34,12 +34,8 @@ class FormeFluentTimePicker extends FormeField<FluentTimeOfDay> {
       vertical: 4.0,
     ),
     bool autofocus = false,
-    String hourPlaceholder = 'hour',
-    String minutePlaceholder = 'minute',
-    String amText = 'AM',
-    String pmText = 'PM',
     double popupHeight = 40 * 10,
-    int minuteIncrement = 1,
+    double minuteIncrement = 1,
   }) : super(
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           focusNode: focusNode,
@@ -65,11 +61,7 @@ class FormeFluentTimePicker extends FormeField<FluentTimeOfDay> {
             final bool readOnly = state.readOnly;
             return TimePicker(
               hourFormat: hourFormat,
-              hourPlaceholder: hourPlaceholder,
-              minutePlaceholder: minutePlaceholder,
               minuteIncrement: minuteIncrement,
-              amText: amText,
-              pmText: pmText,
               onCancel: onCancel,
               header: header,
               headerStyle: headerStyle,

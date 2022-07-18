@@ -8,7 +8,7 @@ environment:
   flutter: ">=1.17.0"
 
 dependencies:
-  fluent_ui: ^4.0.0-pre.0
+  fluent_ui: ^3.12.0
   flutter:
     sdk: flutter
   forme: ^4.1.3

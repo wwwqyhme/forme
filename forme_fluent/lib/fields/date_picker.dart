@@ -37,7 +37,6 @@ class FormeFluentDatePicker extends FormeField<DateTime> {
     ),
     bool autofocus = false,
     double popupHeight = 40 * 10,
-    Locale? locale,
   }) : super(
           requestFocusOnUserInteraction: requestFocusOnUserInteraction,
           focusNode: focusNode,
@@ -74,7 +73,6 @@ class FormeFluentDatePicker extends FormeField<DateTime> {
               contentPadding: contentPadding,
               autofocus: autofocus,
               popupHeight: popupHeight,
-              locale: locale,
               onChanged: readOnly
                   ? null
                   : (v) {
