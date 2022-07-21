@@ -582,9 +582,6 @@ class FormeFieldState<T> extends State<FormeField<T>> {
   /// 1. field can not be focused
   /// 2. field's validation is unnecessary
   /// 3. field is readOnly
-  /// 4. trigger [onReadonlyChanged] if readonly state changed
-  /// 5. trigger onValidationChanged if validation changed
-  /// 6. trigger onEnabledChanged
   set enabled(bool enabled) {
     _enabled = enabled;
     setState(() {
